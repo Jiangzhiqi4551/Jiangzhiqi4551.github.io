@@ -20,32 +20,23 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
 <script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;example.com&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Pisces&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;搜索...&quot;,&quot;empty&quot;:&quot;没有找到任何搜索结果：${query}&quot;,&quot;hits_time&quot;:&quot;找到 ${hits} 个搜索结果（用时 ${time} 毫秒）&quot;,&quot;hits&quot;:&quot;找到 ${hits} 个搜索结果&quot;}}</script><script src="/js/config.js"></script>
-<meta name="description" content="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。1、安装Node.jsNode.js安装教程 2、创建并进入目录1mkdir vuepress-starter &amp;&amp; cd vuepress-starter  3、初始化1npm init  4、安装依赖1npm install -">
-<meta property="og:type" content="article">
-<meta property="og:title" content="使用VuePress搭建一个简洁的技术文档">
-<meta property="og:url" content="http://example.com/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jiang&#39;s blog">
+<meta property="og:url" content="http://example.com/page/3/index.html">
 <meta property="og:site_name" content="Jiang&#39;s blog">
-<meta property="og:description" content="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。1、安装Node.jsNode.js安装教程 2、创建并进入目录1mkdir vuepress-starter &amp;&amp; cd vuepress-starter  3、初始化1npm init  4、安装依赖1npm install -">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center">
-<meta property="article:published_time" content="2021-06-08T08:31:49.000Z">
-<meta property="article:modified_time" content="2021-06-08T08:52:21.736Z">
 <meta property="article:author" content="Master Jiang">
-<meta property="article:tag" content="教程">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center">
 
 
-<link rel="canonical" href="http://example.com/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">
+<link rel="canonical" href="http://example.com/page/3/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;http:&#x2F;&#x2F;example.com&#x2F;2021&#x2F;06&#x2F;08&#x2F;%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3&#x2F;&quot;,&quot;path&quot;:&quot;2021&#x2F;06&#x2F;08&#x2F;使用VuePress搭建一个简洁的技术文档&#x2F;&quot;,&quot;title&quot;:&quot;使用VuePress搭建一个简洁的技术文档&quot;}</script>
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:true,&quot;isPost&quot;:false,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:&quot;&quot;,&quot;permalink&quot;:&quot;&quot;,&quot;path&quot;:&quot;page&#x2F;3&#x2F;index.html&quot;,&quot;title&quot;:&quot;&quot;}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
-<title>使用VuePress搭建一个简洁的技术文档 | Jiang's blog</title>
+<title>Jiang's blog</title>
   
 
 
@@ -110,7 +101,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+    <div class="sidebar-inner sidebar-overview-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -123,7 +114,6 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%95%BF%E6%9C%9F%E6%90%AC%E7%A0%96%E9%9A%BE%E5%85%8D%E9%81%87%E5%88%B0%E5%90%84%E7%A7%8D%E5%90%84%E6%A0%B7%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%8C%E6%96%B0%E4%BA%BA%E5%85%A5%E8%81%8C%E5%90%8E%E4%B9%9F%E9%9C%80%E8%A6%81%E4%B8%80%E4%BB%BD%E5%AE%8C%E6%95%B4%E3%80%81%E6%B8%85%E6%99%B0%E7%9A%84%E6%96%87%E6%A1%A3%E6%8C%87%E5%AF%BC%E5%85%B6%E5%B1%95%E5%BC%80%E5%B7%A5%E4%BD%9C%EF%BC%8C%E8%80%8CHexo%E6%9B%B4%E9%80%82%E5%90%88%E5%81%9A%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%EF%BC%8C%E5%9B%A0%E6%AD%A4%E8%BF%99%E9%87%8C%E9%80%89%E7%94%A8-VuePress-%E6%9D%A5%E6%9E%84%E5%BB%BA%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E5%AE%89%E8%A3%85Node-js"><span class="nav-number"></span> <span class="nav-text">1、安装Node.js</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E5%88%9B%E5%BB%BA%E5%B9%B6%E8%BF%9B%E5%85%A5%E7%9B%AE%E5%BD%95"><span class="nav-number"></span> <span class="nav-text">2、创建并进入目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number"></span> <span class="nav-text">3、初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4%E3%80%81%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="nav-number"></span> <span class="nav-text">4、安装依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5%E3%80%81%E5%88%9B%E5%BB%BA%E6%96%87%E6%A1%A3"><span class="nav-number"></span> <span class="nav-text">5、创建文档</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6%E3%80%81%E4%BF%AE%E6%94%B9-package-json"><span class="nav-number"></span> <span class="nav-text">6、修改 package.json</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7%E3%80%81%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%9C%AC%E5%9C%B0%E9%A2%84%E8%A7%88"><span class="nav-number"></span> <span class="nav-text">7、启动服务器本地预览</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8A%E9%9D%A2%E7%9A%84%E5%86%85%E5%AE%B9%E4%B8%8E%E5%AE%98%E7%BD%91%E6%96%87%E6%A1%A3%E4%B8%80%E8%87%B4%EF%BC%8C%E6%8E%A5%E4%B8%8B%E6%9D%A5%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E4%B8%80%E4%BA%9B%E8%BF%9B%E9%98%B6%E9%85%8D%E7%BD%AE"><span class="nav-number"></span> <span class="nav-text">上面的内容与官网文档一致，接下来简单介绍一些进阶配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E8%BF%9B%E5%85%A5-docs-%E6%96%87%E4%BB%B6%E5%A4%B9%E5%B9%B6%E6%9E%84%E5%BB%BA%E5%A6%82%E4%B8%8B%E7%9B%AE%E5%BD%95"><span class="nav-number"></span> <span class="nav-text">1、进入 docs 文件夹并构建如下目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E4%BD%BF%E7%94%A8%E9%BB%98%E8%AE%A4%E4%B8%BB%E9%A2%98"><span class="nav-number"></span> <span class="nav-text">2、使用默认主题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E9%85%8D%E7%BD%AE"><span class="nav-number"></span> <span class="nav-text">3、配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%B1%E4%BA%8E%E6%96%87%E6%A1%A3%E9%83%A8%E7%BD%B2%E5%9C%A8%E5%86%85%E7%BD%91%EF%BC%8C%E6%9A%82%E6%97%B6%E8%BF%98%E6%B2%A1%E6%9C%89%E5%85%AC%E7%BD%91%E7%9A%84%E9%83%A8%E7%BD%B2%E7%BB%8F%E9%AA%8C%E5%8F%AF%E4%BB%A5%E5%88%86%E4%BA%AB%EF%BC%8C%E5%8F%AF%E4%BB%A5%E5%8F%82%E8%80%83%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3"><span class="nav-number"></span> <span class="nav-text">由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档</span></a></div>
         </div>
         <!--/noindex-->
 
@@ -191,17 +181,103 @@
 </noscript>
 
 
-    <div class="main-inner post posts-expand">
+    <div class="main-inner index posts-expand">
 
-
-  
+    
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="post-title-link" itemprop="url">mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-06-08 16:53:17 / 修改时间：16:54:30" itemprop="dateCreated datePublished" datetime="2021-06-08T16:53:17+08:00">2021-06-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">常见问题</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>在安装 Homebrew 时发现了如下报错</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Error: Fetching /usr/<span class="built_in">local</span>/Homebrew/Library/Taps/homebrew/homebrew-cask failed!</span><br><span class="line">fatal: Could not resolve HEAD to a revision</span><br><span class="line">Failed during: /usr/<span class="built_in">local</span>/bin/brew update --force --quiet</span><br></pre></td></tr></table></figure>
+
+<p>尝试了一些方法都没解决，最后采用如下方法完美解决。</p>
+<h3 id="1、卸载之前安装的-Homebrew"><a href="#1、卸载之前安装的-Homebrew" class="headerlink" title="1、卸载之前安装的 Homebrew"></a>1、卸载之前安装的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/bin/ruby -e <span class="string">&quot;<span class="subst">$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2、安装新的-Homebrew"><a href="#2、安装新的-Homebrew" class="headerlink" title="2、安装新的 Homebrew"></a>2、安装新的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/zsh -c <span class="string">&quot;<span class="subst">$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3、选择中科大下载源"><a href="#3、选择中科大下载源" class="headerlink" title="3、选择中科大下载源"></a>3、选择中科大下载源</h3><p><img src="https://img-blog.csdnimg.cn/20210426215123877.png" alt="在这里插入图片描述"></p>
+<h3 id="4、根据提示运行-source-命令"><a href="#4、根据提示运行-source-命令" class="headerlink" title="4、根据提示运行 source 命令"></a>4、根据提示运行 source 命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> /Users/xxx/.zprofile</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="5、查看-brew-版本信息"><a href="#5、查看-brew-版本信息" class="headerlink" title="5、查看 brew 版本信息"></a>5、查看 brew 版本信息</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xxx@localhost ~ % brew -v</span><br><span class="line">Homebrew 3.1.3-67-gafbe0e8</span><br><span class="line">Homebrew/homebrew-core (git revision e997d9f5a0; last commit 2021-04-23)</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -214,9 +290,9 @@
       <meta itemprop="name" content="Jiang's blog">
     </span>
       <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          使用VuePress搭建一个简洁的技术文档
-        </h1>
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" class="post-title-link" itemprop="url">使用VuePress搭建一个简洁的技术文档</a>
+        </h2>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -249,7 +325,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
+          <h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
 <h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
 
 <h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
@@ -280,6 +356,7 @@
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
 <h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a target="_blank" rel="noopener" href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>
+      
     </div>
 
     
@@ -287,21 +364,8 @@
     
 
     <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E6%95%99%E7%A8%8B/" rel="tag"># 教程</a>
-          </div>
-
-        
-
-          <div class="post-nav">
-            <div class="post-nav-item">
-            </div>
-            <div class="post-nav-item">
-                <a href="/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" rel="next" title="mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法">
-                  mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法 <i class="fa fa-chevron-right"></i>
-                </a>
-            </div>
-          </div>
+        <div class="post-eof"></div>
+      
     </footer>
   </article>
 </div>
@@ -309,7 +373,9 @@
 
 
 
-
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+  </nav>
 
 </div>
   </main>
