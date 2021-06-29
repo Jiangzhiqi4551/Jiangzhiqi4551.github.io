@@ -129,7 +129,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -142,7 +142,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -182,6 +182,111 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/" class="post-title-link" itemprop="url">数据仓库工具箱笔记 - 第二章</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-28 10:58:40" itemprop="dateCreated datePublished" datetime="2021-06-28T10:58:40+08:00">2021-06-28</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-06-29 10:44:19" itemprop="dateModified" datetime="2021-06-29T10:44:19+08:00">2021-06-29</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">数据仓库</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h3 id="维度模型设计四步骤"><a href="#维度模型设计四步骤" class="headerlink" title="维度模型设计四步骤"></a>维度模型设计四步骤</h3><p>​        1、选择业务过程</p>
+<p>​                每个业务过程对应数仓总线矩阵的一行。</p>
+<p>​        2、确认粒度</p>
+<p>​                粒度用于确定事实表中的行表示什么。</p>
+<p>​        3、确认维度</p>
+<p>​                维度描述业务过程事件所涉及的“谁、什么、何处、何时、为什么、如何”等背景。</p>
+<p>​        4、确认事实</p>
+<p>​                事实涉及来自业务过程事件的度量，基本以数值表示。</p>
+<p>​                一个事实表中的每一行，都与按照事实表粒度描述的度量事件存在一对一的关系。</p>
+<h1 id="事实表技术基础"><a href="#事实表技术基础" class="headerlink" title="事实表技术基础"></a>事实表技术基础</h1><h4 id="事实表结构"><a href="#事实表结构" class="headerlink" title="事实表结构"></a>事实表结构</h4><p>​        事实表行对应一个度量事件，事实表的设计完全依赖于物理活动，不受最终产出报表的影响。事实表还包含外键（用于维度关联）、可选的退化维度键、日期时间戳。</p>
+<h4 id="可加、半可加、不可加事实"><a href="#可加、半可加、不可加事实" class="headerlink" title="可加、半可加、不可加事实"></a>可加、半可加、不可加事实</h4><p>​        可加性数字度量：可以按任意维度汇总</p>
+<p>​        半可加性数字度量：可以对某些维度汇总（例如差额）</p>
+<p>​        不可加性数字度量：完全不可加（例如比率）</p>
+<h4 id="一致性事实"><a href="#一致性事实" class="headerlink" title="一致性事实"></a>一致性事实</h4><p>​        比较、计算不同事实表中的事实，必须保证事实的技术定义一致，如果一致，应该采用相同的命名。</p>
+<h4 id="事务事实表"><a href="#事务事实表" class="headerlink" title="事务事实表"></a>事务事实表</h4><p>​        一行对应空间上或时间上某点的度量事件。</p>
+<h4 id="周期快照事实表"><a href="#周期快照事实表" class="headerlink" title="周期快照事实表"></a>周期快照事实表</h4><p>​        一行汇总了发生在某个标准周期（一天、一周）内的多个度量事件。粒度是周期性的，不是个体的事务，表中通常包含许多事实。</p>
+<h4 id="累积快照事实表"><a href="#累积快照事实表" class="headerlink" title="累积快照事实表"></a>累积快照事实表</h4><p>​        一行汇总了发生在过程开始到结束之间的、可预测的度量事件。</p>
+<h4 id="聚集事实表"><a href="#聚集事实表" class="headerlink" title="聚集事实表"></a>聚集事实表</h4><p>​        对原子粒度事实数据表进行简单的上卷操作，目的是提高查询性能。</p>
+<h4 id="合并事实表"><a href="#合并事实表" class="headerlink" title="合并事实表"></a>合并事实表</h4><p>​        将来自多个过程的，粒度相同的事实表合并为一个单一的事实表。</p>
+<p>​        增加了ETL的处理负担，降低了BI应用的分析代价，适合经常需要共同分析的多过程度量（指标）。</p>
+<h1 id="维度表技术基础"><a href="#维度表技术基础" class="headerlink" title="维度表技术基础"></a>维度表技术基础</h1><h4 id="退化维度"><a href="#退化维度" class="headerlink" title="退化维度"></a>退化维度</h4><p>​        事实表中存在着看起来像关联维度表的外键，但事实上没有维度表和维度关联，也就是说退化维度相关的数据都在事实表中。</p>
+<h4 id="杂项维度"><a href="#杂项维度" class="headerlink" title="杂项维度"></a>杂项维度</h4><p>​        将多个不同维度合并到一起形成单个维度。</p>
+<h4 id="支架维度"><a href="#支架维度" class="headerlink" title="支架维度"></a>支架维度</h4><p>​        维度包含对其他维度的引用，事实表关联维度表A，维度表A引用维度表B，B称为支架维度。</p>
+<h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
+<h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
+<h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1063,153 +1168,6 @@
 
 <p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
 
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/08/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%9A%84%E5%B0%8F%E6%96%87%E4%BB%B6%E9%97%AE%E9%A2%98/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/logo1.jpeg">
-      <meta itemprop="name" content="Master Jiang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiang's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/06/08/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%9A%84%E5%B0%8F%E6%96%87%E4%BB%B6%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">大数据框架中的小文件问题</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2021-06-08 18:34:38 / 修改时间：18:37:03" itemprop="dateCreated datePublished" datetime="2021-06-08T18:34:38+08:00">2021-06-08</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">常见问题</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p><a target="_blank" rel="noopener" href="http://xcx1024.com/ArtInfo/997661.html">原文链接</a></p>
-<h1 id="Hadoop里面的小文件问题"><a href="#Hadoop里面的小文件问题" class="headerlink" title="Hadoop里面的小文件问题"></a>Hadoop里面的小文件问题</h1><p>小文件指的是那些size比HDFS的block size(默认64M)小的多的文件。如果在HDFS中存储小文件，那么在HDFS中肯定会含有许许多多这样的小文件(不然就不会用hadoop了)。而HDFS的问题在于无法很有效的处理大量小文件。</p>
-<p>任何一个文件，目录和block，在HDFS中都会被表示为一个object存储在namenode的内存中，没一个object占用150 bytes的内存空间。所以，如果有10million个文件，没一个文件对应一个block，那么就将要消耗namenode 3G的内存来保存这些block的信息。如果规模再大一些，那么将会超出现阶段计算机硬件所能满足的极限。</p>
-<p>不仅如此，HDFS并不是为了有效的处理大量小文件而存在的。它主要是为了流式的访问大文件而设计的。对小文件的读取通常会造成大量从datanode到datanode的seeks和hopping来retrieve文件，而这样是非常的低效的一种访问方式。</p>
-<h3 id="大量小文件在mapreduce中的问题"><a href="#大量小文件在mapreduce中的问题" class="headerlink" title="大量小文件在mapreduce中的问题"></a>大量小文件在mapreduce中的问题</h3><p>Map tasks通常是每次处理一个block的input(默认使用FileInputFormat)。如果文件非常的小，并且拥有大量的这种小文件，那么每一个map task都仅仅处理了非常小的input数据，并且会产生大量的map tasks，每一个map task都会消耗一定量的bookkeeping的资源。比较一个1GB的文件，默认block size为64M，和1Gb的文件，没一个文件100KB，那么后者没一个小文件使用一个map task，那么job的时间将会十倍甚至百倍慢于前者。</p>
-<p>hadoop中有一些特性可以用来减轻这种问题：可以在一个JVM中允许task reuse，以支持在一个JVM中运行多个map task，以此来减少一些JVM的启动消耗(通过设置mapred.job.reuse.jvm.num.tasks属性，默认为1，－1为无限制)。另一种方法为使用MultiFileInputSplit，它可以使得一个map中能够处理多个split。</p>
-<h5 id="为什么会产生大量的小文件？"><a href="#为什么会产生大量的小文件？" class="headerlink" title="为什么会产生大量的小文件？"></a>为什么会产生大量的小文件？</h5><p>至少有两种情况下会产生大量的小文件</p>
-<p>1.这些小文件都是一个大的逻辑文件的pieces。由于HDFS仅仅在不久前才刚刚支持对文件的append，因此以前用来向unbounde files(例如log文件)添加内容的方式都是通过将这些数据用许多chunks的方式写入HDFS中。</p>
-<p>2.文件本身就是很小。例如许许多多的小图片文件。每一个图片都是一个独立的文件。并且没有一种很有效的方法来将这些文件合并为一个大的文件<br>这两种情况需要有不同的解决方式。对于第一种情况，文件是由许许多多的records组成的，那么可以通过件邪行的调用HDFS的sync()方法(和append方法结合使用)来解决。或者，可以通过些一个程序来专门合并这些小文件(see Nathan Marz’s post about a tool called the Consolidator which does exactly this)。<br>对于第二种情况，就需要某种形式的容器来通过某种方式来group这些file。hadoop提供了一些选择：</p>
-<h5 id="HAR-files"><a href="#HAR-files" class="headerlink" title="HAR files"></a>HAR files</h5><p>Hadoop Archives (HAR files)是在0.18.0版本中引入的，它的出现就是为了缓解大量小文件消耗namenode内存的问题。HAR文件是通过在HDFS上构建一个层次化的文件系统来工作。一个HAR文件是通过hadoop的archive命令来创建，而这个命令实 际上也是运行了一个MapReduce任务来将小文件打包成HAR。对于client端来说，使用HAR文件没有任何影响。所有的原始文件都 visible &amp;&amp; accessible（using har://URL）。但在HDFS端它内部的文件数减少了。</p>
-<p>通过HAR来读取一个文件并不会比直接从HDFS中读取文件高效，而且实际上可能还会稍微低效一点，因为对每一个HAR文件的访问都需要完成两层index文件的读取和文件本身数据的读取(见上图)。并且尽管HAR文件可以被用来作为MapReduce job的input，但是并没有特殊的方法来使maps将HAR文件中打包的文件当作一个HDFS文件处理。可以考虑通过创建一种input format，利用HAR文件的优势来提高MapReduce的效率，但是目前还没有人作这种input format。需要注意的是：MultiFileInputSplit，即使在HADOOP-4565的改进(choose files in a split that are node local)，但始终还是需要seek per small file。</p>
-<h5 id="Sequence-Files"><a href="#Sequence-Files" class="headerlink" title="Sequence Files"></a>Sequence Files</h5><p>通常对于“the small files problem”的回应会是：使用SequenceFile。这种方法是说，使用filename作为key，并且file contents作为value。实践中这种方式非常管用。回到10000个100KB的文件，可以写一个程序来将这些小文件写入到一个单独的SequenceFile中去，然后就可以在一个streaming fashion(directly or using mapreduce)中来使用这个sequenceFile。不仅如此，SequenceFiles也是splittable的，所以mapreduce可以break them into chunks，并且分别的被独立的处理。和HAR不同的是，这种方式还支持压缩。block的压缩在许多情况下都是最好的选择，因为它将多个records压缩到一起，而不是一个record一个压缩。</p>
-<p>将已有的许多小文件转换成一个SequenceFiles可能会比较慢。但是，完全有可能通过并行的方式来创建一个一系列的SequenceFiles。(Stuart Sierra has written a very useful post about converting a tar file into a SequenceFile—tools like this are very useful)。更进一步，如果有可能最好设计自己的数据pipeline来将数据直接写入一个SequenceFile。</p>
-<h1 id="hive中的小文件问题"><a href="#hive中的小文件问题" class="headerlink" title="hive中的小文件问题"></a>hive中的小文件问题</h1><h3 id="小文件是如何产生的"><a href="#小文件是如何产生的" class="headerlink" title="小文件是如何产生的"></a>小文件是如何产生的</h3><p>1.动态分区插入数据，产生大量的小文件，从而导致map数量剧增。<br>2.reduce数量越多，小文件也越多(reduce的个数和输出文件是对应的)。<br>3.数据源本身就包含大量的小文件。</p>
-<h3 id="小文件问题的影响"><a href="#小文件问题的影响" class="headerlink" title="小文件问题的影响"></a>小文件问题的影响</h3><p>1.从Hive的角度看，小文件会开很多map，一个map开一个JVM去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。<br>2.在HDFS中，每个小文件对象约占150byte，如果小文件过多会占用大量内存。这样NameNode内存容量严重制约了集群的扩展。</p>
-<h3 id="小文件问题的解决方案"><a href="#小文件问题的解决方案" class="headerlink" title="小文件问题的解决方案"></a>小文件问题的解决方案</h3><h5 id="从小文件产生的途经就可以从源头上控制小文件数量，方法如下："><a href="#从小文件产生的途经就可以从源头上控制小文件数量，方法如下：" class="headerlink" title="从小文件产生的途经就可以从源头上控制小文件数量，方法如下："></a>从小文件产生的途经就可以从源头上控制小文件数量，方法如下：</h5><p>1.使用Sequencefile作为表存储格式，不要用textfile，在一定程度上可以减少小文件。<br>2.减少reduce的数量(可以使用参数进行控制)。<br>3.少用动态分区，用时记得按distribute by分区。</p>
-<h5 id="对于已有的小文件，我们可以通过以下几种方案解决："><a href="#对于已有的小文件，我们可以通过以下几种方案解决：" class="headerlink" title="对于已有的小文件，我们可以通过以下几种方案解决："></a>对于已有的小文件，我们可以通过以下几种方案解决：</h5><p>1.使用hadoop archive命令把小文件进行归档。<br>2.重建表，建表时减少reduce数量。<br>3.通过参数进行调节，设置map/reduce端的相关参数，如下：</p>
-<h6 id="设置map输入合并小文件的相关参数："><a href="#设置map输入合并小文件的相关参数：" class="headerlink" title="设置map输入合并小文件的相关参数："></a>设置map输入合并小文件的相关参数：</h6><p>//每个Map最大输入大小(这个值决定了合并后文件的数量)</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set mapred.max.split.size=256000000;</span><br></pre></td></tr></table></figure>
-<p>//一个节点上split的至少的大小(这个值决定了多个DataNode上的文件是否需要合并)</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set mapred.min.split.size.per.node=100000000;</span><br></pre></td></tr></table></figure>
-<p>//一个交换机下split的至少的大小(这个值决定了多个交换机上的文件是否需要合并)</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set mapred.min.split.size.per.rack=100000000;</span><br></pre></td></tr></table></figure>
-<p>//执行Map前进行小文件合并</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;</span><br></pre></td></tr></table></figure>
-
-
-
-<h6 id="设置map输出和reduce输出进行合并的相关参数："><a href="#设置map输出和reduce输出进行合并的相关参数：" class="headerlink" title="设置map输出和reduce输出进行合并的相关参数："></a>设置map输出和reduce输出进行合并的相关参数：</h6><p>//设置map端输出进行合并，默认为true</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.merge.mapfiles = true</span><br></pre></td></tr></table></figure>
-<p>//设置reduce端输出进行合并，默认为false</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.merge.mapredfiles = true</span><br></pre></td></tr></table></figure>
-<p>//设置合并文件的大小</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.merge.size.per.task = 25610001000</span><br></pre></td></tr></table></figure>
-<p>//当输出文件的平均大小小于该值时，启动一个独立的MapReduce任务进行文件merge。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.merge.smallfiles.avgsize=16000000</span><br></pre></td></tr></table></figure>
-
-<h1 id="spark中的小文件问题"><a href="#spark中的小文件问题" class="headerlink" title="spark中的小文件问题"></a>spark中的小文件问题</h1><h3 id="SparkStreaming如何解决小文件问题"><a href="#SparkStreaming如何解决小文件问题" class="headerlink" title="SparkStreaming如何解决小文件问题"></a>SparkStreaming如何解决小文件问题</h3><p>使用sparkstreaming时，如果实时计算结果要写入到HDFS，那么不可避免的会遇到一个问题，那就是在默认情况下会产生非常多的小文件，这是由sparkstreaming的微批处理模式和DStream(RDD)的分布式(partition)特性导致的，sparkstreaming为每个partition启动一个独立的线程来处理数据，一旦文件输出到HDFS，那么这个文件流就关闭了，再来一个batch的parttition任务，就再使用一个新的文件流，那么假设，一个batch为10s，每个输出的DStream有32个partition，那么一个小时产生的文件数将会达到(3600/10)*32=11520个之多。众多小文件带来的结果是有大量的文件元信息，比如文件的location、文件大小、block number等需要NameNode来维护，NameNode会因此鸭梨山大。不管是什么格式的文件，parquet、text,、JSON或者 Avro，都会遇到这种小文件问题，这里讨论几种处理Sparkstreaming小文件的典型方法。</p>
-<h5 id="1-增加batch大小"><a href="#1-增加batch大小" class="headerlink" title="1 增加batch大小"></a>1 增加batch大小</h5><p>这种方法很容易理解，batch越大，从外部接收的event就越多，内存积累的数据也就越多，那么输出的文件数也就回变少，比如上边的时间从10s增加为100s，那么一个小时的文件数量就会减少到1152个。但别高兴太早，实时业务能等那么久吗，本来人家10s看到结果更新一次，现在要等快两分钟，是人都会骂娘。所以这种方法适用的场景是消息实时到达，但不想挤压在一起处理，因为挤压在一起处理的话，批处理任务在干等，这时就可以采用这种方法(是不是很像spark内部的pipeline模式，但是要注意区别哦)。</p>
-<h5 id="2-Coalesce大法好？"><a href="#2-Coalesce大法好？" class="headerlink" title="2 Coalesce大法好？"></a>2 Coalesce大法好？</h5><p>文章开头讲了，小文件的基数是：batch_number*partition_number，而第一种方法是减少batch_number，那么这种方法就是减少partition_number了，这个api不细说，就是减少初始的分区个数。看过spark源码的童鞋都知道，对于窄依赖，一个子RDD的partition规则继承父RDD，对于宽依赖(就是那些个叉叉叉ByKey操作)，如果没有特殊指定分区个数，也继承自父rdd。那么初始的SourceDstream是几个partiion，最终的输出就是几个partition。所以Coalesce大法的好处就是，可以在最终要输出的时候，来减少一把partition个数。但是这个方法的缺点也很明显，本来是32个线程在写256M数据，现在可能变成了4个线程在写256M数据，而没有写完成这256M数据，这个batch是不算做结束的。那么一个batch的处理时延必定增长，batch挤压会逐渐增大。这种方法也要慎用，切鸡切鸡啊！</p>
-<h5 id="3-SparkStreaming外部来处理"><a href="#3-SparkStreaming外部来处理" class="headerlink" title="3 SparkStreaming外部来处理"></a>3 SparkStreaming外部来处理</h5><p>我们既然把数据输出到hdfs，那么说明肯定是要用hive或者sparksql这样的“sql on hadoop”系统类进一步进行数据分析，而这些表一般都是按照半小时或者一小时、一天，这样来分区的(注意不要和sparkStreaming的分区混淆，这里的分区，是用来做分区裁剪优化的)，那么我们可以考虑在SparkStreaming外再启动定时的批处理任务来合并SparkStreaming产生的小文件。这种方法不是很直接，但是却比较有用，“性价比”较高，唯一要注意的是，批处理的合并任务在时间切割上要把握好，搞不好就可能回去合并一个还在写入的SparkStreaming小文件。</p>
-<h5 id="自己调用foreach去append"><a href="#自己调用foreach去append" class="headerlink" title="自己调用foreach去append"></a>自己调用foreach去append</h5><p>SparkStreaming提供的foreach这个outout类api，可以让我们自定义输出计算结果的方法。那么我们其实也可以利用这个特性，那就是每个batch在要写文件时，并不是去生成一个新的文件流，而是把之前的文件打开。考虑这种方法的可行性，首先，HDFS上的文件不支持修改，但是很多都支持追加，那么每个batch的每个partition就对应一个输出文件，每次都去追加这个partition对应的输出文件，这样也可以实现减少文件数量的目的。这种方法要注意的就是不能无限制的追加，当判断一个文件已经达到某一个阈值时，就要产生一个新的文件进行追加了。</p>
-<h1 id="如何避免Spark-SQL做数据导入时产生大量小文件"><a href="#如何避免Spark-SQL做数据导入时产生大量小文件" class="headerlink" title="如何避免Spark SQL做数据导入时产生大量小文件"></a>如何避免Spark SQL做数据导入时产生大量小文件</h1><h3 id="什么是小文件？"><a href="#什么是小文件？" class="headerlink" title="什么是小文件？"></a>什么是小文件？</h3><p>生产上，我们往往将Spark SQL作为Hive的替代方案，来获得SQL on Hadoop更出色的性能。因此，本文所讲的是指存储于HDFS中小文件，即指文件的大小远小于HDFS上块（dfs.block.size）大小的文件。</p>
-<h3 id="小文件问题的影响-1"><a href="#小文件问题的影响-1" class="headerlink" title="小文件问题的影响"></a>小文件问题的影响</h3><p>一方面，大量的小文件会给Hadoop集群的扩展性和性能带来严重的影响。NameNode在内存中维护整个文件系统的元数据镜像，用户HDFS的管理；其中每个HDFS文件元信息（位置，大小，分块等）对象约占150字节，如果小文件过多，会占用大量内存，直接影响NameNode的性能。相对的，HDFS读写小文件也会更加耗时，因为每次都需要从NameNode获取元信息，并与对应的DataNode建立连接。如果NameNode在宕机中恢复，也需要更多的时间从元数据文件中加载。</p>
-<p>另一方面，也会给Spark SQL等查询引擎造成查询性能的损耗，大量的数据分片信息以及对应产生的Task元信息也会给Spark Driver的内存造成压力，带来单点问题。此外，入库操作最后的commit job操作，在Spark Driver端单点做，很容易出现单点的性能问题。</p>
-<h3 id="Spark小文件产生的过程"><a href="#Spark小文件产生的过程" class="headerlink" title="Spark小文件产生的过程"></a>Spark小文件产生的过程</h3><p>数据源本身就是就含大量小文件<br>动态分区插入数据，没有Shuffle的情况下，输入端有多少个逻辑分片，对应的HadoopRDD就会产生多少个HadoopPartition，每个Partition对应于Spark作业的Task（个数为M），分区数为N。最好的情况就是（M=N） &amp;&amp; （M中的数据也是根据N来预先打散的），那就刚好写N个文件；最差的情况下，每个Task中都有各个分区的记录，那文件数最终文件数将达到M * N个。这种情况下是极易产生小文件的。</p>
-<p>比如我们拿TPCDS测试集中的store_sales进行举例， sql如下所示<br>use tpcds_1t_parquet;</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">INSERT overwrite table store_sales partition </span><br><span class="line">       ( </span><br><span class="line">              ss_sold_date_sk </span><br><span class="line">       ) </span><br><span class="line">SELECT ss_sold_time_sk, </span><br><span class="line">       ss_item_sk, </span><br><span class="line">       ss_customer_sk, </span><br><span class="line">       ss_cdemo_sk, </span><br><span class="line">       ss_hdemo_sk, </span><br><span class="line">       ss_addr_sk, </span><br><span class="line">       ss_store_sk, </span><br><span class="line">       ss_promo_sk, </span><br><span class="line">       ss_ticket_number, </span><br><span class="line">       ss_quantity, </span><br><span class="line">       ss_wholesale_cost, </span><br><span class="line">       ss_list_price, </span><br><span class="line">       ss_sales_price, </span><br><span class="line">       ss_ext_discount_amt, </span><br><span class="line">       ss_ext_sales_price, </span><br><span class="line">       ss_ext_wholesale_cost, </span><br><span class="line">       ss_ext_list_price, </span><br><span class="line">       ss_ext_tax, </span><br><span class="line">       ss_coupon_amt, </span><br><span class="line">       ss_net_paid, </span><br><span class="line">       ss_net_paid_inc_tax, </span><br><span class="line">       ss_net_profit, </span><br><span class="line">       ss_sold_date_sk </span><br><span class="line">FROM   tpcds_1t_ext.et_store_sales;</span><br></pre></td></tr></table></figure>
-
-<p>首先我们得到其执行计划，如下所示，<br><font color='yellow'> Physical Plan </font></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">InsertIntoHiveTable MetastoreRelation tpcds_1t_parquet, store_sales, Map(ss_sold_date_sk -&gt; None), true, false</span><br><span class="line">+- HiveTableScan [ss_sold_time_sk#4L, ss_item_sk#5L, ss_customer_sk#6L, ss_cdemo_sk#7L, ss_hdemo_sk#8L, ss_addr_sk#9L, ss_store_sk#10L, ss_promo_sk#11L, ss_ticket_number#12L, ss_quantity#13, ss_wholesale_cost#14, ss_list_price#15, ss_sales_price#16, ss_ext_discount_amt#17, ss_ext_sales_price#18, ss_ext_wholesale_cost#19, ss_ext_list_price#20, ss_ext_tax#21, ss_coupon_amt#22, ss_net_paid#23, ss_net_paid_inc_tax#24, ss_net_profit#25, ss_sold_date_sk#3L], MetastoreRelation tpcds_1t_ext, et_store_sales</span><br></pre></td></tr></table></figure>
-
-<p>store_sales的原生文件包含1616逻辑分片，对应生成1616 个Spark Task，插入动态分区表之后生成1824个数据分区加一个NULL值的分区，每个分区下都有可能生成1616个文件，这种情况下，最终的文件数量极有可能达到2949200。1T的测试集store_sales也就大概300g，这种情况每个文件可能就零点几M。</p>
-<p>动态分区插入数据，有Shuffle的情况下，上面的M值就变成了spark.sql.shuffle.partitions(默认值200)这个参数值，文件数的算法和范围和2中基本一致。</p>
-<p>比如，为了防止Shuffle阶段的数据倾斜我们可以在上面的sql中加上 distribute by rand()，这样我们的执行计划就变成了，</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">InsertIntoHiveTable MetastoreRelation tpcds_1t_parquet, store_sales, Map(ss_sold_date_sk -&gt; None), true, false</span><br><span class="line">+- *Project [ss_sold_time_sk#4L, ss_item_sk#5L, ss_customer_sk#6L, ss_cdemo_sk#7L, ss_hdemo_sk#8L, ss_addr_sk#9L, ss_store_sk#10L, ss_promo_sk#11L, ss_ticket_number#12L, ss_quantity#13, ss_wholesale_cost#14, ss_list_price#15, ss_sales_price#16, ss_ext_discount_amt#17, ss_ext_sales_price#18, ss_ext_wholesale_cost#19, ss_ext_list_price#20, ss_ext_tax#21, ss_coupon_amt#22, ss_net_paid#23, ss_net_paid_inc_tax#24, ss_net_profit#25, ss_sold_date_sk#3L]</span><br><span class="line">   +- Exchange(coordinator id: 1080882047) hashpartitioning(_nondeterministic#49, 2048), coordinator[target post-shuffle partition size: 67108864]</span><br><span class="line">      +- *Project [ss_sold_time_sk#4L, ss_item_sk#5L, ss_customer_sk#6L, ss_cdemo_sk#7L, ss_hdemo_sk#8L, ss_addr_sk#9L, ss_store_sk#10L, ss_promo_sk#11L, ss_ticket_number#12L, ss_quantity#13, ss_wholesale_cost#14, ss_list_price#15, ss_sales_price#16, ss_ext_discount_amt#17, ss_ext_sales_price#18, ss_ext_wholesale_cost#19, ss_ext_list_price#20, ss_ext_tax#21, ss_coupon_amt#22, ss_net_paid#23, ss_net_paid_inc_tax#24, ss_net_profit#25, ss_sold_date_sk#3L, rand(4184439864130379921) AS _nondeterministic#49]</span><br><span class="line">         +- HiveTableScan [ss_sold_date_sk#3L, ss_sold_time_sk#4L, ss_item_sk#5L, ss_customer_sk#6L, ss_cdemo_sk#7L, ss_hdemo_sk#8L, ss_addr_sk#9L, ss_store_sk#10L, ss_promo_sk#11L, ss_ticket_number#12L, ss_quantity#13, ss_wholesale_cost#14, ss_list_price#15, ss_sales_price#16, ss_ext_discount_amt#17, ss_ext_sales_price#18, ss_ext_wholesale_cost#19, ss_ext_list_price#20, ss_ext_tax#21, ss_coupon_amt#22, ss_net_paid#23, ss_net_paid_inc_tax#24, ss_net_profit#25], MetastoreRelation tpcds_1t_ext, et_store_sales</span><br></pre></td></tr></table></figure>
-<p>这种情况下，这样我们的文件数妥妥的就是spark.sql.shuffle.partitions * N，因为rand函数一般会把数据打散的非常均匀。当spark.sql.shuffle.partitions设置过大时，小文件问题就产生了；当spark.sql.shuffle.partitions设置过小时，任务的并行度就下降了，性能随之受到影响。<br>最理想的情况，当然是根据分区字段进行shuffle，在上面的sql中加上distribute by ss_sold_date_sk。 把同一分区的记录都哈希到同一个分区中去，由一个Spark的Task进行写入，这样的话只会产生N个文件，在我们的case中store_sales，在1825个分区下各种生成了一个数据文件。<br>但是这种情况下也容易出现数据倾斜的问题，比如双11的销售数据就很容易在这种情况下发生倾斜。</p>
-<p>基于分区字段Shuffle可能出现数据倾斜</p>
-<p>如上图所示，在我们插入store_sales时，就发生了null值的倾斜，大大的拖慢的数据入库的时间。</p>
-<p>如何解决Spark SQL产生小文件问题</p>
-<p>前面已经提到根据分区字段进行分区，除非每个分区下本身的数据较少，分区字段选择不合理，那么小文件问题基本上就不存在了，但是也有可能由于shuffle引入新的数据倾斜问题。<br>我们首先可以尝试是否可以将两者结合使用， 在之前的sql上加上distribute by ss_sold_date_sk，cast(rand() * 5 as int)， 这个类似于我们处理数据倾斜问题时候给字段加上后缀的形式。如，</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">use tpcds_1t_parquet;</span><br><span class="line"></span><br><span class="line">INSERT overwrite table store_sales partition </span><br><span class="line">       ( </span><br><span class="line">              ss_sold_date_sk </span><br><span class="line">       ) </span><br><span class="line">SELECT ss_sold_time_sk, </span><br><span class="line">       ss_item_sk, </span><br><span class="line">       ss_customer_sk, </span><br><span class="line">       ss_cdemo_sk, </span><br><span class="line">       ss_hdemo_sk, </span><br><span class="line">       ss_addr_sk, </span><br><span class="line">       ss_store_sk, </span><br><span class="line">       ss_promo_sk, </span><br><span class="line">       ss_ticket_number, </span><br><span class="line">       ss_quantity, </span><br><span class="line">       ss_wholesale_cost, </span><br><span class="line">       ss_list_price, </span><br><span class="line">       ss_sales_price, </span><br><span class="line">       ss_ext_discount_amt, </span><br><span class="line">       ss_ext_sales_price, </span><br><span class="line">       ss_ext_wholesale_cost, </span><br><span class="line">       ss_ext_list_price, </span><br><span class="line">       ss_ext_tax, </span><br><span class="line">       ss_coupon_amt, </span><br><span class="line">       ss_net_paid, </span><br><span class="line">       ss_net_paid_inc_tax, </span><br><span class="line">       ss_net_profit, </span><br><span class="line">       ss_sold_date_sk </span><br><span class="line">FROM   tpcds_1t_ext.et_store_sales</span><br><span class="line">distribute by ss_sold_date_sk, cast(rand() * 5 as int);</span><br></pre></td></tr></table></figure>
-
-<p>按照之前的推算，每个分区下将产生5个文件，同时null值倾斜部分的数据也被打散成五份进行计算，缓解了数据倾斜的问题 ，我们最终将得到1825 *5=9105个文件，如下所示<br>1825 9105 247111074494 /user/kyuubi/hive_db/tpcds_1t_parquet.db/store_sales</p>
-<p>如果我们将5改得更小，文件数也会越少，但相应的倾斜key的计算时间也会上去。<br>在我们知道那个分区键倾斜的情况下，我们也可以将入库的SQL拆成几个部分，比如我们store_sales是因为null值倾斜，我们就可以通过where ss_sold_date_sk is not null 和 where ss_sold_date_sk is null 将原始数据分成两个部分。前者可以基于分区字段进行分区，如distribute by ss_sold_date_sk;后者可以基于随机值进行分区，distribute by cast(rand() * 5 as int), 这样可以静态的将null值部分分成五个文件。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">FROM   tpcds_1t_ext.et_store_sales </span><br><span class="line">where ss_sold_date_sk is not null</span><br><span class="line">distribute by ss_sold_date_sk;</span><br><span class="line"></span><br><span class="line">FROM   tpcds_1t_ext.et_store_sales </span><br><span class="line">where ss_sold_date_sk is null</span><br><span class="line">distribute by distribute by cast(rand() * 5 as int);</span><br></pre></td></tr></table></figure>
-
-<p>对于倾斜部分的数据，我们可以开启Spark SQL的自适应功能，spark.sql.adaptive.enabled=true来动态调整每个相当于Spark的reduce端task处理的数据量，这样我们就不需要认为的感知随机值的规模了，我们可以直接</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FROM   tpcds_1t_ext.et_store_sales </span><br><span class="line">where ss_sold_date_sk is null</span><br><span class="line">distribute by distribute by rand() ;</span><br></pre></td></tr></table></figure>
-
-<p>然后Spark在Shuffle 阶段会自动的帮我们将数据尽量的合并成spark.sql.adaptive.shuffle.targetPostShuffleInputSize（默认64m）的大小，以减少输出端写文件线程的总量，最后减少个数。<br>对于spark.sql.adaptive.shuffle.targetPostShuffleInputSize参数而言，我们也可以设置成为dfs.block.size的大小，这样可以做到和块对齐，文件大小可以设置的最为合理。</p>
-<h1 id="sparkstreaming实时写入hive后合并小文件问题"><a href="#sparkstreaming实时写入hive后合并小文件问题" class="headerlink" title="sparkstreaming实时写入hive后合并小文件问题"></a>sparkstreaming实时写入hive后合并小文件问题</h1><p>今天主要来说一下sparksql写入hive后小文件太多,影响查询性能的问题.在另外一篇博客里面也稍微提到了一下,但还是感觉要单独说一下,首先我们要知道hive里面文件的数量=executor-coresnum-executorsjob数,所以如果我们batchDuration的设置的比较小的话,每天在一个分区里面就会生成很多的小文件,我们在hive里面查询的时候就会非常的影响性能,下面介绍两种方法优化小文件:</p>
-<p>第一种,可以在创建的DataFrame的时候,cache一下,然后对DataFrame进行重新分区,可以把分区设置为1,可以用reparation,当然也可以用coalesce,这两个的区别,可以看我的另外一篇博客,这个时候就会一个job产生一个文件.但是这么做就降低了写入的性能,所以数据量不是特别大的时候,还是可以用的,但是如果数据量很大,就需谨慎使用,</p>
-<p>第二种方法是利用sql定时执行一下,insert overwrite table a select * from a;这个时候会覆盖表的数据达到合并小文件的目的,具体的sql下面会有.</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">val df = spark.createDataFrame(rowRDD, schema).cache()</span><br><span class="line">          df.coalesce(1).createOrReplaceTempView(&quot;tempTable&quot;)</span><br><span class="line">          val sq = &quot;insert into combine_data partition(day_time=&#x27;&quot; + day_time + &quot;&#x27;) select * from tempTable&quot;</span><br><span class="line">          sql(sq)</span><br><span class="line">          println(&quot;插入hive成功了&quot;)</span><br><span class="line">          df.unpersist(true)</span><br><span class="line">insert overwrite table combine_data partition (day_time=&#x27;2018-08-01&#x27;) select data,enter_time from combine_data where day_time = &#x27;2018-08-01&#x27;</span><br></pre></td></tr></table></figure>
       
     </div>
 
