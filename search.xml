@@ -331,6 +331,75 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark入门之基础知识（三）键值对操作</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E9%94%AE%E5%80%BC%E5%AF%B9%E6%93%8D%E4%BD%9C/</url>
+    <content><![CDATA[<p>摘要：键值对算子简介</p>
+<span id="more"></span>
+
+<h2 id="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"><a href="#键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。" class="headerlink" title="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"></a>键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。</h2><h3 id="如何创建Pair-RDD"><a href="#如何创建Pair-RDD" class="headerlink" title="如何创建Pair RDD"></a>如何创建Pair RDD</h3><p>1）键值对格式的数据可以直接读入，返回Pair RDD<br>2）使用map()把一个普通的RDD转化为Pair RDD<br>读取text文件，取每行文本的第一个单词做key，该行文本做value</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val lines = context.textFile(&quot;text&quot;)</span><br><span class="line">lines.map(x =&gt; (x.split(&quot; &quot;)(0), x))</span><br></pre></td></tr></table></figure>
+
+<h3 id="Pair-RDD的转化操作"><a href="#Pair-RDD的转化操作" class="headerlink" title="Pair RDD的转化操作"></a>Pair RDD的转化操作</h3><p>Pair RDD也是RDD，对RDD可用的操作对于Pair RDD也可用。</p>
+<p>首先创建出一个Pair RDD</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;  val data = sc.parallelize(List(1,2,3,4,4))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[7] at parallelize at &lt;console&gt;:24</span><br><span class="line"></span><br><span class="line">scala&gt; val data2 = data.map(x =&gt; (x,1))</span><br><span class="line">data2: org.apache.spark.rdd.RDD[(Int, Int)] = MapPartitionsRDD[8] at map at &lt;console&gt;:26</span><br><span class="line"></span><br><span class="line">scala&gt; data2.take(10)</span><br><span class="line">res16: Array[(Int, Int)] = Array((1,1), (2,1), (3,1), (4,1), (4,1))</span><br></pre></td></tr></table></figure>
+
+<p>1)reduceByKey<br>合并具有相同键的值</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     val result1 = data2.reduceByKey((x, y) =&gt; x + y)</span><br><span class="line">result1: org.apache.spark.rdd.RDD[(Int, Int)] = ShuffledRDD[10] at reduceByKey at &lt;console&gt;:28</span><br><span class="line">scala&gt; result1.collect()</span><br><span class="line">res19: Array[(Int, Int)] = Array((4,2), (2,1), (1,1), (3,1))     </span><br></pre></td></tr></table></figure>
+
+<p>2）groupByKey<br>对相同键的值进行分组</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.groupByKey().collect()</span><br><span class="line">res20: Array[(Int, Iterable[Int])] = Array((4,CompactBuffer(1, 1)), (2,CompactBuffer(1)), (1,CompactBuffer(1)), (3,CompactBuffer(1)))</span><br></pre></td></tr></table></figure>
+
+<p>3）mapValues<br>对Pair RDD中的每个值应用函数而不改变键</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.mapValues(x =&gt; x * 10).collect()</span><br><span class="line">res21: Array[(Int, Int)] = Array((1,10), (2,10), (3,10), (4,10), (4,10))  </span><br></pre></td></tr></table></figure>
+
+<p>4）flatMapValues<br>应用函数到键值对中的值上，每一个KV对的Value都会被映射成一系列的值，这些值再和K重新组合成多个KV对</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.flatMapValues(x =&gt; x to (4)).collect()</span><br><span class="line">res22: Array[(Int, Int)] = Array((1,1), (1,2), (1,3), (1,4), (2,1), (2,2), (2,3), (2,4), (3,1), (3,2), (3,3), (3,4), (4,1), (4,2), (4,3), (4,4), (4,1), (4,2), (4,3), (4,4))</span><br></pre></td></tr></table></figure>
+
+<p>5）keys<br>返回一个仅包含键值得RDD</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.keys.collect()</span><br><span class="line">res23: Array[Int] = Array(1, 2, 3, 4, 4)      </span><br></pre></td></tr></table></figure>
+
+<p>6）values<br>返回一个仅包含值得RDD</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.values.collect()</span><br><span class="line">res24: Array[Int] = Array(1, 1, 1, 1, 1)</span><br></pre></td></tr></table></figure>
+
+<p>7）sortByKey<br>返回一个根据键值排序的RDD（范围分区）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.sortByKey().collect()</span><br><span class="line">res25: Array[(Int, Int)] = Array((1,1), (2,1), (3,1), (4,1), (4,1))</span><br></pre></td></tr></table></figure>
+
+<p>8）combineByKey<br>基于键进行聚合的函数，对于分区中的每一个键值，要么是已经遍历过的，要么是还没遍历过的。</p>
+<p>如果是已经遍历过的：<br>使用 mergeValue 进行处理</p>
+<p>如果是还没遍历过的：<br>使用createCombiner进行处理</p>
+<p>如果多个分区中都有同一个键值：<br>使用mergeCombiner进行处理</p>
+<p>计算平均值的例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = sc.parallelize(List(&quot;a&quot;, &quot;aa&quot;, &quot;aaa&quot;, &quot;aaa&quot;, &quot;aaaa&quot;))</span><br><span class="line">val pair = data.map(x =&gt; (x, x.length))</span><br><span class="line">val result = pair.combineByKey(</span><br><span class="line">// 对于每一个新出现的key ，保存对应的value值  同时将个数初始化为1</span><br><span class="line">  valueOfKey =&gt; (valueOfKey, 1),   </span><br><span class="line">//  对于已经出现过的key值，将新出现的key对应的value进行累加，同时个数加一</span><br><span class="line">  (tmp: (Int, Int), newValue) =&gt; (tmp._1 + newValue, tmp._2 + 1),  </span><br><span class="line">//  多个分区进行合并时，如果两个分区有相同的key值，则把两个分区统计完的总value进行相加，同时计算值的个数</span><br><span class="line">  (tmp1: (Int, Int), tmp2: (Int, Int)) =&gt; (tmp1._1 + tmp2._1, tmp1._2 + tmp2._2)  </span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; result.take(10)</span><br><span class="line">res5: Array[(String, (Int, Int))] = Array((aa,(2,1)), (aaaa,(4,1)), (a,(1,1)), (aaa,(6,2)))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 计算平均值</span><br><span class="line">    val avg = result.map&#123; case (key, value) =&gt; (key, value._1 / value._2.toFloat) &#125;</span><br><span class="line"></span><br><span class="line">scala&gt; avg.take(10)</span><br><span class="line">res6: Array[(String, Float)] = Array((aa,2.0), (aaaa,4.0), (a,1.0), (aaa,3.0))</span><br></pre></td></tr></table></figure>
+
+
+<p>9）查看分区数</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     val partitionSize = result.partitions.size</span><br><span class="line">partitionSize: Int = 2</span><br></pre></td></tr></table></figure>
+<p>可以使用repartition或者coalesce进行重分区。</p>
+<p>repartition和coalesce的区别：<br>repartition的底层实现为简单调用了coalesce，并将shuffle 设置为 true。<br>如果我们目前有1000个分区，想要重分区成100个，最好调用coalesce，因为整个过程不会发生shuffle。<br>如果我们有100个分区，想要重分区成1000个，这时候需要调用repartition，调用coalesce是无效的，因为不经过shuffle无法增加分区。</p>
+<p>10）groupBy<br>对RDD中每个元素应用函数，函数的结果作为该元素的key，再根据key进行分组</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data3 = sc.parallelize(List(1,2,3,4,5,6))</span><br><span class="line">val data4 = data3.groupBy( x =&gt; (x%2))</span><br><span class="line">data4.take(10)</span><br><span class="line"></span><br><span class="line">res7: Array[(Int, Iterable[Int])] = Array((0,CompactBuffer(2, 4, 6)), (1,CompactBuffer(1, 3, 5)))</span><br></pre></td></tr></table></figure>
+<p>在上面的代码中我们将奇数分为一组，偶数分为一组。</p>
+<p>11）join连接操作</p>
+<p>内连接</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">	val ori1 = sc.parallelize(List(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;))</span><br><span class="line">    val first = ori1.map(x =&gt; (x,1))</span><br><span class="line">    val ori2 = sc.parallelize(List(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;e&quot;))</span><br><span class="line">    val second = ori2.map(x =&gt; (x,2))</span><br><span class="line">    val joinResult = first.join(second)</span><br><span class="line">    joinResult.take(10)</span><br><span class="line"></span><br><span class="line">res8: Array[(String, (Int, Int))] = Array((b,(1,2)), (a,(1,2)), (c,(1,2)))      </span><br></pre></td></tr></table></figure>
+
+<p>左外连接（右外连接同理）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">	val leftResult = first.leftOuterJoin(second)</span><br><span class="line">    leftResult.take(10)</span><br><span class="line"></span><br><span class="line">scala&gt;     leftResult.take(10)</span><br><span class="line">res9: Array[(String, (Int, Option[Int]))] = Array((d,(1,None)), (b,(1,Some(2))), (a,(1,Some(2))), (c,(1,Some(2))))</span><br></pre></td></tr></table></figure>
+
+
+<p>join操作的执行过程：<br>默认情况下，连接操作会将两个数据集中所有键的哈希值都求出来，将哈希值相同的记录通过网络传输到同一台机器上，在该机器上对所有键相同的记录执行连接操作。</p>
+<h3 id="Pair-RDD的行动操作"><a href="#Pair-RDD的行动操作" class="headerlink" title="Pair RDD的行动操作"></a>Pair RDD的行动操作</h3><p><img src="https://img-blog.csdnimg.cn/20191219171254168.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h6 id="Spark会为生成RDD设定好分区方式的操作"><a href="#Spark会为生成RDD设定好分区方式的操作" class="headerlink" title="Spark会为生成RDD设定好分区方式的操作"></a>Spark会为生成RDD设定好分区方式的操作</h6><p>cogroup<br>groupWith<br>join<br>leftOuterJoin<br>rightOuterJoin<br>groupByKey<br>reduceByKey<br>combineByKey<br>partitionBy<br>sort<br>mapValues<br>flatMapValues<br>filter</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark入门之基础知识（二）RDD编程</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
     <content><![CDATA[<p>摘要：RDD基础知识总结</p>
@@ -428,15 +497,55 @@
       </categories>
   </entry>
   <entry>
+    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
+    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<ol>
+<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
+</li>
+<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
+</li>
+<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
+</li>
+<li><p>需要重启 IDEA ，即可正常运行。</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>常见问题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>catalog和schema的区别</title>
+    <url>/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>摘要：什么是catalog，什么是schema</p>
+<span id="more"></span>
+
+<p>直接上图，直观一点：</p>
+<p><img src="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h3 id="什么是catalog"><a href="#什么是catalog" class="headerlink" title="什么是catalog"></a>什么是catalog</h3><p>从概念上说，一个catalog包含多个schema，一个schema下可以包含多个数据库对象（表，视图，字段），catalog可以理解为数据库实例的元数据集合。</p>
+<p>常用数据库对catalog和schema的支持如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/2019121012584136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h3 id="什么是schema"><a href="#什么是schema" class="headerlink" title="什么是schema"></a>什么是schema</h3><p>一般来说，schema是指数据库表的组织和定义，定义了表、字段以及表和字段间的关系。可以理解为表的命名空间。</p>
+<p>推荐下stack overflow上的优秀回答：<br> <a href="https://stackoverflow.com/questions/7022755/whats-the-difference-between-a-catalog-and-a-schema-in-a-relational-database">What’s the difference between a catalog and a schema in a relational database?
+</a></p>
+]]></content>
+      <categories>
+        <category>数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>git commit 时提示please tell me who you are解决方法</title>
     <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#99;&#x6f;&#109;">&#121;&#111;&#x75;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#99;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#108;&#x65;&#46;&#x63;&#111;&#109;">&#121;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#108;&#x65;&#46;&#x63;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#117;&#x40;&#101;&#120;&#x61;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#x6d;">&#121;&#x6f;&#117;&#x40;&#101;&#120;&#x61;&#109;&#112;&#108;&#101;&#46;&#99;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#x6f;&#117;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#109;">&#x79;&#x6f;&#117;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -567,27 +676,6 @@
       <tags>
         <tag>Geohash</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
-    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<ol>
-<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
-</li>
-<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
-</li>
-<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
-</li>
-<li><p>需要重启 IDEA ，即可正常运行。</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>常见问题</category>
-      </categories>
   </entry>
   <entry>
     <title>数据仓库之如何分层</title>
@@ -727,75 +815,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（三）键值对操作</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E9%94%AE%E5%80%BC%E5%AF%B9%E6%93%8D%E4%BD%9C/</url>
-    <content><![CDATA[<p>摘要：键值对算子简介</p>
-<span id="more"></span>
-
-<h2 id="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"><a href="#键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。" class="headerlink" title="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"></a>键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。</h2><h3 id="如何创建Pair-RDD"><a href="#如何创建Pair-RDD" class="headerlink" title="如何创建Pair RDD"></a>如何创建Pair RDD</h3><p>1）键值对格式的数据可以直接读入，返回Pair RDD<br>2）使用map()把一个普通的RDD转化为Pair RDD<br>读取text文件，取每行文本的第一个单词做key，该行文本做value</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val lines = context.textFile(&quot;text&quot;)</span><br><span class="line">lines.map(x =&gt; (x.split(&quot; &quot;)(0), x))</span><br></pre></td></tr></table></figure>
-
-<h3 id="Pair-RDD的转化操作"><a href="#Pair-RDD的转化操作" class="headerlink" title="Pair RDD的转化操作"></a>Pair RDD的转化操作</h3><p>Pair RDD也是RDD，对RDD可用的操作对于Pair RDD也可用。</p>
-<p>首先创建出一个Pair RDD</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;  val data = sc.parallelize(List(1,2,3,4,4))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[7] at parallelize at &lt;console&gt;:24</span><br><span class="line"></span><br><span class="line">scala&gt; val data2 = data.map(x =&gt; (x,1))</span><br><span class="line">data2: org.apache.spark.rdd.RDD[(Int, Int)] = MapPartitionsRDD[8] at map at &lt;console&gt;:26</span><br><span class="line"></span><br><span class="line">scala&gt; data2.take(10)</span><br><span class="line">res16: Array[(Int, Int)] = Array((1,1), (2,1), (3,1), (4,1), (4,1))</span><br></pre></td></tr></table></figure>
-
-<p>1)reduceByKey<br>合并具有相同键的值</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     val result1 = data2.reduceByKey((x, y) =&gt; x + y)</span><br><span class="line">result1: org.apache.spark.rdd.RDD[(Int, Int)] = ShuffledRDD[10] at reduceByKey at &lt;console&gt;:28</span><br><span class="line">scala&gt; result1.collect()</span><br><span class="line">res19: Array[(Int, Int)] = Array((4,2), (2,1), (1,1), (3,1))     </span><br></pre></td></tr></table></figure>
-
-<p>2）groupByKey<br>对相同键的值进行分组</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.groupByKey().collect()</span><br><span class="line">res20: Array[(Int, Iterable[Int])] = Array((4,CompactBuffer(1, 1)), (2,CompactBuffer(1)), (1,CompactBuffer(1)), (3,CompactBuffer(1)))</span><br></pre></td></tr></table></figure>
-
-<p>3）mapValues<br>对Pair RDD中的每个值应用函数而不改变键</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.mapValues(x =&gt; x * 10).collect()</span><br><span class="line">res21: Array[(Int, Int)] = Array((1,10), (2,10), (3,10), (4,10), (4,10))  </span><br></pre></td></tr></table></figure>
-
-<p>4）flatMapValues<br>应用函数到键值对中的值上，每一个KV对的Value都会被映射成一系列的值，这些值再和K重新组合成多个KV对</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.flatMapValues(x =&gt; x to (4)).collect()</span><br><span class="line">res22: Array[(Int, Int)] = Array((1,1), (1,2), (1,3), (1,4), (2,1), (2,2), (2,3), (2,4), (3,1), (3,2), (3,3), (3,4), (4,1), (4,2), (4,3), (4,4), (4,1), (4,2), (4,3), (4,4))</span><br></pre></td></tr></table></figure>
-
-<p>5）keys<br>返回一个仅包含键值得RDD</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.keys.collect()</span><br><span class="line">res23: Array[Int] = Array(1, 2, 3, 4, 4)      </span><br></pre></td></tr></table></figure>
-
-<p>6）values<br>返回一个仅包含值得RDD</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.values.collect()</span><br><span class="line">res24: Array[Int] = Array(1, 1, 1, 1, 1)</span><br></pre></td></tr></table></figure>
-
-<p>7）sortByKey<br>返回一个根据键值排序的RDD（范围分区）</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     data2.sortByKey().collect()</span><br><span class="line">res25: Array[(Int, Int)] = Array((1,1), (2,1), (3,1), (4,1), (4,1))</span><br></pre></td></tr></table></figure>
-
-<p>8）combineByKey<br>基于键进行聚合的函数，对于分区中的每一个键值，要么是已经遍历过的，要么是还没遍历过的。</p>
-<p>如果是已经遍历过的：<br>使用 mergeValue 进行处理</p>
-<p>如果是还没遍历过的：<br>使用createCombiner进行处理</p>
-<p>如果多个分区中都有同一个键值：<br>使用mergeCombiner进行处理</p>
-<p>计算平均值的例子：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = sc.parallelize(List(&quot;a&quot;, &quot;aa&quot;, &quot;aaa&quot;, &quot;aaa&quot;, &quot;aaaa&quot;))</span><br><span class="line">val pair = data.map(x =&gt; (x, x.length))</span><br><span class="line">val result = pair.combineByKey(</span><br><span class="line">// 对于每一个新出现的key ，保存对应的value值  同时将个数初始化为1</span><br><span class="line">  valueOfKey =&gt; (valueOfKey, 1),   </span><br><span class="line">//  对于已经出现过的key值，将新出现的key对应的value进行累加，同时个数加一</span><br><span class="line">  (tmp: (Int, Int), newValue) =&gt; (tmp._1 + newValue, tmp._2 + 1),  </span><br><span class="line">//  多个分区进行合并时，如果两个分区有相同的key值，则把两个分区统计完的总value进行相加，同时计算值的个数</span><br><span class="line">  (tmp1: (Int, Int), tmp2: (Int, Int)) =&gt; (tmp1._1 + tmp2._1, tmp1._2 + tmp2._2)  </span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; result.take(10)</span><br><span class="line">res5: Array[(String, (Int, Int))] = Array((aa,(2,1)), (aaaa,(4,1)), (a,(1,1)), (aaa,(6,2)))</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 计算平均值</span><br><span class="line">    val avg = result.map&#123; case (key, value) =&gt; (key, value._1 / value._2.toFloat) &#125;</span><br><span class="line"></span><br><span class="line">scala&gt; avg.take(10)</span><br><span class="line">res6: Array[(String, Float)] = Array((aa,2.0), (aaaa,4.0), (a,1.0), (aaa,3.0))</span><br></pre></td></tr></table></figure>
-
-
-<p>9）查看分区数</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt;     val partitionSize = result.partitions.size</span><br><span class="line">partitionSize: Int = 2</span><br></pre></td></tr></table></figure>
-<p>可以使用repartition或者coalesce进行重分区。</p>
-<p>repartition和coalesce的区别：<br>repartition的底层实现为简单调用了coalesce，并将shuffle 设置为 true。<br>如果我们目前有1000个分区，想要重分区成100个，最好调用coalesce，因为整个过程不会发生shuffle。<br>如果我们有100个分区，想要重分区成1000个，这时候需要调用repartition，调用coalesce是无效的，因为不经过shuffle无法增加分区。</p>
-<p>10）groupBy<br>对RDD中每个元素应用函数，函数的结果作为该元素的key，再根据key进行分组</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data3 = sc.parallelize(List(1,2,3,4,5,6))</span><br><span class="line">val data4 = data3.groupBy( x =&gt; (x%2))</span><br><span class="line">data4.take(10)</span><br><span class="line"></span><br><span class="line">res7: Array[(Int, Iterable[Int])] = Array((0,CompactBuffer(2, 4, 6)), (1,CompactBuffer(1, 3, 5)))</span><br></pre></td></tr></table></figure>
-<p>在上面的代码中我们将奇数分为一组，偶数分为一组。</p>
-<p>11）join连接操作</p>
-<p>内连接</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">	val ori1 = sc.parallelize(List(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;))</span><br><span class="line">    val first = ori1.map(x =&gt; (x,1))</span><br><span class="line">    val ori2 = sc.parallelize(List(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;e&quot;))</span><br><span class="line">    val second = ori2.map(x =&gt; (x,2))</span><br><span class="line">    val joinResult = first.join(second)</span><br><span class="line">    joinResult.take(10)</span><br><span class="line"></span><br><span class="line">res8: Array[(String, (Int, Int))] = Array((b,(1,2)), (a,(1,2)), (c,(1,2)))      </span><br></pre></td></tr></table></figure>
-
-<p>左外连接（右外连接同理）</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">	val leftResult = first.leftOuterJoin(second)</span><br><span class="line">    leftResult.take(10)</span><br><span class="line"></span><br><span class="line">scala&gt;     leftResult.take(10)</span><br><span class="line">res9: Array[(String, (Int, Option[Int]))] = Array((d,(1,None)), (b,(1,Some(2))), (a,(1,Some(2))), (c,(1,Some(2))))</span><br></pre></td></tr></table></figure>
-
-
-<p>join操作的执行过程：<br>默认情况下，连接操作会将两个数据集中所有键的哈希值都求出来，将哈希值相同的记录通过网络传输到同一台机器上，在该机器上对所有键相同的记录执行连接操作。</p>
-<h3 id="Pair-RDD的行动操作"><a href="#Pair-RDD的行动操作" class="headerlink" title="Pair RDD的行动操作"></a>Pair RDD的行动操作</h3><p><img src="https://img-blog.csdnimg.cn/20191219171254168.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h6 id="Spark会为生成RDD设定好分区方式的操作"><a href="#Spark会为生成RDD设定好分区方式的操作" class="headerlink" title="Spark会为生成RDD设定好分区方式的操作"></a>Spark会为生成RDD设定好分区方式的操作</h6><p>cogroup<br>groupWith<br>join<br>leftOuterJoin<br>rightOuterJoin<br>groupByKey<br>reduceByKey<br>combineByKey<br>partitionBy<br>sort<br>mapValues<br>flatMapValues<br>filter</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>数据仓库工具箱笔记 - 第一章</title>
     <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
     <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
@@ -913,25 +932,6 @@
 ]]></content>
       <categories>
         <category>网络</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>catalog和schema的区别</title>
-    <url>/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>摘要：什么是catalog，什么是schema</p>
-<span id="more"></span>
-
-<p>直接上图，直观一点：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是catalog"><a href="#什么是catalog" class="headerlink" title="什么是catalog"></a>什么是catalog</h3><p>从概念上说，一个catalog包含多个schema，一个schema下可以包含多个数据库对象（表，视图，字段），catalog可以理解为数据库实例的元数据集合。</p>
-<p>常用数据库对catalog和schema的支持如下：</p>
-<p><img src="https://img-blog.csdnimg.cn/2019121012584136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是schema"><a href="#什么是schema" class="headerlink" title="什么是schema"></a>什么是schema</h3><p>一般来说，schema是指数据库表的组织和定义，定义了表、字段以及表和字段间的关系。可以理解为表的命名空间。</p>
-<p>推荐下stack overflow上的优秀回答：<br> <a href="https://stackoverflow.com/questions/7022755/whats-the-difference-between-a-catalog-and-a-schema-in-a-relational-database">What’s the difference between a catalog and a schema in a relational database?
-</a></p>
-]]></content>
-      <categories>
-        <category>数据仓库</category>
       </categories>
   </entry>
   <entry>
