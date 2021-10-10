@@ -1,23 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<span id="more"></span>
-
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hadoop archive归档命令的使用</title>
     <url>/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>摘要：Hadoop archive 简介</p>
@@ -55,6 +38,23 @@
 ]]></content>
       <categories>
         <category>Hadoop</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+<span id="more"></span>
+
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
       </categories>
   </entry>
   <entry>
@@ -400,6 +400,40 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark算子之foldByKey</title>
+    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
+    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
+<span id="more"></span>
+
+<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
+<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
+<p>我们先初始化一个RDD</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>查看这个RDD的分区及分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
+<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
+<p>这时候我们用foldByKey算子，zeroValue设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>再查看下每个分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
+
+
+<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='yellow'>一次</font>初始化，再对剩下的value值做映射。</p>
+<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
+<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark入门之基础知识（二）RDD编程</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
     <content><![CDATA[<p>摘要：RDD基础知识总结</p>
@@ -463,40 +497,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark算子之foldByKey</title>
-    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
-    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
-<span id="more"></span>
-
-<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
-<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
-<p>我们先初始化一个RDD</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>查看这个RDD的分区及分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
-<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
-<p>这时候我们用foldByKey算子，zeroValue设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
-<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>再查看下每个分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
-
-
-<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='yellow'>一次</font>初始化，再对剩下的value值做映射。</p>
-<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
-<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
     <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
@@ -512,6 +512,22 @@
 <li><p>需要重启 IDEA ，即可正常运行。</p>
 </li>
 </ol>
+]]></content>
+      <categories>
+        <category>常见问题</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>git commit 时提示please tell me who you are解决方法</title>
+    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<p>先是按照git的提示</p>
+<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#x6d;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#x6d;">&#x79;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#x6d;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#117;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#46;&#x63;&#111;&#109;">&#121;&#x6f;&#117;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#46;&#x63;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
         <category>常见问题</category>
@@ -534,22 +550,6 @@
 ]]></content>
       <categories>
         <category>数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>git commit 时提示please tell me who you are解决方法</title>
-    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
-<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;">&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
-<p>按如上步骤操作，最后成功commit</p>
-]]></content>
-      <categories>
-        <category>常见问题</category>
       </categories>
   </entry>
   <entry>
@@ -576,6 +576,50 @@
       <categories>
         <category>常见问题</category>
       </categories>
+  </entry>
+  <entry>
+    <title>使用VuePress搭建一个简洁的技术文档</title>
+    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
+    <content><![CDATA[<p>摘要：VuePress入门教程</p>
+<span id="more"></span>
+
+<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
+<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
+
+<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
+<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
+<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<ol>
+<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
+<li>images下存放各种图片资源，包括导航栏的logo等</li>
+<li>data-guide-book存放所有文章</li>
+</ol>
+<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>heroImage可以引用images下的图片资源</li>
+<li>actionLink为点击快速上手后跳转到的那篇文章</li>
+</ol>
+<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>修改 config.js 中的配置如下：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
+<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
+      <categories>
+        <category>教程</category>
+      </categories>
+      <tags>
+        <tag>教程</tag>
+      </tags>
   </entry>
   <entry>
     <title>基于Geohash实现根据经纬度的快速定位</title>
@@ -631,50 +675,6 @@
       </categories>
       <tags>
         <tag>Geohash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用VuePress搭建一个简洁的技术文档</title>
-    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
-    <content><![CDATA[<p>摘要：VuePress入门教程</p>
-<span id="more"></span>
-
-<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
-<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
-
-<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
-
-<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
-
-<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
-
-<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
-<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
-<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<ol>
-<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
-<li>images下存放各种图片资源，包括导航栏的logo等</li>
-<li>data-guide-book存放所有文章</li>
-</ol>
-<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>heroImage可以引用images下的图片资源</li>
-<li>actionLink为点击快速上手后跳转到的那篇文章</li>
-</ol>
-<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<p>修改 config.js 中的配置如下：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
-<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
-      <categories>
-        <category>教程</category>
-      </categories>
-      <tags>
-        <tag>教程</tag>
       </tags>
   </entry>
   <entry>
