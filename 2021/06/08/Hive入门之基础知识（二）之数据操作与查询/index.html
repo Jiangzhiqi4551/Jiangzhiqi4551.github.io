@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;jiangzhiqi4551.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;搜索...&quot;,&quot;empty&quot;:&quot;没有找到任何搜索结果：${query}&quot;,&quot;hits_time&quot;:&quot;找到 ${hits} 个搜索结果（用时 ${time} 毫秒）&quot;,&quot;hits&quot;:&quot;找到 ${hits} 个搜索结果&quot;},&quot;path&quot;:&quot;&#x2F;search.xml&quot;,&quot;localsearch&quot;:{&quot;enable&quot;:true,&quot;trigger&quot;:&quot;auto&quot;,&quot;top_n_per_article&quot;:1,&quot;unescape&quot;:false,&quot;preload&quot;:false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="随笔总结一些关于Hive的杂七杂八的知识点">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hive入门之基础知识（二）之数据操作与查询">
+<meta property="og:url" content="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2/index.html">
+<meta property="og:site_name" content="Jiang&#39;s blog">
+<meta property="og:description" content="随笔总结一些关于Hive的杂七杂八的知识点">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-08T10:38:57.000Z">
+<meta property="article:modified_time" content="2021-10-10T10:16:20.933Z">
+<meta property="article:author" content="Master Jiang">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;jiangzhiqi4551.github.io&#x2F;2021&#x2F;06&#x2F;08&#x2F;Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2&#x2F;&quot;,&quot;path&quot;:&quot;2021&#x2F;06&#x2F;08&#x2F;Hive入门之基础知识（二）之数据操作与查询&#x2F;&quot;,&quot;title&quot;:&quot;Hive入门之基础知识（二）之数据操作与查询&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Hive入门之基础知识（二）之数据操作与查询 | Jiang's blog</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+<link rel="alternate" href="/atom.xml" title="Jiang's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiang's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%91Hive%E8%A1%A8%E4%B8%AD%E8%A3%85%E8%BD%BD%E6%95%B0%E6%8D%AE"><span class="nav-number">1.</span> <span class="nav-text">向Hive表中装载数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5%E5%90%91%E8%A1%A8%E4%B8%AD%E8%A3%85%E8%BD%BD%E6%95%B0%E6%8D%AE"><span class="nav-number">2.</span> <span class="nav-text">通过查询语句向表中装载数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%8F%92%E5%85%A5"><span class="nav-number">2.0.1.</span> <span class="nav-text">动态分区插入</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E6%95%B0%E6%8D%AE"><span class="nav-number">3.</span> <span class="nav-text">导出数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%BC%95%E7%94%A8%E9%9B%86%E5%90%88%E7%B1%BB%E5%9E%8B%E4%B8%AD%E7%9A%84%E5%85%83%E7%B4%A0"><span class="nav-number">4.</span> <span class="nav-text">如何引用集合类型中的元素</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#array"><span class="nav-number">4.0.1.</span> <span class="nav-text">array</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#map"><span class="nav-number">4.0.2.</span> <span class="nav-text">map</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#struct"><span class="nav-number">4.0.3.</span> <span class="nav-text">struct</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E7%AE%97%E6%9C%AF%E8%AE%A1%E7%AE%97%E4%B8%AD%E5%8F%AF%E8%83%BD%E7%9A%84%E4%B8%8A%E6%BA%A2%E6%88%96%E4%B8%8B%E6%BA%A2%E9%97%AE%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">如何解决算术计算中可能的上溢或下溢问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E4%BB%A5%E8%BF%9B%E8%A1%8C%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E7%9A%84%E5%87%BD%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text">可以进行数据类型转换的函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%83%85%E5%86%B5%E4%B8%8BHive%E5%8F%AF%E4%BB%A5%E9%81%BF%E5%85%8D%E4%BA%A7%E7%94%9F%E4%B8%80%E4%B8%AAMR%E4%BB%BB%E5%8A%A1"><span class="nav-number">7.</span> <span class="nav-text">什么情况下Hive可以避免产生一个MR任务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hive%E7%9A%84join%E4%BC%98%E5%8C%96"><span class="nav-number">8.</span> <span class="nav-text">Hive的join优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#order-by%E4%B8%8Esort-by"><span class="nav-number">9.</span> <span class="nav-text">order by与sort by</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#distribute-by%E8%AF%AD%E5%8F%A5%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">10.</span> <span class="nav-text">distribute by语句的使用</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Master Jiang"
+      src="/images/logo1.jpeg">
+  <p class="site-author-name" itemprop="name">Master Jiang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Jiangzhiqi4551" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Jiangzhiqi4551" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:Jiangzhiqi4551@outlook.com" title="E-Mail → mailto:Jiangzhiqi4551@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/Jiangzhiqi4551?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;Jiangzhiqi4551?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fas fa-blog fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hive入门之基础知识（二）之数据操作与查询
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-08 18:38:57" itemprop="dateCreated datePublished" datetime="2021-06-08T18:38:57+08:00">2021-06-08</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Hive/" itemprop="url" rel="index"><span itemprop="name">Hive</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="向Hive表中装载数据"><a href="#向Hive表中装载数据" class="headerlink" title="向Hive表中装载数据"></a>向Hive表中装载数据</h2><p>Hive不会验证向表中装载的数据和表的模式是否匹配（需要自己检查确认），但是会检查文件的格式是否和表结构定义的一致（创建表时指定的结构若为SEQUENCEFILE，则装载进去的文件也应该为sequencefile格式）。</p>
+<p>从本地文件系统向表中装载数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA LOCAL INPATH &#x27;path&#x27; INTO TABLE &#x27;table&#x27;  </span><br></pre></td></tr></table></figure>
+
+<p>从本地文件系统向表中装载数据，使用overwrite覆盖原表数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA LOCAL INPATH &#x27;path&#x27; OVERWRITE INTO TABLE &#x27;table&#x27;</span><br></pre></td></tr></table></figure>
+
+
+<p>从本地文件系统向表中装载数据，使用overwrite覆盖原表数据并指定时间分区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA LOCAL INPATH &#x27;path&#x27; OVERWRITE INTO TABLE &#x27;table&#x27; PARTITION (dt=&#x27;2019-11-11&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>从HDFS向表中装载数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA INPATH &#x27;path&#x27; INTO TABLE &#x27;table&#x27;  </span><br></pre></td></tr></table></figure>
+
+<p>从HDFS向表中装载数据，使用overwrite覆盖原表数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA INPATH &#x27;path&#x27; OVERWRITE INTO TABLE &#x27;table&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从HDFS向表中装载数据，使用overwrite覆盖原表数据并指定时间分区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOAD DATA LOCAL INPATH &#x27;path&#x27; OVERWRITE INTO TABLE &#x27;table&#x27; PARTITION (dt=&#x27;2019-11-11&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>另外需要注意的是，如果使用了local关键字，数据将会被<strong>拷贝</strong>到目标位置，<br>如果不使用local关键字，数据会被<strong>转移</strong>到目标位置。因为Hive默认在分布式文件系统中用户不需要一份文件的多份重复拷贝。</p>
+<h2 id="通过查询语句向表中装载数据"><a href="#通过查询语句向表中装载数据" class="headerlink" title="通过查询语句向表中装载数据"></a>通过查询语句向表中装载数据</h2><p>PARTITION关键字可以指定要创建的分区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE &#x27;table1&#x27;</span><br><span class="line">PARTITION(dt=&#x27;2019-11-11&#x27;)</span><br><span class="line">SELECT * FROM &#x27;table2&#x27;</span><br><span class="line">WHERE dt=&#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
+<h4 id="动态分区插入"><a href="#动态分区插入" class="headerlink" title="动态分区插入"></a>动态分区插入</h4><p>当分区很多时，一个一个指定很麻烦，可以使用动态分区插入<br>需要先开启动态分区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SET hive.exec.dynamic.partition = true       </span><br><span class="line">SET hive.exec.dynamic.partition.mode = nostrict</span><br></pre></td></tr></table></figure>
+<p>使用动态分区插入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">将表2中11-01号到11-11号的user_id按时间分区插入到表1中</span><br><span class="line">INSERT OVERWRITE TABLE &#x27;table1&#x27;</span><br><span class="line">PARTITION(dt)</span><br><span class="line">SELECT </span><br><span class="line">user_id,</span><br><span class="line">dt</span><br><span class="line">from &#x27;table2&#x27;</span><br><span class="line">WHERE dt BETWEEN &#x27;2019-11-01&#x27; AND &#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
+<p>还可以通过一个查询语句直接创建出表，在实际工作中长使用此功能创建临时表</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE tmp AS</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">dt,</span><br><span class="line">hour</span><br><span class="line">from table1</span><br></pre></td></tr></table></figure>
+<h2 id="导出数据"><a href="#导出数据" class="headerlink" title="导出数据"></a>导出数据</h2><p>如果数据恰好是所需要的格式，直接从HDFS上拷贝文件即可。<br>如果不是需要的格式，可以参考如下示例，Hive会将所有字段序列化成字符串写入到文件中。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">INSERT OVERWRITE LOCAL DIRECTORY &#x27;yourPath&#x27;</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">name,</span><br><span class="line">dt,</span><br><span class="line">hour</span><br><span class="line">from yourTable</span><br></pre></td></tr></table></figure>
+<h2 id="如何引用集合类型中的元素"><a href="#如何引用集合类型中的元素" class="headerlink" title="如何引用集合类型中的元素"></a>如何引用集合类型中的元素</h2><h4 id="array"><a href="#array" class="headerlink" title="array"></a>array</h4><p>数组的索引从0开始，使用array[索引]的语法，引用一个不存在的元素将返回null</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT user_info[0] from user_detail</span><br></pre></td></tr></table></figure>
+<h4 id="map"><a href="#map" class="headerlink" title="map"></a>map</h4><p>与array相同，使用array[…]的语法，不过使用对应的key值而不是索引</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT user_info[&quot;location&quot;] from user_detail</span><br></pre></td></tr></table></figure>
+<h4 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h4><p>使用 点 <strong><font color='yellow'>.</font></strong> 符号</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT address.city from user_detail</span><br></pre></td></tr></table></figure>
+
+<h2 id="如何解决算术计算中可能的上溢或下溢问题"><a href="#如何解决算术计算中可能的上溢或下溢问题" class="headerlink" title="如何解决算术计算中可能的上溢或下溢问题"></a>如何解决算术计算中可能的上溢或下溢问题</h2><p>1）使用范围更广的数据类型，但会占用更多空间。<br>2）进行缩放，除以10、100、1000等，还可以取log值进行计算。</p>
+<h2 id="可以进行数据类型转换的函数"><a href="#可以进行数据类型转换的函数" class="headerlink" title="可以进行数据类型转换的函数"></a>可以进行数据类型转换的函数</h2><p>floor、round、ceil，输入的是double类型，返回值为bigint类型。在进行数据类型转换时，这些函数是首选的处理方式。</p>
+<h2 id="什么情况下Hive可以避免产生一个MR任务"><a href="#什么情况下Hive可以避免产生一个MR任务" class="headerlink" title="什么情况下Hive可以避免产生一个MR任务"></a>什么情况下Hive可以避免产生一个MR任务</h2><p>1）本地模式，如 select * from table ，不会产生MR，Hive会直接读取存储目录下的文件，输出格式化后的数据。<br>2）在where子句中只有分区字段时，也不会产生MR。 </p>
+<h2 id="Hive的join优化"><a href="#Hive的join优化" class="headerlink" title="Hive的join优化"></a>Hive的join优化</h2><p>大多数情况下，Hive会对每对join对象启动一个MR任务，但如果对3个或3个以上的表进行join时，on条件使用了相同的连接键，只会产生一个MR任务。</p>
+<h2 id="order-by与sort-by"><a href="#order-by与sort-by" class="headerlink" title="order by与sort by"></a>order by与sort by</h2><p>order by：对结果执行全局排序，所有数据全部放在一个reducer中执行，当数据量很大时，会执行很长时间。<br>sort by：只会在每个reducer中进行排序，即局部排序。可以保证每个reducer输出的结果是有序的，但是不同reducer输出的结果可能会有重复的。</p>
+<h2 id="distribute-by语句的使用"><a href="#distribute-by语句的使用" class="headerlink" title="distribute by语句的使用"></a>distribute by语句的使用</h2><p>distribute by控制map的输出在reduce中是如何划分的，可以指定distribute by的值，将相同值得数据分发到一个reducer中去，类似于group by。在分发后的数据中可以调用sort by 进行reducer内部的排序。<br>按用户ID做distribute，再按客户端时间做排序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">* </span><br><span class="line">from your_table</span><br><span class="line">DISTRIBUTE BY user_id</span><br><span class="line">SORT BY client_event_time</span><br></pre></td></tr></table></figure>
+<p>当distribute by和sort by中的字段相同时，可以使用<strong>cluster by</strong>做替代，达成相同的效果，但是使用cluster by会剥夺sort by的并行性，而且cluster by也不能指定ASC或者desc，只能按降序排列，但是可以实现数据的全局有序。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="/atom.xml">
+          <span class="icon">
+            <i class=""></i>
+          </span>
+
+          <span class="label">RSS</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/" rel="prev" title="Hive入门之基础知识（三）之分区与优化的简单介绍">
+                  <i class="fa fa-chevron-left"></i> Hive入门之基础知识（三）之分区与优化的简单介绍
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/" rel="next" title="Spark入门之基础知识（二）RDD编程">
+                  Spark入门之基础知识（二）RDD编程 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Master Jiang</span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

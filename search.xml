@@ -82,6 +82,36 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive入门之基础知识（一）之杂七杂八</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89%E4%B9%8B%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="Hive出现的原因"><a href="#Hive出现的原因" class="headerlink" title="Hive出现的原因"></a>Hive出现的原因</h2><p>从一个基于传统关系型数据库和结构化查询语言的数据基础架构转移到Hadoop上，使用HQL查询Hadoop中的数据。</p>
+<h2 id="Hive与传统关系型数据库的区别"><a href="#Hive与传统关系型数据库的区别" class="headerlink" title="Hive与传统关系型数据库的区别"></a>Hive与传统关系型数据库的区别</h2><p>Hive不支持记录级别的更新、插入和删除操作。执行延迟大，不支持事务。</p>
+<h2 id="Hive组成模块"><a href="#Hive组成模块" class="headerlink" title="Hive组成模块"></a>Hive组成模块</h2><p><img src="https://img-blog.csdnimg.cn/20191213140841632.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>所有的命令和查询都会进入到驱动模块driver中，driver对输入进行解析和编译，以及对需求的计算进行优化，然后启动MR来执行job。Hive本身不会生成MR的程序，而是通过一个表示”job执行计划“的XML文件驱动执行内置的原生的MR模块。<br>Hive通过和jobtracker进行通信来初始化MR任务。</p>
+<h2 id="Hive安装目录"><a href="#Hive安装目录" class="headerlink" title="Hive安装目录"></a>Hive安装目录</h2><p><img src="https://img-blog.csdnimg.cn/20191213142812701.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h2 id="Hive常用的命令行执行参数"><a href="#Hive常用的命令行执行参数" class="headerlink" title="Hive常用的命令行执行参数"></a>Hive常用的命令行执行参数</h2><p>Hive -e执行完一条命令后立刻退出CLI<br>Hive -S开启静默模式，去掉OK等无关紧要的输出信息<br>Hive -f文件名，指定文件中的一个或多个查询语句。</p>
+<h2 id="Hive的基本数据类型"><a href="#Hive的基本数据类型" class="headerlink" title="Hive的基本数据类型"></a>Hive的基本数据类型</h2><p><img src="https://img-blog.csdnimg.cn/2019121314530063.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20191213145333149.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>其中时间戳可以是整数、浮点数、字符串，其表示的是UTC时间。</p>
+<h4 id="类型转换的用法："><a href="#类型转换的用法：" class="headerlink" title="类型转换的用法："></a>类型转换的用法：</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cast(user_id AS STRING) as user_id_string</span><br></pre></td></tr></table></figure>
+
+<h4 id="Hive中的集合数据类型"><a href="#Hive中的集合数据类型" class="headerlink" title="Hive中的集合数据类型"></a>Hive中的集合数据类型</h4><p>Hive中的集合数据类型：map、struct、array<br>为什么Hive支持集合数据类型，而大多数传统关系型数据库不支持：关系型数据库通过外键将多个表进行关联，当数据量很大时，根据外键进行关联造成的磁盘间的寻址操作将产生很高的代价。</p>
+<h4 id="Hive的读时模式"><a href="#Hive的读时模式" class="headerlink" title="Hive的读时模式"></a>Hive的读时模式</h4><p>传统的关系型数据库是写时模式，在数据写入时对模式进行检查。<br>对于Hive要查询的数据，有很多种方式对其进行创建，修改，损坏，因此Hive采用读时模式，在查询时进行验证，尽量修复错误或者赋空值。</p>
+<h4 id="Hive查看表信息"><a href="#Hive查看表信息" class="headerlink" title="Hive查看表信息"></a>Hive查看表信息</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DESCRIBE  表名</span><br><span class="line">DESCRIBE EXTENDED 表名</span><br><span class="line">DESCRIBE FORMATTED 表名</span><br></pre></td></tr></table></figure>
+<p>都可以查询表的详细信息，信息完整程度由上到下逐渐增加，DESCRIBE FORMATTED的数据最完整。</p>
+<h2 id="外部表和内部表"><a href="#外部表和内部表" class="headerlink" title="外部表和内部表"></a>外部表和内部表</h2><p>内部表：也叫管理表，Hive会控制数据的生命周期，删除一个内部表时，Hive也会删除表中的数据。内部表也不便于和其他工作共享数据。<br>外部表：删除表并不会删除表中的数据，但是描述表的元数据信息会被删除。有些HQL的语法结构也不适用于外部表。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE EXTERNAL TABLE 目标表 LIKE 源表   -- 生成的表是外部表</span><br><span class="line">CREATE TABLE 目标表 LIKE 源表  -- 如果源表是外部表，则目标表也是外部表；如果源表是内部表，目标表也是内部表</span><br></pre></td></tr></table></figure>
+
+<h2 id="Hive表的存储格式"><a href="#Hive表的存储格式" class="headerlink" title="Hive表的存储格式"></a>Hive表的存储格式</h2><p>默认情况下，Hive采用的存储格式为文本文件格式（TEXTFILE），在这种格式下，每一行被认为是一个单独的记录。<br>记录的解析由序列化器，反序列化器（SerDe）来控制。<br>Hive使用一个inputformat对象将输入流分割成记录，使用outputformat对象将记录格式化为输出流，使用SerDe在读数据时将记录解析成列，写数据时将列编码成记录。</p>
+<h2 id="Hive防止表被删除或查询"><a href="#Hive防止表被删除或查询" class="headerlink" title="Hive防止表被删除或查询"></a>Hive防止表被删除或查询</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ALTER TABLE test ENABLE NO_DROP  // 防止被删除</span><br><span class="line">ALTER TABLE test ENABLE OFFLINE  // 防止被查询</span><br></pre></td></tr></table></figure>
+<p>若要允许被删除或查询，只需把 enable 改为 disable </p>
+<h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><p>Hive没有关系型数据库中键的概念，只有有限的索引功能。一张表的索引数据存放在另一张表中。<br>建立索引可以帮助剪裁掉一张表的一些数据块，减少MR任务的数据输入量。<br>通过explain+SQL语句可以查看是否使用了索引。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
     <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
@@ -121,36 +151,6 @@
 <h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
 <p>中number值的设置调整reducer个数。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive入门之基础知识（一）之杂七杂八</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89%E4%B9%8B%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="Hive出现的原因"><a href="#Hive出现的原因" class="headerlink" title="Hive出现的原因"></a>Hive出现的原因</h2><p>从一个基于传统关系型数据库和结构化查询语言的数据基础架构转移到Hadoop上，使用HQL查询Hadoop中的数据。</p>
-<h2 id="Hive与传统关系型数据库的区别"><a href="#Hive与传统关系型数据库的区别" class="headerlink" title="Hive与传统关系型数据库的区别"></a>Hive与传统关系型数据库的区别</h2><p>Hive不支持记录级别的更新、插入和删除操作。执行延迟大，不支持事务。</p>
-<h2 id="Hive组成模块"><a href="#Hive组成模块" class="headerlink" title="Hive组成模块"></a>Hive组成模块</h2><p><img src="https://img-blog.csdnimg.cn/20191213140841632.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>所有的命令和查询都会进入到驱动模块driver中，driver对输入进行解析和编译，以及对需求的计算进行优化，然后启动MR来执行job。Hive本身不会生成MR的程序，而是通过一个表示”job执行计划“的XML文件驱动执行内置的原生的MR模块。<br>Hive通过和jobtracker进行通信来初始化MR任务。</p>
-<h2 id="Hive安装目录"><a href="#Hive安装目录" class="headerlink" title="Hive安装目录"></a>Hive安装目录</h2><p><img src="https://img-blog.csdnimg.cn/20191213142812701.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h2 id="Hive常用的命令行执行参数"><a href="#Hive常用的命令行执行参数" class="headerlink" title="Hive常用的命令行执行参数"></a>Hive常用的命令行执行参数</h2><p>Hive -e执行完一条命令后立刻退出CLI<br>Hive -S开启静默模式，去掉OK等无关紧要的输出信息<br>Hive -f文件名，指定文件中的一个或多个查询语句。</p>
-<h2 id="Hive的基本数据类型"><a href="#Hive的基本数据类型" class="headerlink" title="Hive的基本数据类型"></a>Hive的基本数据类型</h2><p><img src="https://img-blog.csdnimg.cn/2019121314530063.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20191213145333149.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>其中时间戳可以是整数、浮点数、字符串，其表示的是UTC时间。</p>
-<h4 id="类型转换的用法："><a href="#类型转换的用法：" class="headerlink" title="类型转换的用法："></a>类型转换的用法：</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cast(user_id AS STRING) as user_id_string</span><br></pre></td></tr></table></figure>
-
-<h4 id="Hive中的集合数据类型"><a href="#Hive中的集合数据类型" class="headerlink" title="Hive中的集合数据类型"></a>Hive中的集合数据类型</h4><p>Hive中的集合数据类型：map、struct、array<br>为什么Hive支持集合数据类型，而大多数传统关系型数据库不支持：关系型数据库通过外键将多个表进行关联，当数据量很大时，根据外键进行关联造成的磁盘间的寻址操作将产生很高的代价。</p>
-<h4 id="Hive的读时模式"><a href="#Hive的读时模式" class="headerlink" title="Hive的读时模式"></a>Hive的读时模式</h4><p>传统的关系型数据库是写时模式，在数据写入时对模式进行检查。<br>对于Hive要查询的数据，有很多种方式对其进行创建，修改，损坏，因此Hive采用读时模式，在查询时进行验证，尽量修复错误或者赋空值。</p>
-<h4 id="Hive查看表信息"><a href="#Hive查看表信息" class="headerlink" title="Hive查看表信息"></a>Hive查看表信息</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DESCRIBE  表名</span><br><span class="line">DESCRIBE EXTENDED 表名</span><br><span class="line">DESCRIBE FORMATTED 表名</span><br></pre></td></tr></table></figure>
-<p>都可以查询表的详细信息，信息完整程度由上到下逐渐增加，DESCRIBE FORMATTED的数据最完整。</p>
-<h2 id="外部表和内部表"><a href="#外部表和内部表" class="headerlink" title="外部表和内部表"></a>外部表和内部表</h2><p>内部表：也叫管理表，Hive会控制数据的生命周期，删除一个内部表时，Hive也会删除表中的数据。内部表也不便于和其他工作共享数据。<br>外部表：删除表并不会删除表中的数据，但是描述表的元数据信息会被删除。有些HQL的语法结构也不适用于外部表。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE EXTERNAL TABLE 目标表 LIKE 源表   -- 生成的表是外部表</span><br><span class="line">CREATE TABLE 目标表 LIKE 源表  -- 如果源表是外部表，则目标表也是外部表；如果源表是内部表，目标表也是内部表</span><br></pre></td></tr></table></figure>
-
-<h2 id="Hive表的存储格式"><a href="#Hive表的存储格式" class="headerlink" title="Hive表的存储格式"></a>Hive表的存储格式</h2><p>默认情况下，Hive采用的存储格式为文本文件格式（TEXTFILE），在这种格式下，每一行被认为是一个单独的记录。<br>记录的解析由序列化器，反序列化器（SerDe）来控制。<br>Hive使用一个inputformat对象将输入流分割成记录，使用outputformat对象将记录格式化为输出流，使用SerDe在读数据时将记录解析成列，写数据时将列编码成记录。</p>
-<h2 id="Hive防止表被删除或查询"><a href="#Hive防止表被删除或查询" class="headerlink" title="Hive防止表被删除或查询"></a>Hive防止表被删除或查询</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ALTER TABLE test ENABLE NO_DROP  // 防止被删除</span><br><span class="line">ALTER TABLE test ENABLE OFFLINE  // 防止被查询</span><br></pre></td></tr></table></figure>
-<p>若要允许被删除或查询，只需把 enable 改为 disable </p>
-<h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><p>Hive没有关系型数据库中键的概念，只有有限的索引功能。一张表的索引数据存放在另一张表中。<br>建立索引可以帮助剪裁掉一张表的一些数据块，减少MR任务的数据输入量。<br>通过explain+SQL语句可以查看是否使用了索引。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -312,25 +312,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（一）</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
-    <content><![CDATA[<p>Spark 基础知识</p>
-<span id="more"></span>
-
-<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
-<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
-<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
-<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
-<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
-<p>SparkStreaming：提供了用来操作数据流的API。</p>
-<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
-<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Spark入门之基础知识（三）键值对操作</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E9%94%AE%E5%80%BC%E5%AF%B9%E6%93%8D%E4%BD%9C/</url>
     <content><![CDATA[<p>摘要：键值对算子简介</p>
@@ -394,6 +375,25 @@
 <p>join操作的执行过程：<br>默认情况下，连接操作会将两个数据集中所有键的哈希值都求出来，将哈希值相同的记录通过网络传输到同一台机器上，在该机器上对所有键相同的记录执行连接操作。</p>
 <h3 id="Pair-RDD的行动操作"><a href="#Pair-RDD的行动操作" class="headerlink" title="Pair RDD的行动操作"></a>Pair RDD的行动操作</h3><p><img src="https://img-blog.csdnimg.cn/20191219171254168.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
 <h6 id="Spark会为生成RDD设定好分区方式的操作"><a href="#Spark会为生成RDD设定好分区方式的操作" class="headerlink" title="Spark会为生成RDD设定好分区方式的操作"></a>Spark会为生成RDD设定好分区方式的操作</h6><p>cogroup<br>groupWith<br>join<br>leftOuterJoin<br>rightOuterJoin<br>groupByKey<br>reduceByKey<br>combineByKey<br>partitionBy<br>sort<br>mapValues<br>flatMapValues<br>filter</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Spark入门之基础知识（一）</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <content><![CDATA[<p>Spark 基础知识</p>
+<span id="more"></span>
+
+<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
+<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
+<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
+<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
+<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
+<p>SparkStreaming：提供了用来操作数据流的API。</p>
+<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
+<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
 ]]></content>
       <categories>
         <category>Spark</category>
@@ -543,9 +543,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#117;&#x40;&#101;&#120;&#97;&#x6d;&#x70;&#x6c;&#x65;&#x2e;&#99;&#x6f;&#109;">&#x79;&#111;&#117;&#x40;&#101;&#120;&#97;&#x6d;&#x70;&#x6c;&#x65;&#x2e;&#99;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;">&#121;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;">&#121;&#111;&#x75;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#x6f;&#117;&#64;&#101;&#120;&#97;&#109;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#x6d;">&#x79;&#x6f;&#117;&#64;&#101;&#120;&#97;&#109;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
