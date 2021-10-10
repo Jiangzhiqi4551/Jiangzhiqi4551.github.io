@@ -222,7 +222,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+        <time title="修改时间：2021-10-10 18:20:48" itemprop="dateModified" datetime="2021-10-10T18:20:48+08:00">2021-10-10</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -244,35 +244,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <span id="more"></span>
-
-<h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h3 id="维度模型设计四步骤"><a href="#维度模型设计四步骤" class="headerlink" title="维度模型设计四步骤"></a>维度模型设计四步骤</h3><p>​        1、选择业务过程</p>
-<p>​                每个业务过程对应数仓总线矩阵的一行。</p>
-<p>​        2、确认粒度</p>
-<p>​                粒度用于确定事实表中的行表示什么。</p>
-<p>​        3、确认维度</p>
-<p>​                维度描述业务过程事件所涉及的“谁、什么、何处、何时、为什么、如何”等背景。</p>
-<p>​        4、确认事实</p>
-<p>​                事实涉及来自业务过程事件的度量，基本以数值表示。</p>
-<p>​                一个事实表中的每一行，都与按照事实表粒度描述的度量事件存在一对一的关系。</p>
-<h1 id="事实表技术基础"><a href="#事实表技术基础" class="headerlink" title="事实表技术基础"></a>事实表技术基础</h1><h4 id="事实表结构"><a href="#事实表结构" class="headerlink" title="事实表结构"></a>事实表结构</h4><p>​        事实表行对应一个度量事件，事实表的设计完全依赖于物理活动，不受最终产出报表的影响。事实表还包含外键（用于维度关联）、可选的退化维度键、日期时间戳。</p>
-<h4 id="可加、半可加、不可加事实"><a href="#可加、半可加、不可加事实" class="headerlink" title="可加、半可加、不可加事实"></a>可加、半可加、不可加事实</h4><p>​        可加性数字度量：可以按任意维度汇总</p>
-<p>​        半可加性数字度量：可以对某些维度汇总（例如差额）</p>
-<p>​        不可加性数字度量：完全不可加（例如比率）</p>
-<h4 id="一致性事实"><a href="#一致性事实" class="headerlink" title="一致性事实"></a>一致性事实</h4><p>​        比较、计算不同事实表中的事实，必须保证事实的技术定义一致，如果一致，应该采用相同的命名。</p>
-<h4 id="事务事实表"><a href="#事务事实表" class="headerlink" title="事务事实表"></a>事务事实表</h4><p>​        一行对应空间上或时间上某点的度量事件。</p>
-<h4 id="周期快照事实表"><a href="#周期快照事实表" class="headerlink" title="周期快照事实表"></a>周期快照事实表</h4><p>​        一行汇总了发生在某个标准周期（一天、一周）内的多个度量事件。粒度是周期性的，不是个体的事务，表中通常包含许多事实。</p>
-<h4 id="累积快照事实表"><a href="#累积快照事实表" class="headerlink" title="累积快照事实表"></a>累积快照事实表</h4><p>​        一行汇总了发生在过程开始到结束之间的、可预测的度量事件。</p>
-<h4 id="聚集事实表"><a href="#聚集事实表" class="headerlink" title="聚集事实表"></a>聚集事实表</h4><p>​        对原子粒度事实数据表进行简单的上卷操作，目的是提高查询性能。</p>
-<h4 id="合并事实表"><a href="#合并事实表" class="headerlink" title="合并事实表"></a>合并事实表</h4><p>​        将来自多个过程的，粒度相同的事实表合并为一个单一的事实表。</p>
-<p>​        增加了ETL的处理负担，降低了BI应用的分析代价，适合经常需要共同分析的多过程度量（指标）。</p>
-<h1 id="维度表技术基础"><a href="#维度表技术基础" class="headerlink" title="维度表技术基础"></a>维度表技术基础</h1><h4 id="退化维度"><a href="#退化维度" class="headerlink" title="退化维度"></a>退化维度</h4><p>​        事实表中存在着看起来像关联维度表的外键，但事实上没有维度表和维度关联，也就是说退化维度相关的数据都在事实表中。</p>
-<h4 id="杂项维度"><a href="#杂项维度" class="headerlink" title="杂项维度"></a>杂项维度</h4><p>​        将多个不同维度合并到一起形成单个维度。</p>
-<h4 id="支架维度"><a href="#支架维度" class="headerlink" title="支架维度"></a>支架维度</h4><p>​        维度包含对其他维度的引用，事实表关联维度表A，维度表A引用维度表B，B称为支架维度。</p>
-<h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
-<h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
-<h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
-
+          <p>《数据仓库工具箱》第二章读书笔记</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -329,7 +309,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+        <time title="修改时间：2021-10-10 18:20:48" itemprop="dateModified" datetime="2021-10-10T18:20:48+08:00">2021-10-10</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -416,7 +396,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+        <time title="修改时间：2021-10-10 18:25:07" itemprop="dateModified" datetime="2021-10-10T18:25:07+08:00">2021-10-10</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -438,7 +418,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>GeoHash原理及应用</p>
+          <p>摘要：GeoHash原理及应用</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/06/08/%E5%9F%BA%E4%BA%8EGeohash%E5%AE%9E%E7%8E%B0%E6%A0%B9%E6%8D%AE%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%9A%84%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D/#more" rel="contents">
@@ -503,7 +483,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-10-10 18:09:15" itemprop="dateModified" datetime="2021-10-10T18:09:15+08:00">2021-10-10</time>
+        <time title="修改时间：2021-10-10 18:25:07" itemprop="dateModified" datetime="2021-10-10T18:25:07+08:00">2021-10-10</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -525,17 +505,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <span id="more"></span>
-
-<p>直接上图，直观一点：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是catalog"><a href="#什么是catalog" class="headerlink" title="什么是catalog"></a>什么是catalog</h3><p>从概念上说，一个catalog包含多个schema，一个schema下可以包含多个数据库对象（表，视图，字段），catalog可以理解为数据库实例的元数据集合。</p>
-<p>常用数据库对catalog和schema的支持如下：</p>
-<p><img src="https://img-blog.csdnimg.cn/2019121012584136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是schema"><a href="#什么是schema" class="headerlink" title="什么是schema"></a>什么是schema</h3><p>一般来说，schema是指数据库表的组织和定义，定义了表、字段以及表和字段间的关系。可以理解为表的命名空间。</p>
-<p>推荐下stack overflow上的优秀回答：<br> <a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/7022755/whats-the-difference-between-a-catalog-and-a-schema-in-a-relational-database">What’s the difference between a catalog and a schema in a relational database?
-</a></p>
-
+          <p>摘要：什么是catalog，什么是schema</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
