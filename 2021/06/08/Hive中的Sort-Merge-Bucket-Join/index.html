@@ -20,15 +20,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
 <script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;jiangzhiqi4551.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Pisces&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;搜索...&quot;,&quot;empty&quot;:&quot;没有找到任何搜索结果：${query}&quot;,&quot;hits_time&quot;:&quot;找到 ${hits} 个搜索结果（用时 ${time} 毫秒）&quot;,&quot;hits&quot;:&quot;找到 ${hits} 个搜索结果&quot;}}</script><script src="/js/config.js"></script>
-<meta name="description" content="最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。 map join我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由">
+<meta name="description" content="最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hive中的Sort Merge Bucket Join">
 <meta property="og:url" content="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/index.html">
 <meta property="og:site_name" content="Jiang&#39;s blog">
-<meta property="og:description" content="最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。 map join我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由">
+<meta property="og:description" content="最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-06-08T08:55:08.000Z">
-<meta property="article:modified_time" content="2021-06-08T08:56:35.000Z">
+<meta property="article:modified_time" content="2021-10-10T10:16:20.913Z">
 <meta property="article:author" content="Master Jiang">
 <meta name="twitter:card" content="summary">
 
@@ -134,7 +134,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -220,10 +220,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 16:55:08 / 修改时间：16:56:35" itemprop="dateCreated datePublished" datetime="2021-06-08T16:55:08+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 16:55:08" itemprop="dateCreated datePublished" datetime="2021-06-08T16:55:08+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -245,6 +251,8 @@
     
     <div class="post-body" itemprop="articleBody">
         <p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
+<span id="more"></span>
+
 <h4 id="map-join"><a href="#map-join" class="headerlink" title="map join"></a><em><strong>map join</strong></em></h4><p>我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由此引出了 Sort Merge Bucket Join。</p>
 <h4 id="SMB-join"><a href="#SMB-join" class="headerlink" title="SMB join"></a><em><strong>SMB join</strong></em></h4><p>要使用 SMB Join，所有的表都必须按相同的列进行分桶并使用相同的桶数（或一个表桶数是另一个表桶数的倍数）且保证数据有序。这样才能确保 hash 值相同的 key 被分到同一个桶中，SMB join 的结果才是有效的。可以在建表时通过使用 <code>CLUSTERED BY user_id INTO 256 BUCKETS</code>  来对某一列进行分桶并指定桶数。</p>
 <p>分桶后在插入时需要：</p>

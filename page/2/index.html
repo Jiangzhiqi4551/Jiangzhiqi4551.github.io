@@ -129,7 +129,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -191,96 +191,6 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/logo1.jpeg">
-      <meta itemprop="name" content="Master Jiang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiang's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/" class="post-title-link" itemprop="url">Hive入门之基础知识（四）之文件格式和压缩方法</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2021-06-08 18:37:29 / 修改时间：18:38:04" itemprop="dateCreated datePublished" datetime="2021-06-08T18:37:29+08:00">2021-06-08</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hive/" itemprop="url" rel="index"><span itemprop="name">Hive</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%9A%84%E5%B0%8F%E6%96%87%E4%BB%B6%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -304,10 +214,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:34:38 / 修改时间：18:37:03" itemprop="dateCreated datePublished" datetime="2021-06-08T18:34:38+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:34:38" itemprop="dateCreated datePublished" datetime="2021-06-08T18:34:38+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -328,7 +244,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p><a target="_blank" rel="noopener" href="http://xcx1024.com/ArtInfo/997661.html">原文链接</a></p>
+          <span id="more"></span>
+
+<p><a target="_blank" rel="noopener" href="http://xcx1024.com/ArtInfo/997661.html">原文链接</a></p>
 <h1 id="Hadoop里面的小文件问题"><a href="#Hadoop里面的小文件问题" class="headerlink" title="Hadoop里面的小文件问题"></a>Hadoop里面的小文件问题</h1><p>小文件指的是那些size比HDFS的block size(默认64M)小的多的文件。如果在HDFS中存储小文件，那么在HDFS中肯定会含有许许多多这样的小文件(不然就不会用hadoop了)。而HDFS的问题在于无法很有效的处理大量小文件。</p>
 <p>任何一个文件，目录和block，在HDFS中都会被表示为一个object存储在namenode的内存中，没一个object占用150 bytes的内存空间。所以，如果有10million个文件，没一个文件对应一个block，那么就将要消耗namenode 3G的内存来保存这些block的信息。如果规模再大一些，那么将会超出现阶段计算机硬件所能满足的极限。</p>
 <p>不仅如此，HDFS并不是为了有效的处理大量小文件而存在的。它主要是为了流式的访问大文件而设计的。对小文件的读取通常会造成大量从datanode到datanode的seeks和hopping来retrieve文件，而这样是非常的低效的一种访问方式。</p>
@@ -451,10 +369,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:33:21 / 修改时间：18:34:14" itemprop="dateCreated datePublished" datetime="2021-06-08T18:33:21+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:33:21" itemprop="dateCreated datePublished" datetime="2021-06-08T18:33:21+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -475,7 +399,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h2 id="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"><a href="#键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。" class="headerlink" title="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"></a>键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。</h2><h3 id="如何创建Pair-RDD"><a href="#如何创建Pair-RDD" class="headerlink" title="如何创建Pair RDD"></a>如何创建Pair RDD</h3><p>1）键值对格式的数据可以直接读入，返回Pair RDD<br>2）使用map()把一个普通的RDD转化为Pair RDD<br>读取text文件，取每行文本的第一个单词做key，该行文本做value</p>
+          <span id="more"></span>
+
+<h2 id="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"><a href="#键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。" class="headerlink" title="键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。"></a>键值对RDD在实际生产中很常用，通常用来进行聚合计算，并且Spark对键值对RDD也提供了新的操作接口可以做更多操作，本文简单介绍一些键值对RDD的基础操作。</h2><h3 id="如何创建Pair-RDD"><a href="#如何创建Pair-RDD" class="headerlink" title="如何创建Pair RDD"></a>如何创建Pair RDD</h3><p>1）键值对格式的数据可以直接读入，返回Pair RDD<br>2）使用map()把一个普通的RDD转化为Pair RDD<br>读取text文件，取每行文本的第一个单词做key，该行文本做value</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">val lines = context.textFile(&quot;text&quot;)</span><br><span class="line">lines.map(x =&gt; (x.split(&quot; &quot;)(0), x))</span><br></pre></td></tr></table></figure>
 
 <h3 id="Pair-RDD的转化操作"><a href="#Pair-RDD的转化操作" class="headerlink" title="Pair RDD的转化操作"></a>Pair RDD的转化操作</h3><p>Pair RDD也是RDD，对RDD可用的操作对于Pair RDD也可用。</p>
@@ -582,10 +508,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:27:45 / 修改时间：18:32:52" itemprop="dateCreated datePublished" datetime="2021-06-08T18:27:45+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:27:45" itemprop="dateCreated datePublished" datetime="2021-06-08T18:27:45+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -606,7 +538,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1.前言"></a>1.前言</h1><p>数据仓库的建设是一个持续的工程。在这个过程中我们需要形成自己的规范，以方便管理和维护。在数据仓库的建设过程中，不仅会面临着公司业务迅速发展，业务系统迭代变更，需要对业务系统数据进行相应的整合，形成公司完整的统一数据视图；而且基于数据仓库的应用也是多样化的，比如支撑自己企业的数据可视化平台、即席查询、对策略提供数据支持等。参考目前已有的分层模型，结合自身实际数据情况，确定对数据仓库进行层次划分，不同的层次，承担不同的职责，方便模型的管理与维护。</p>
+          <span id="more"></span>
+
+<h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1.前言"></a>1.前言</h1><p>数据仓库的建设是一个持续的工程。在这个过程中我们需要形成自己的规范，以方便管理和维护。在数据仓库的建设过程中，不仅会面临着公司业务迅速发展，业务系统迭代变更，需要对业务系统数据进行相应的整合，形成公司完整的统一数据视图；而且基于数据仓库的应用也是多样化的，比如支撑自己企业的数据可视化平台、即席查询、对策略提供数据支持等。参考目前已有的分层模型，结合自身实际数据情况，确定对数据仓库进行层次划分，不同的层次，承担不同的职责，方便模型的管理与维护。</p>
 <h1 id="2-数仓模型"><a href="#2-数仓模型" class="headerlink" title="2.数仓模型"></a>2.数仓模型</h1><h3 id="2-1-数仓分层介绍"><a href="#2-1-数仓分层介绍" class="headerlink" title="2.1 数仓分层介绍"></a>2.1 数仓分层介绍</h3><table>
 <thead>
 <tr>
@@ -778,10 +712,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:25:38 / 修改时间：18:27:16" itemprop="dateCreated datePublished" datetime="2021-06-08T18:25:38+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:25:38" itemprop="dateCreated datePublished" datetime="2021-06-08T18:25:38+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -802,7 +742,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-name-node/index.html">原文链接</a></p>
+          <span id="more"></span>
+
+<p><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-name-node/index.html">原文链接</a></p>
 <h1 id="NameNode-高可用整体架构概述"><a href="#NameNode-高可用整体架构概述" class="headerlink" title="NameNode 高可用整体架构概述"></a>NameNode 高可用整体架构概述</h1><p>在 Hadoop 1.0 时代，Hadoop 的两大核心组件 HDFS NameNode 和 JobTracker 都存在着单点问题，这其中以 NameNode 的单点问题尤为严重。因为 NameNode 保存了整个 HDFS 的元数据信息，一旦 NameNode 挂掉，整个 HDFS 就无法访问，同时 Hadoop 生态系统中依赖于 HDFS 的各个组件，包括 MapReduce、Hive、Pig 以及 HBase 等也都无法正常工作，并且重新启动 NameNode 和进行数据恢复的过程也会比较耗时。这些问题在给 Hadoop 的使用者带来困扰的同时，也极大地限制了 Hadoop 的使用场景，使得 Hadoop 在很长的时间内仅能用作离线存储和离线计算，无法应用到对可用性和数据一致性要求很高的在线应用场景中。</p>
 <p>所幸的是，在 Hadoop2.0 中，HDFS NameNode 和 YARN ResourceManger(JobTracker 在 2.0 中已经被整合到 YARN ResourceManger 之中) 的单点问题都得到了解决，经过多个版本的迭代和发展，目前已经能用于生产环境。HDFS NameNode 和 YARN ResourceManger 的高可用 (High Availability，HA) 方案基本类似，两者也复用了部分代码，但是由于 HDFS NameNode 对于数据存储和数据一致性的要求比 YARN ResourceManger 高得多，所以 HDFS NameNode 的高可用实现更为复杂一些，本文从内部实现的角度对 HDFS NameNode 的高可用机制进行详细的分析。</p>
 <p>HDFS NameNode 的高可用整体架构如图 1 所示 (图片来源于参考文献 [1])：<br>图 1.HDFS NameNode 高可用整体架构<br><img src="https://img-blog.csdnimg.cn/20200209113132878.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>从上图中，我们可以看出 NameNode 的高可用架构主要分为下面几个部分：</p>
@@ -986,10 +928,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:22:24 / 修改时间：18:25:06" itemprop="dateCreated datePublished" datetime="2021-06-08T18:22:24+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:22:24" itemprop="dateCreated datePublished" datetime="2021-06-08T18:22:24+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -1011,64 +959,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
-<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><p>先上图<br><img src="https://img-blog.csdnimg.cn/20200219111728915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h4 id="堆内存（线程间共享）"><a href="#堆内存（线程间共享）" class="headerlink" title="堆内存（线程间共享）"></a>堆内存（线程间共享）</h4><p>在虚拟机启动时创建，此内存区域的唯一目的就是存放对象实例，是垃圾收集器管理的主要区域（也叫GC堆），Java堆可以处于物理上不连续的内存空间中，只要逻辑上是连续的即可，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时（通过-Xmx和-Xms控制扩展），将会抛出OutOfMemoryError异常。</p>
-<h4 id="方法区（线程间共享）（因为GC较少也叫永久代）"><a href="#方法区（线程间共享）（因为GC较少也叫永久代）" class="headerlink" title="方法区（线程间共享）（因为GC较少也叫永久代）"></a>方法区（线程间共享）（因为GC较少也叫永久代）</h4><p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。不需要连续的内存和可以选择固定大小或者可扩展，还可以选择不实现垃圾收集，这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError异常。 </p>
-<h4 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h4><p>生命周期与线程相同。描述的是Java方法执行的内存模型，每个方法被执行的时候都会同时创建一个栈帧（Stack Frame）用于存储局部变量表、操作栈、动态链接、方法出口等信息。每一个方法被调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。<br>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；虚拟机动态扩展时无法申请到足够的内存时OOM</p>
-<h4 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h4><p>类似于虚拟机栈，虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的Native方法服务，与虚拟机栈一样，本地方法栈区域也会抛出StackOverflowError和OutOfMemoryError异常。</p>
-<h4 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h4><p>当前线程所执行的字节码的行号指示器。如果线程正在执行的是一个Java方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie方法，这个计数器值则为空（Undefined）。</p>
-<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，由于Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器。此区域是唯一一个不会OOM的区域。</p>
-<h4 id="如何通过参数控制各个区域的大小"><a href="#如何通过参数控制各个区域的大小" class="headerlink" title="如何通过参数控制各个区域的大小"></a>如何通过参数控制各个区域的大小</h4><p><img src="https://img-blog.csdnimg.cn/20200219112104266.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h1 id="Java的垃圾收集"><a href="#Java的垃圾收集" class="headerlink" title="Java的垃圾收集"></a>Java的垃圾收集</h1><h4 id="如何判断对象是否存活"><a href="#如何判断对象是否存活" class="headerlink" title="如何判断对象是否存活"></a>如何判断对象是否存活</h4><ol>
-<li>引用计数<br>每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计数为0时可以回收，但是无法解决循环引用的问题。</li>
-<li>可达性分析<br>从GC Roots开始向下搜索，搜索所走过的路径称为引用链。当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。<br>GC Roots包括：<br>虚拟机栈中引用的对象；<br>方法区中类静态属性实体引用的对象；<br>方法区中常量引用的对象；<br>本地方法栈中JNI引用的对象。</li>
-</ol>
-<h4 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h4><h6 id="标记-—-清除算法"><a href="#标记-—-清除算法" class="headerlink" title="标记 — 清除算法"></a>标记 — 清除算法</h6><p>算法分为“标记”和“清除”两个阶段：首先标记出所有需要回收的对象，在标记完成后统一回收掉所有被标记的对象。<br><img src="https://img-blog.csdnimg.cn/20200219112558756.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="
-"><br>主要问题：<br>1、效率较低<br>2、会产生大量不连续的内存碎片，可能导致当程序在以后的运行过程中需要分配较大对象时，虽然总的空间足够，但是连续的内存空间却不足，不得不提前触发另一次垃圾收集动作。</p>
-<h6 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h6><p>将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。<br><img src="https://img-blog.csdnimg.cn/20200219112825305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>主要问题：<br>虽然解决了内存碎片的问题，但是可用内存却减小了一半。<br>在实际应用中，因为多数对象都是很快就会被垃圾收集的，所以把整个内存区域分成了一个Eden区，两个survivor区，大小比为8:1：1，当回收时，将一个Eden区和一个survivor区活着的对象复制到另一个survivor区，再将这次的Eden和survivor区清理。</p>
-<h6 id="标记-—-整理"><a href="#标记-—-整理" class="headerlink" title="标记 — 整理"></a>标记 — 整理</h6><p>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向一端移动，然后直接清理掉端边界以外的内存。<br><img src="https://img-blog.csdnimg.cn/2020021911335743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h6 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h6><p>把Java堆分为新生代和老年代，对各代分别用适当的算法，新生代采用复制算法，老年代采用标记清除或标记整理算法。</p>
-<h4 id="垃圾回收器"><a href="#垃圾回收器" class="headerlink" title="垃圾回收器"></a>垃圾回收器</h4><h6 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h6><ol>
-<li>串行收集器，收集时stop the world，单线程收集器；</li>
-<li>默认的client模式下的新生代收集器；</li>
-<li>新生代复制，老年代标记整理，简单高效<br><img src="https://img-blog.csdnimg.cn/20200219113821725.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h6><ol>
-<li>Serial收集器的多线程版本，新生代并行，老年代串行，收集时stop the world，server模式下默认的新生代收集器，能搭配CMS；</li>
-<li>新生代复制算法、老年代标记-整理；</li>
-<li>CPU好的环境里，停顿时间好于serial，并发能力差的环境里不如serial；<br><img src="https://img-blog.csdnimg.cn/202002191141021.png" alt="在这里插入图片描述"><h6 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h6></li>
-<li>类似ParNew收集器，Parallel收集器更关注系统的<font color='yellow'>吞吐量</font>，适合在后台运算不需要太多交互的任务。</li>
-<li>新生代复制算法、老年代标记-整理</li>
-<li>可以设置GC最大停顿时间，具有自适应调节策略，以达到最大吞吐量<br><img src="https://img-blog.csdnimg.cn/20200219114309545.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h6><p>以获取<font color='yellow'>最短回收停顿时间</font>为目标的收集器，系统停顿时间最短，给用户带来较好的体验，基于标记—清除，具体过程为：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象，速度很快</li>
-<li>并发标记（耗时最长）：进行GC Roots Tracing的过程，收集器线程与用户线程一起工作</li>
-<li>重新标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间比初始标记阶段稍长一些，但远比并发标记的时间短。 </li>
-<li>并发清除（耗时最长）：并发回收垃圾，收集器线程与用户线程一起工作<br><img src="https://img-blog.csdnimg.cn/2020021912050944.png" alt="在这里插入图片描述"><br>整个过程中耗时最长的并发标记和并发清除过程中，收集器线程都可以与用户线程一起工作，但是并发阶段应用程序变慢，降低吞吐量，产生大量空间碎片，也无法处理浮动垃圾（并发清除时产生的垃圾，只能等到下次清除）</li>
-</ol>
-<h6 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h6><ol>
-<li>面向<font color='yellow'>服务端</font>应用的垃圾收集器，整体看基于标记整理算法，局部看基于复制（两个region之间），不会产生内存空间碎片</li>
-<li>可预测停顿，能让使用者明确指定在一个长度为N毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒</li>
-<li>使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），新生代和老年代不再是物理隔阂了，它们都是一部分（可以不连续）Region的集合。G1跟踪各个region中垃圾堆积的价值大小（回收空间及所需时间），在后台维护一个优先列表，在每次被允许的时间内，优先回收高价值的。</li>
-</ol>
-<p>回收过程分如下阶段：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象</li>
-<li>并发标记：进行GC Roots Tracing的过程（进行可达性分析），可与用户程序并发执行</li>
-<li>最终标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，并行执行</li>
-<li>筛选回收：对各个region回收价值和成本排序，制定回收计划。</li>
-</ol>
-<h4 id="什么时候进行Minor-GC（新生代GC）"><a href="#什么时候进行Minor-GC（新生代GC）" class="headerlink" title="什么时候进行Minor GC（新生代GC）"></a>什么时候进行Minor GC（新生代GC）</h4><p>Eden区没有足够的空间时</p>
-<h4 id="什么时候进行Full-GC（Major-GC）"><a href="#什么时候进行Full-GC（Major-GC）" class="headerlink" title="什么时候进行Full GC（Major GC）"></a>什么时候进行Full GC（Major GC）</h4><p>只要老年代的连续空间 &gt; 新生代对象总大小  或  历次晋升的平均大小，就Minor GC，否则进行Full GC </p>
-<h4 id="对象什么时候进入老年代"><a href="#对象什么时候进入老年代" class="headerlink" title="对象什么时候进入老年代"></a>对象什么时候进入老年代</h4><ol>
-<li>大对象直接进入老年代，避免在Eden区和两个survivor区之间进行大量内存复制</li>
-<li>长期存活的对象进入老年代，Eden区出生，Minor GC后进入Survivor区，年龄为1，之后每过一次Minor GC，年龄+1，到15岁进入老年代</li>
-<li>Survivor空间中年龄相同的所有对象内存大小之和&gt;survivor空间的一半，大于等于该年龄的对象进入老年代</li>
-<li>空间分配担保，复制算法时，8：1：1 比例下，存活的对象大小超过survivor区时，通过老年代进行担保</li>
-</ol>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1117,10 +1015,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:19:25 / 修改时间：18:20:31" itemprop="dateCreated datePublished" datetime="2021-06-08T18:19:25+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:19:25" itemprop="dateCreated datePublished" datetime="2021-06-08T18:19:25+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -1141,7 +1045,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
+          <span id="more"></span>
+
+<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
 <h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
@@ -1213,10 +1119,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 18:16:45 / 修改时间：18:18:05" itemprop="dateCreated datePublished" datetime="2021-06-08T18:16:45+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 18:16:45" itemprop="dateCreated datePublished" datetime="2021-06-08T18:16:45+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -1238,13 +1150,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1293,10 +1206,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 17:21:05 / 修改时间：18:07:14" itemprop="dateCreated datePublished" datetime="2021-06-08T17:21:05+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 17:21:05" itemprop="dateCreated datePublished" datetime="2021-06-08T17:21:05+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -1318,56 +1237,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <p>之前对网络各层作用的了解一直都比较模糊，对各个协议的作用也不甚清楚，最近看到了一篇对TCP/IP协议栈讲解比较清晰的博文，特地转载过来。</p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/onepixel/p/7092302.html">原文链接</a></p>
-<h2 id="什么是TCP-IP协议栈"><a href="#什么是TCP-IP协议栈" class="headerlink" title="什么是TCP/IP协议栈"></a>什么是TCP/IP协议栈</h2><p>TCP/IP 协议栈是一系列网络协议的总和，是构成网络通信的核心骨架，它定义了电子设备如何连入因特网，以及数据如何在它们之间进行传输。TCP/IP 协议采用4层结构，分别是**<font color='yellow'>应用层、传输层、网络层和链路层</font><strong>，每一层都呼叫它的下一层所提供的协议来完成自己的需求。由于我们大部分时间都工作在应用层，下层的事情不用我们操心；其次网络协议体系本身就很复杂庞大，入门门槛高，因此很难搞清楚TCP/IP的工作原理，通俗一点讲就是，</strong><font color='yellow'>一个主机的数据要经过哪些过程才能发送到对方的主机上</font>**。 </p>
-<h2 id="物理介质"><a href="#物理介质" class="headerlink" title="物理介质"></a>物理介质</h2><p>物理介质就是把电脑连接起来的物理手段，常见的有光纤、双绞线，以及无线电波，它决定了电信号(0和1)的传输方式，物理介质的不同决定了电信号的传输带宽、速率、传输距离以及抗干扰性等等。</p>
-<p>TCP/IP协议栈分为四层，每一层都由特定的协议与对方进行通信，而**<font color='yellow'>协议之间的通信最终都要转化为 0 和 1 的电信号，通过物理介质进行传输才能到达对方的电脑</font>**，因此物理介质是网络通信的基石。</p>
-<p>下面我们通过一张图先来大概了解一下TCP/IP协议的基本框架：<br><img src="https://img-blog.csdnimg.cn/20200404205007610.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>当通过http发起一个请求时，应用层、传输层、网络层和链路层的相关协议依次对该请求进行包装并携带对应的<strong>首部</strong>，最终在链路层生成以<strong>太网数据包</strong>，以太网数据包通过物理介质传输给对方主机，对方接收到数据包以后，然后再一层一层采用对应的协议进行拆包，最后把应用层数据交给应用程序处理。</p>
-<p>网络通信就好比送快递，商品外面的一层层包裹就是各种协议，协议包含了商品信息、收货地址、收件人、联系方式等，然后还需要配送车、配送站、快递员，商品才能最终到达用户手中。</p>
-<p>一般情况下，快递是不能直达的，需要先转发到对应的配送站，然后由配送站再进行派件。</p>
-<p>配送车就是物理介质，配送站就是网关， 快递员就是路由器，收货地址就是IP地址，联系方式就是MAC地址。 </p>
-<p>快递员负责把包裹转发到各个配送站，配送站根据收获地址里的省市区，确认是否需要继续转发到其他配送站，当包裹到达了目标配送站以后，配送站再根据联系方式找到收件人进行派件。  </p>
-<p>有了整体概念以后，下面我们详细了解一下各层的分工。</p>
-<h2 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h2><p>网络通信就是把有特定意义的数据通过物理介质传送给对方，单纯的发送 0 和 1 是没有意义的，要传输有意义的数据，就需要以字节为单位对 0 和 1 进行分组，并且要标识好每一组电信号的信息特征，然后按照分组的顺序依次发送。以太网规定一组电信号就是一个数据包，一个数据包被称为**<font color='yellow'>一帧</font><strong>， 制定这个规则的协议就是</strong><font color='yellow'>以太网协议</font><strong>。一个完整的以太网数据包如下图所示：<br><img src="https://img-blog.csdnimg.cn/202004042051205.png" alt="在这里插入图片描述"><br>整个数据帧由</strong><font color='yellow'>首部、数据和尾部</font>**三部分组成，首部固定为14个字节，包含了目标MAC地址、源MAC地址和类型；数据最短为46个字节，最长为1500个字节，如果需要传输的数据很长，就必须分割成多个帧进行发送；尾部固定为4个字节，表示数据帧校验序列，用于确定数据包在传输过程中是否损坏。因此，以太网协议通过对电信号进行分组并形成数据帧，然后通过物理介质把数据帧发送给接收方。那么以太网如何来识接收方的身份呢？</p>
-<p>以太网规协议定，接入网络的设备都必须安装网络适配器，即**<font color='yellow'>网卡</font><strong>， 数据包必须是从一块网卡传送到另一块网卡。而</strong><font color='yellow'>网卡地址</font><strong>就是数据包的发送地址和接收地址，也就是帧首部所包含的</strong><font color='yellow'>MAC地址</font>**，MAC地址是每块网卡的身份标识，就如同我们身份证上的身份证号码，具有全球唯一性。MAC地址采用十六进制标识，共6个字节， 前三个字节是厂商编号，后三个字节是网卡流水号，例如 4C-0F-6E-12-D2-19</p>
-<p>有了MAC地址以后，以太网采用**<font color='yellow'>广播</font><strong>形式，把数据包发给该</strong><font color='yellow'>子网内</font>**所有主机，子网内每台主机在接收到这个包以后，都会读取首部里的目标MAC地址，然后和自己的MAC地址进行对比，如果相同就做下一步处理，如果不同，就丢弃这个包。</p>
-<p>所以链路层的主要工作就是**<font color='yellow'>对电信号进行分组并形成具有特定意义的数据帧，然后以广播的形式通过物理介质发送给接收方。</font>**</p>
-<h2 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h2><p>对于上面的过程，有几个细节问题值得我们思考：</p>
-<p>1、发送者如何知道接收者的MAC地址？</p>
-<p>2、发送者如何知道接收者和自己同属一个子网？</p>
-<p>3、如果接收者和自己不在同一个子网，数据包如何发给对方？<br>为了解决这些问题，网络层引入了三个协议，分别是**<font color='yellow'>IP协议、ARP协议、路由协议。</font>**</p>
-<h4 id="IP协议"><a href="#IP协议" class="headerlink" title="IP协议"></a>IP协议</h4><p>通过前面的介绍我们知道，MAC地址只与厂商有关，与所处的网络无关，所以无法通过MAC地址来判断两台主机是否属于同一个子网。</p>
-<p>因此，网络层引入了IP协议，制定了一套新地址，使得我们能够区分两台主机是否同属一个网络，这套地址就是网络地址，也就是所谓的IP地址。</p>
-<p>IP地址目前有两个版本，分别是IPv4和IPv6，IPv4是一个32位的地址，常采用4个十进制数字表示。IP协议将这个32位的地址分为两部分，前面部分代表网络地址，后面部分表示该主机在局域网中的地址。由于各类地址的分法不尽相同，以C类地址192.168.24.1为例，其中前24位就是网络地址，后8位就是主机地址。因此， **<font color='yellow'>如果两个IP地址在同一个子网内，则网络地址一定相同</font>**。为了判断IP地址中的网络地址，IP协议还引入了子网掩码， IP地址和子网掩码通过按位与运算后就可以得到网络地址。</p>
-<p>由于发送者和接收者的IP地址是已知的(应用层的协议会传入)， 因此我们只要通过子网掩码对两个IP地址进行AND运算后就能够判断双方是否在同一个子网了。</p>
-<h4 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h4><p>即地址解析协议，是**<font color='yellow'>根据IP地址获取MAC地址</font>**的一个网络层协议。其工作原理如下：</p>
-<p>ARP首先会发起一个请求数据包，数据包的首部包含了目标主机的IP地址，然后这个数据包会在链路层进行再次包装，生成以太网数据包，最终由以太网广播给子网内的所有主机，每一台主机都会接收到这个数据包，并取出标头里的IP地址，然后和自己的IP地址进行比较，如果相同就返回自己的MAC地址，如果不同就丢弃该数据包。ARP接收返回消息，以此确定目标机的MAC地址；与此同时，ARP还会将返回的MAC地址与对应的IP地址存入本机ARP缓存中并保留一定时间，下次请求时直接查询ARP缓存以节约资源。cmd输入 arp -a 就可以查询本机缓存的ARP数据。</p>
-<h4 id="路由协议"><a href="#路由协议" class="headerlink" title="路由协议"></a>路由协议</h4><p>通过ARP协议的工作原理可以发现，**<font color='yellow'>ARP的MAC寻址还是局限在同一个子网中</font>**，因此网络层引入了路由协议，首先通过IP协议来判断两台主机是否在同一个子网中，如果在同一个子网，就通过ARP协议查询对应的MAC地址，然后以广播的形式向该子网内的主机发送数据包；如果不在同一个子网，以太网会将该数据包转发给本子网的网关进行路由。网关是互联网上子网与子网之间的桥梁，所以网关会进行多次转发，最终将该数据包转发到目标IP所在的子网中，然后再通过ARP获取目标机MAC，最终也是通过广播形式将数据包发送给接收方。</p>
-<p>而完成这个路由协议的物理设备就是**<font color='yellow'>路由器</font>**，在错综复杂的网络世界里，路由器扮演者交通枢纽的角色，它会根据信道情况，选择并设定路由，以最佳路径来转发数据包。</p>
-<h4 id="IP数据包"><a href="#IP数据包" class="headerlink" title="IP数据包"></a>IP数据包</h4><p>在网络层被包装的数据包就叫**<font color='yellow'>IP数据包</font>**，IPv4数据包的结构如下图所示：<br><img src="https://img-blog.csdnimg.cn/20200404205714539.png" alt="在这里插入图片描述"><br>IP数据包由首部和数据两部分组成，首部长度为20个字节，主要包含了目标IP地址和源IP地址，目标IP地址是网关路由的线索和依据；数据部分的最大长度为65515字节，理论上一个IP数据包的总长度可以达到65535个字节，而以太网数据包的最大长度是1500个字符，如果超过这个大小，就需要对IP数据包进行分割，分成多帧发送。</p>
-<p>所以，网络层的主要工作是**<font color='yellow'>定义网络地址，区分网段，子网内MAC寻址，对于不同子网的数据包进行路由</font>**。</p>
-<h4 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h4><p>链路层定义了主机的身份，即MAC地址， 而网络层定义了IP地址，明确了主机所在的网段，有了这两个地址，数据包就从可以从一个主机发送到另一台主机。但实际上数据包是从一个主机的某个应用程序发出，然后由对方主机的应用程序接收。而每台电脑都有可能同时运行着很多个应用程序，所以当数据包被发送到主机上以后，是无法确定哪个应用程序要接收这个包。</p>
-<p>因此传输层引入了UDP协议来解决这个问题，为了给每个应用程序标识身份，UDP协议定义了**<font color='yellow'>端口</font>**，同一个主机上的每个应用程序都需要指定唯一的端口号，并且规定网络中传输的数据包必须加上端口信息。 这样，当数据包到达主机以后，就可以根据端口号找到对应的应用程序了。UDP定义的数据包就叫做UDP数据包，结构如下所示：<br><img src="https://img-blog.csdnimg.cn/20200404205754668.png" alt="在这里插入图片描述"><br>UDP数据包由首部和数据两部分组成，首部长度为8个字节，主要包括源端口和目标端口；数据最大为65527个字节，整个数据包的长度最大可达到65535个字节。</p>
-<p>UDP协议比较简单，实现容易，但它没有确认机制， 数据包一旦发出，无法知道对方是否收到，因此可靠性较差，为了解决这个问题，提高网络可靠性，TCP协议就诞生了，TCP即传输控制协议，是一种面向连接的、可靠的、基于字节流的通信协议。简单来说TCP就是有确认机制的UDP协议，每发出一个数据包都要求确认，如果有一个数据包丢失，就收不到确认，发送方就必须重发这个数据包。<br>为了保证传输的可靠性，TCP 协议在 UDP 基础之上建立了三次对话的确认机制，也就是说，在正式收发数据前，必须和对方建立可靠的连接。由于建立过程较为复杂，我们在这里做一个形象的描述：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">主机A：我想发数据给你，可以么？</span><br><span class="line"></span><br><span class="line">主机B：可以，你什么时候发？</span><br><span class="line"></span><br><span class="line">主机A：我马上发，你接着！</span><br></pre></td></tr></table></figure>
-<p>经过三次对话之后，主机A才会向主机B发送正式数据，而UDP是面向非连接的协议，它不与对方建立连接，而是直接就把数据包发过去了。所以 TCP 能够保证数据包在传输过程中不被丢失，但美好的事物必然是要付出代价的，相比 UDP，TCP 实现过程复杂，消耗连接资源多，传输速度慢。</p>
-<p>TCP 数据包和 UDP 一样，都是由首部和数据两部分组成，唯一不同的是，TCP 数据包没有长度限制，理论上可以无限长，但是为了保证网络的效率，通常 TCP 数据包的长度不会超过IP数据包的长度，以确保单个 TCP 数据包不必再分割。</p>
-<p>总结一下，传输层的主要工作是**<font color='yellow'>定义端口，标识应用程序身份，实现端口到端口的通信，TCP协议可以保证数据传输的可靠性</font>**。</p>
-<h4 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4><p>理论上讲，有了以上三层协议的支持，数据已经可以从一个主机上的应用程序传输到另一台主机的应用程序了，但此时传过来的数据是字节流，不能很好的被程序识别，操作性差。因此，应用层定义了各种各样的协议来规范数据格式，常见的有 HTTP、FTP、SMTP 等，HTTP 是一种比较常用的应用层协议，主要用于B/S架构之间的数据通信，其报文格式如下：<br><img src="https://img-blog.csdnimg.cn/20200404205928861.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>在 Resquest Headers 中，Accept 表示客户端期望接收的数据格式，而 ContentType 则表示客户端发送的数据格式；在 Response Headers 中，ContentType 表示服务端响应的数据格式，这里定义的格式，一般是和  Resquest Headers 中 Accept 定义的格式是一致的。</p>
-<p>有了这个规范以后，服务端收到请求以后，就能正确的解析客户端发来的数据，当请求处理完以后，再按照客户端要求的格式返回，客户端收到结果后，按照服务端返回的格式进行解析。</p>
-<p>所以应用层的主要工作就是**<font color='yellow'>定义数据格式并按照对应的格式解读数据</font>**。</p>
-<h4 id="全流程"><a href="#全流程" class="headerlink" title="全流程"></a>全流程</h4><p>首先我们梳理一下每层模型的职责：</p>
-<ul>
-<li>**<font color='yellow'>链路层</font>**：对0和1进行分组，定义数据帧，确认主机的物理地址，传输数据；</li>
-<li>**<font color='yellow'>网络层</font>**：定义IP地址，确认主机所在的网络位置，并通过IP进行MAC寻址，对外网数据包进行路由转发；</li>
-<li>**<font color='yellow'>传输层</font>**：定义端口，确认主机上应用程序的身份，并将数据包交给对应的应用程序；</li>
-<li>**<font color='yellow'>应用层</font>**：定义数据格式，并按照对应的格式解读数据。</li>
-</ul>
-<p>然后再把每层模型的职责串联起来，用一句通俗易懂的话讲就是：</p>
-<blockquote>
-<p>当你输入一个网址并按下回车键的时候，首先，应用层协议对该请求包做了格式定义；紧接着传输层协议加上了双方的端口号，确认了双方通信的应用程序；然后网络协议加上了双方的IP地址，确认了双方的网络位置；最后链路层协议加上了双方的MAC地址，确认了双方的物理位置，同时将数据进行分组，形成数据帧，采用广播方式，通过传输介质发送给对方主机。而对于不同网段，该数据包首先会转发给网关路由器，经过多次转发后，最终被发送到目标主机。目标机接收到数据包后，采用对应的协议，对帧数据进行组装，然后再通过一层一层的协议进行解析，最终被应用层的协议解析并交给服务器处理。</p>
-</blockquote>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/08/%E8%AF%A6%E8%A7%A3TCP-IP%E5%8D%8F%E8%AE%AE%E6%A0%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -1416,10 +1293,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 17:15:25 / 修改时间：17:20:40" itemprop="dateCreated datePublished" datetime="2021-06-08T17:15:25+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 17:15:25" itemprop="dateCreated datePublished" datetime="2021-06-08T17:15:25+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -1440,11 +1323,123 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#109;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;">&#x79;&#x6f;&#117;&#64;&#x65;&#120;&#x61;&#109;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+          <span id="more"></span>
+
+<p>先是按照git的提示</p>
+<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#x65;&#120;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#x6f;&#x6d;">&#x79;&#111;&#x75;&#64;&#x65;&#120;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#x6d;">&#121;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/" class="post-title-link" itemprop="url">Hadoop archive归档命令的使用</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-06-08 16:58:03" itemprop="dateCreated datePublished" datetime="2021-06-08T16:58:03+08:00">2021-06-08</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Hadoop/" itemprop="url" rel="index"><span itemprop="name">Hadoop</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <span id="more"></span>
+
+<h2 id="archive-命令有什么用"><a href="#archive-命令有什么用" class="headerlink" title="archive 命令有什么用"></a>archive 命令有什么用</h2><p>archive 可以用来解决 Hadoop 中的<em><strong>小文件</strong></em>问题，当存在大量小文件时，会产生如下影响：</p>
+<ol>
+<li>HDFS 中，小文件过多会占用大量内存，NameNode 内存容量最终会成为限制集群扩展的瓶颈。</li>
+<li>HDFS 读写小文件更加耗时，因为每次都需要从 NameNode 获取元信息，并与对应的 DataNode 建立连接。</li>
+<li>小文件过多会开很多 map，一个 map 启动一个 JVM 去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。</li>
+</ol>
+<h2 id="如何使用-archive-进行归档"><a href="#如何使用-archive-进行归档" class="headerlink" title="如何使用 archive 进行归档"></a>如何使用 archive 进行归档</h2><p><img src="https://img-blog.csdnimg.cn/20200428164050783.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>其实已经用法已经很明白了，name指定名字，将路径上的内容创建到 archive 文件中。</p>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>首先我们创建一个小文件 text.txt ，上传四份到 HDFS 上</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428164901114.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>用官方自带的 wordcount 跑一下：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428165351971.png" alt="在这里插入图片描述"></p>
+<p>很明显，4个输入，接下来执行归档命令，将 small 路径下的所有文件归档到 archiveResult 中，可以看到 archive 启动了一个 MapReduce：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428165806873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>得到：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170355564.png" alt="在这里插入图片描述"></p>
+<p>但是进去之后会发现里面并不是我们之前的几个 text.txt 文件：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170538921.png" alt="在这里插入图片描述"></p>
+<p>使用带 har 的命令即可解决：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170942383.png" alt="在这里插入图片描述"></p>
+<p>使用归档之后的文件进行 wordcount：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428171245198.png" alt="在这里插入图片描述"></p>
+<p>最后仍然可以得到正确的结果，但是需要注意的是：<br><strong>使用 archive 归档后，减轻的是 HDFS 的压力，对于 MapReduce 来说，输入还是四个文件。</strong></p>
+<p>如果想要控制 map 数，Hive 可以通过几个参数来实现：</p>
+<ol>
+<li>set mapred.max.split.size = **;（决定每个map处理的最大的文件大小）</li>
+<li>set mapred.min.split.size.per.node = **;（一个节点上 split 的至少的大小，这个值决定了多个DataNode 上的文件是否需要合并）</li>
+<li>set mapred.min.split.size.per.rack = **;（一个交换机下 split 的至少的大小，这个值决定了多个交换机上的文件是否需要合并）</li>
+</ol>
 
       
     </div>

@@ -129,7 +129,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -191,108 +191,6 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/logo1.jpeg">
-      <meta itemprop="name" content="Master Jiang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiang's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/" class="post-title-link" itemprop="url">Hadoop archive归档命令的使用</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2021-06-08 16:58:03 / 修改时间：17:01:39" itemprop="dateCreated datePublished" datetime="2021-06-08T16:58:03+08:00">2021-06-08</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hadoop/" itemprop="url" rel="index"><span itemprop="name">Hadoop</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="archive-命令有什么用"><a href="#archive-命令有什么用" class="headerlink" title="archive 命令有什么用"></a>archive 命令有什么用</h2><p>archive 可以用来解决 Hadoop 中的<em><strong>小文件</strong></em>问题，当存在大量小文件时，会产生如下影响：</p>
-<ol>
-<li>HDFS 中，小文件过多会占用大量内存，NameNode 内存容量最终会成为限制集群扩展的瓶颈。</li>
-<li>HDFS 读写小文件更加耗时，因为每次都需要从 NameNode 获取元信息，并与对应的 DataNode 建立连接。</li>
-<li>小文件过多会开很多 map，一个 map 启动一个 JVM 去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。</li>
-</ol>
-<h2 id="如何使用-archive-进行归档"><a href="#如何使用-archive-进行归档" class="headerlink" title="如何使用 archive 进行归档"></a>如何使用 archive 进行归档</h2><p><img src="https://img-blog.csdnimg.cn/20200428164050783.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>其实已经用法已经很明白了，name指定名字，将路径上的内容创建到 archive 文件中。</p>
-<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>首先我们创建一个小文件 text.txt ，上传四份到 HDFS 上</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428164901114.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>用官方自带的 wordcount 跑一下：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428165351971.png" alt="在这里插入图片描述"></p>
-<p>很明显，4个输入，接下来执行归档命令，将 small 路径下的所有文件归档到 archiveResult 中，可以看到 archive 启动了一个 MapReduce：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428165806873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>得到：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170355564.png" alt="在这里插入图片描述"></p>
-<p>但是进去之后会发现里面并不是我们之前的几个 text.txt 文件：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170538921.png" alt="在这里插入图片描述"></p>
-<p>使用带 har 的命令即可解决：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170942383.png" alt="在这里插入图片描述"></p>
-<p>使用归档之后的文件进行 wordcount：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428171245198.png" alt="在这里插入图片描述"></p>
-<p>最后仍然可以得到正确的结果，但是需要注意的是：<br><strong>使用 archive 归档后，减轻的是 HDFS 的压力，对于 MapReduce 来说，输入还是四个文件。</strong></p>
-<p>如果想要控制 map 数，Hive 可以通过几个参数来实现：</p>
-<ol>
-<li>set mapred.max.split.size = **;（决定每个map处理的最大的文件大小）</li>
-<li>set mapred.min.split.size.per.node = **;（一个节点上 split 的至少的大小，这个值决定了多个DataNode 上的文件是否需要合并）</li>
-<li>set mapred.min.split.size.per.rack = **;（一个交换机下 split 的至少的大小，这个值决定了多个交换机上的文件是否需要合并）</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -316,10 +214,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 16:57:14 / 修改时间：16:57:43" itemprop="dateCreated datePublished" datetime="2021-06-08T16:57:14+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 16:57:14" itemprop="dateCreated datePublished" datetime="2021-06-08T16:57:14+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -340,7 +244,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <ol>
+          <span id="more"></span>
+
+<ol>
 <li><p>在 <a target="_blank" rel="noopener" href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
 </li>
 <li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
@@ -399,10 +305,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 16:55:08 / 修改时间：16:56:35" itemprop="dateCreated datePublished" datetime="2021-06-08T16:55:08+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 16:55:08" itemprop="dateCreated datePublished" datetime="2021-06-08T16:55:08+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -424,20 +336,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
-<h4 id="map-join"><a href="#map-join" class="headerlink" title="map join"></a><em><strong>map join</strong></em></h4><p>我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由此引出了 Sort Merge Bucket Join。</p>
-<h4 id="SMB-join"><a href="#SMB-join" class="headerlink" title="SMB join"></a><em><strong>SMB join</strong></em></h4><p>要使用 SMB Join，所有的表都必须按相同的列进行分桶并使用相同的桶数（或一个表桶数是另一个表桶数的倍数）且保证数据有序。这样才能确保 hash 值相同的 key 被分到同一个桶中，SMB join 的结果才是有效的。可以在建表时通过使用 <code>CLUSTERED BY user_id INTO 256 BUCKETS</code>  来对某一列进行分桶并指定桶数。</p>
-<p>分桶后在插入时需要：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.enforce.bucketing<span class="operator">=</span><span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>强制 hive 为目标分桶表设置正确的reducer数，如果不指定，需要自己设置正确的reducer数：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> mapred.reduce.tasks<span class="operator">=</span><span class="number">256</span></span><br></pre></td></tr></table></figure>
-
-<p>在使用前，需要：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin.sortedmerge <span class="operator">=</span> <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
-
-
-<p>之后每个 mapper 从第一个表中读取一个 bucket 的数据，并读取第二个表中相应 bucket 的数据，在此之后就可以进行 SMB join了，大大缩短执行时间。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -486,10 +392,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 16:53:17 / 修改时间：16:54:30" itemprop="dateCreated datePublished" datetime="2021-06-08T16:53:17+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 16:53:17" itemprop="dateCreated datePublished" datetime="2021-06-08T16:53:17+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -510,7 +422,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>在安装 Homebrew 时发现了如下报错</p>
+          <span id="more"></span>
+
+<p>在安装 Homebrew 时发现了如下报错</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Error: Fetching /usr/<span class="built_in">local</span>/Homebrew/Library/Taps/homebrew/homebrew-cask failed!</span><br><span class="line">fatal: Could not resolve HEAD to a revision</span><br><span class="line">Failed during: /usr/<span class="built_in">local</span>/bin/brew update --force --quiet</span><br></pre></td></tr></table></figure>
 
 <p>尝试了一些方法都没解决，最后采用如下方法完美解决。</p>
@@ -573,10 +487,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-06-08 16:31:49 / 修改时间：16:52:21" itemprop="dateCreated datePublished" datetime="2021-06-08T16:31:49+08:00">2021-06-08</time>
+      <time title="创建时间：2021-06-08 16:31:49" itemprop="dateCreated datePublished" datetime="2021-06-08T16:31:49+08:00">2021-06-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-10-10 18:16:20" itemprop="dateModified" datetime="2021-10-10T18:16:20+08:00">2021-10-10</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -597,7 +517,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
+          <span id="more"></span>
+
+<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
 <h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
 
 <h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
