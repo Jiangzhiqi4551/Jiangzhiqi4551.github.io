@@ -6,7 +6,7 @@
   <link href="https://jiangzhiqi4551.github.io/atom.xml" rel="self"/>
   
   <link href="https://jiangzhiqi4551.github.io/"/>
-  <updated>2021-10-11T04:20:31.007Z</updated>
+  <updated>2021-10-11T15:22:23.596Z</updated>
   <id>https://jiangzhiqi4551.github.io/</id>
   
   <author>
@@ -15,6 +15,25 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Hive中like与rlike的区别</title>
+    <link href="https://jiangzhiqi4551.github.io/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+    <id>https://jiangzhiqi4551.github.io/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
+    <published>2021-10-11T15:04:16.000Z</published>
+    <updated>2021-10-11T15:22:23.596Z</updated>
+    
+    <content type="html"><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p><span id="more"></span><h1 id="like"><a href="#like" class="headerlink" title="like"></a>like</h1><p>% 代替 0 或多个字符</p><p>_ 代替一个字符</p><p><strong>举个例子：</strong></p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;%a%&#x27;</span></span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;_a_&#x27;</span></span><br></pre></td></tr></table></figure><h1 id="rlike"><a href="#rlike" class="headerlink" title="rlike"></a>rlike</h1><p>rlike 采用正则表达式，以下总结几个常用的</p><p>\： 转义用，序列 \ 匹配 \</p><p>^： 匹配输入字符串开始的位置</p><p>$： 匹配输入字符串结尾的位置</p><p>*： 零次或多次匹配前面的字符或子表达式</p><p>?： 零次或一次匹配前面的字符或子表达式</p><p>x|y： 匹配 x 或 y</p><p>[xyz]： 字符集。匹配包含的任一字符</p><p>\w： 匹配任何字类字符，包括下划线</p><p>.： 匹配所有单个字符</p><p>此外，还可以用 regexp 替换 rlike，用 not regexp 替换 not rlike ，效果一样。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^he&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 FALSE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^e&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;llo$&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;hello|world&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;h[\\w]llo&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> rlike <span class="string">&#x27;h.llo&#x27;</span> </span><br></pre></td></tr></table></figure>]]></content>
+    
+    
+    <summary type="html">&lt;p&gt;Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Hive" scheme="https://jiangzhiqi4551.github.io/categories/Hive/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>数据仓库工具箱笔记 - 第二章</title>
@@ -365,7 +384,7 @@
     <published>2021-06-08T09:15:25.000Z</published>
     <updated>2021-10-11T04:17:55.020Z</updated>
     
-    <content type="html"><![CDATA[<p>一些排坑记录。。</p><span id="more"></span><p>先是按照git的提示</p><p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#97;&#109;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#x6d;">&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#97;&#109;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p><p>进行设置，结果发现还是报错，最后找到解决方案如下：</p><p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#x6f;&#109;">&#121;&#x6f;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p><p>按如上步骤操作，最后成功commit</p>]]></content>
+    <content type="html"><![CDATA[<p>一些排坑记录。。</p><span id="more"></span><p>先是按照git的提示</p><p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p><p>进行设置，结果发现还是报错，最后找到解决方案如下：</p><p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;">&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p><p>按如上步骤操作，最后成功commit</p>]]></content>
     
     
     <summary type="html">&lt;p&gt;一些排坑记录。。&lt;/p&gt;</summary>
@@ -373,25 +392,6 @@
     
     
     <category term="排坑记录" scheme="https://jiangzhiqi4551.github.io/categories/%E6%8E%92%E5%9D%91%E8%AE%B0%E5%BD%95/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Hadoop archive归档命令的使用</title>
-    <link href="https://jiangzhiqi4551.github.io/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
-    <id>https://jiangzhiqi4551.github.io/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
-    <published>2021-06-08T08:58:03.000Z</published>
-    <updated>2021-10-10T10:32:28.664Z</updated>
-    
-    <content type="html"><![CDATA[<p>摘要：Hadoop archive 简介</p><span id="more"></span><h2 id="archive-命令有什么用"><a href="#archive-命令有什么用" class="headerlink" title="archive 命令有什么用"></a>archive 命令有什么用</h2><p>archive 可以用来解决 Hadoop 中的<em><strong>小文件</strong></em>问题，当存在大量小文件时，会产生如下影响：</p><ol><li>HDFS 中，小文件过多会占用大量内存，NameNode 内存容量最终会成为限制集群扩展的瓶颈。</li><li>HDFS 读写小文件更加耗时，因为每次都需要从 NameNode 获取元信息，并与对应的 DataNode 建立连接。</li><li>小文件过多会开很多 map，一个 map 启动一个 JVM 去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。</li></ol><h2 id="如何使用-archive-进行归档"><a href="#如何使用-archive-进行归档" class="headerlink" title="如何使用 archive 进行归档"></a>如何使用 archive 进行归档</h2><p><img src="https://img-blog.csdnimg.cn/20200428164050783.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p><p>其实已经用法已经很明白了，name指定名字，将路径上的内容创建到 archive 文件中。</p><h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>首先我们创建一个小文件 text.txt ，上传四份到 HDFS 上</p><p><img src="https://img-blog.csdnimg.cn/20200428164901114.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p><p>用官方自带的 wordcount 跑一下：</p><p><img src="https://img-blog.csdnimg.cn/20200428165351971.png" alt="在这里插入图片描述"></p><p>很明显，4个输入，接下来执行归档命令，将 small 路径下的所有文件归档到 archiveResult 中，可以看到 archive 启动了一个 MapReduce：</p><p><img src="https://img-blog.csdnimg.cn/20200428165806873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p><p>得到：</p><p><img src="https://img-blog.csdnimg.cn/20200428170355564.png" alt="在这里插入图片描述"></p><p>但是进去之后会发现里面并不是我们之前的几个 text.txt 文件：</p><p><img src="https://img-blog.csdnimg.cn/20200428170538921.png" alt="在这里插入图片描述"></p><p>使用带 har 的命令即可解决：</p><p><img src="https://img-blog.csdnimg.cn/20200428170942383.png" alt="在这里插入图片描述"></p><p>使用归档之后的文件进行 wordcount：</p><p><img src="https://img-blog.csdnimg.cn/20200428171245198.png" alt="在这里插入图片描述"></p><p>最后仍然可以得到正确的结果，但是需要注意的是：<br><strong>使用 archive 归档后，减轻的是 HDFS 的压力，对于 MapReduce 来说，输入还是四个文件。</strong></p><p>如果想要控制 map 数，Hive 可以通过几个参数来实现：</p><ol><li>set mapred.max.split.size = **;（决定每个map处理的最大的文件大小）</li><li>set mapred.min.split.size.per.node = **;（一个节点上 split 的至少的大小，这个值决定了多个DataNode 上的文件是否需要合并）</li><li>set mapred.min.split.size.per.rack = **;（一个交换机下 split 的至少的大小，这个值决定了多个交换机上的文件是否需要合并）</li></ol>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;摘要：Hadoop archive 简介&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Hadoop" scheme="https://jiangzhiqi4551.github.io/categories/Hadoop/"/>
     
     
   </entry>
