@@ -6,7 +6,7 @@
   <link href="https://jiangzhiqi4551.github.io/atom.xml" rel="self"/>
   
   <link href="https://jiangzhiqi4551.github.io/"/>
-  <updated>2021-10-12T07:54:09.852Z</updated>
+  <updated>2021-10-12T08:03:52.923Z</updated>
   <id>https://jiangzhiqi4551.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>数据治理过程中的几种优化手段</title>
+    <link href="https://jiangzhiqi4551.github.io/2021/10/12/%E6%95%B0%E6%8D%AE%E6%B2%BB%E7%90%86%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%A0%E7%A7%8D%E4%BC%98%E5%8C%96%E6%89%8B%E6%AE%B5/"/>
+    <id>https://jiangzhiqi4551.github.io/2021/10/12/%E6%95%B0%E6%8D%AE%E6%B2%BB%E7%90%86%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%A0%E7%A7%8D%E4%BC%98%E5%8C%96%E6%89%8B%E6%AE%B5/</id>
+    <published>2021-10-12T07:56:42.000Z</published>
+    <updated>2021-10-12T08:03:52.923Z</updated>
+    
+    <content type="html"><![CDATA[<p>当企业数仓发展到一定规模后，就会出现模型迭代速度远慢于业务发展速度的现象，为了满足业务需要，DE 往往会面向需求进行快速开发，由此造成了烟囱表、数据安全、计算冗余、存储浪费等各种各样的问题。为了解决这些问题，保持离线数仓长期向好的健康状态，需要开展数据治理工作。</p><p>但在多数公司中，开展数据治理的原因往往是为了节约成本，减少计算开销和存储开销。。。下面总结一些可以优化计算和存储开销的常见方法。</p><span id="more"></span><h3 id="1-删除-TOPk-存储的无下游，且近-N-天无更新的-ODS-表"><a href="#1-删除-TOPk-存储的无下游，且近-N-天无更新的-ODS-表" class="headerlink" title="1. 删除 TOPk 存储的无下游，且近 N 天无更新的 ODS 表"></a>1. 删除 TOPk 存储的无下游，且近 N 天无更新的 ODS 表</h3><p>业务风险高，数据不可恢复，需要跟业务确认</p><h3 id="2-如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）"><a href="#2-如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）" class="headerlink" title="2. 如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）"></a>2. 如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）</h3><p>业务风险中，可能存在回溯数据的需求</p><h3 id="3-删除-TOPk-存储的-DWD-表-N-年前的数据"><a href="#3-删除-TOPk-存储的-DWD-表-N-年前的数据" class="headerlink" title="3. 删除 TOPk 存储的 DWD 表 N 年前的数据"></a>3. 删除 TOPk 存储的 DWD 表 N 年前的数据</h3><p>业务风险中，可能存在回溯数据的需求</p><h3 id="4-对未执行完-EC-的表进行-EC-操作"><a href="#4-对未执行完-EC-的表进行-EC-操作" class="headerlink" title="4. 对未执行完 EC 的表进行 EC 操作"></a>4. 对未执行完 EC 的表进行 EC 操作</h3><p>业务风险低</p><h3 id="5-缩短-Hive-表-EC-的时间窗口（如缩短为7天）"><a href="#5-缩短-Hive-表-EC-的时间窗口（如缩短为7天）" class="headerlink" title="5. 缩短 Hive 表 EC 的时间窗口（如缩短为7天）"></a>5. 缩短 Hive 表 EC 的时间窗口（如缩短为7天）</h3><p>业务风险低</p><h3 id="6-埋点模型优化治理"><a href="#6-埋点模型优化治理" class="headerlink" title="6. 埋点模型优化治理"></a>6. 埋点模型优化治理</h3><ul><li>对埋点模型本身进行优化，剪裁无效列，减少原始日志数据上报量，并去清理历史数据，将无效字段删除。</li><li>针对原始上报数据，上报数据量 TOP 的埋点，与业务侧确认后，以埋点合并、埋点下线等方式进行优化，减少每天新增的数据量。</li><li>将埋点平台未注册的埋点逐步下线。</li><li>开展埋点生命周期管理。对于功能迭代、活动结束、埋点重新设计场景，可以主动下线埋点，同步客户端删除代码。对于长时间无访问且无人维护的埋点，可以由埋点平台主动识别并下线。</li></ul><p>业务风险低，清除历史数据会消耗一定的计算资源。</p><h3 id="7-分离业务日志与技术日志"><a href="#7-分离业务日志与技术日志" class="headerlink" title="7. 分离业务日志与技术日志"></a>7. 分离业务日志与技术日志</h3><p>业务风险低</p><h3 id="8-MySQL-同步到-HIve-的快照表只保留近-N-天数据"><a href="#8-MySQL-同步到-HIve-的快照表只保留近-N-天数据" class="headerlink" title="8. MySQL 同步到 HIve 的快照表只保留近 N 天数据"></a>8. MySQL 同步到 HIve 的快照表只保留近 N 天数据</h3><p>业务风险中，可能存在回溯数据的需求</p><h3 id="9-TOP存储的中间表，生命周期设为-N-天"><a href="#9-TOP存储的中间表，生命周期设为-N-天" class="headerlink" title="9. TOP存储的中间表，生命周期设为 N 天"></a>9. TOP存储的中间表，生命周期设为 N 天</h3><p>业务风险低</p><h3 id="10-删除不持续产出的-TOP-表"><a href="#10-删除不持续产出的-TOP-表" class="headerlink" title="10. 删除不持续产出的 TOP 表"></a>10. 删除不持续产出的 TOP 表</h3><p>业务风险低</p><h3 id="11-TOP-存储的-ODS-表冷存"><a href="#11-TOP-存储的-ODS-表冷存" class="headerlink" title="11. TOP 存储的 ODS 表冷存"></a>11. TOP 存储的 ODS 表冷存</h3><p>业务风险低</p><h3 id="12-DWD-表技术埋点裁剪"><a href="#12-DWD-表技术埋点裁剪" class="headerlink" title="12. DWD 表技术埋点裁剪"></a>12. DWD 表技术埋点裁剪</h3><p>业务风险高，可能需要切换使用方式</p>]]></content>
+    
+    
+    <summary type="html">&lt;p&gt;当企业数仓发展到一定规模后，就会出现模型迭代速度远慢于业务发展速度的现象，为了满足业务需要，DE 往往会面向需求进行快速开发，由此造成了烟囱表、数据安全、计算冗余、存储浪费等各种各样的问题。为了解决这些问题，保持离线数仓长期向好的健康状态，需要开展数据治理工作。&lt;/p&gt;
+&lt;p&gt;但在多数公司中，开展数据治理的原因往往是为了节约成本，减少计算开销和存储开销。。。下面总结一些可以优化计算和存储开销的常见方法。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="大数据技术&amp;数据仓库" scheme="https://jiangzhiqi4551.github.io/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%8A%80%E6%9C%AF-%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93/"/>
+    
+    
+    <category term="数据治理" scheme="https://jiangzhiqi4551.github.io/tags/%E6%95%B0%E6%8D%AE%E6%B2%BB%E7%90%86/"/>
+    
+  </entry>
   
   <entry>
     <title>Hive宏(Macro)简介</title>
@@ -373,25 +395,6 @@
     
     
     <category term="Spark" scheme="https://jiangzhiqi4551.github.io/categories/Spark/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Hive中的Skew Join</title>
-    <link href="https://jiangzhiqi4551.github.io/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/"/>
-    <id>https://jiangzhiqi4551.github.io/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</id>
-    <published>2021-06-08T10:16:45.000Z</published>
-    <updated>2021-10-10T10:16:20.953Z</updated>
-    
-    <content type="html"><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p><span id="more"></span><h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p><h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure><p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p><h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p><p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="Hive" scheme="https://jiangzhiqi4551.github.io/categories/Hive/"/>
     
     
   </entry>

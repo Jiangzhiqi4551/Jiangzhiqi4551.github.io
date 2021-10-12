@@ -41,6 +41,39 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive中like与rlike的区别</title>
+    <url>/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p>
+<span id="more"></span>
+
+<h1 id="like"><a href="#like" class="headerlink" title="like"></a>like</h1><p>% 代替 0 或多个字符</p>
+<p>_ 代替一个字符</p>
+<p><strong>举个例子：</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;%a%&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;_a_&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="rlike"><a href="#rlike" class="headerlink" title="rlike"></a>rlike</h1><p>rlike 采用正则表达式，以下总结几个常用的</p>
+<p>\： 转义用，序列 \ 匹配 \</p>
+<p>^： 匹配输入字符串开始的位置</p>
+<p>$： 匹配输入字符串结尾的位置</p>
+<p>*： 零次或多次匹配前面的字符或子表达式</p>
+<p>?： 零次或一次匹配前面的字符或子表达式</p>
+<p>x|y： 匹配 x 或 y</p>
+<p>[xyz]： 字符集。匹配包含的任一字符</p>
+<p>\w： 匹配任何字类字符，包括下划线</p>
+<p>.： 匹配所有单个字符</p>
+<p>此外，还可以用 regexp 替换 rlike，用 not regexp 替换 not rlike ，效果一样。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^he&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 FALSE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^e&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;llo$&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;hello|world&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;h[\\w]llo&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> rlike <span class="string">&#x27;h.llo&#x27;</span> </span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hadoop纠删码（Erasure Coding）简介</title>
     <url>/2021/10/12/Hadoop%E7%BA%A0%E5%88%A0%E7%A0%81%EF%BC%88Erasure-Coding%EF%BC%89%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>摘要：相比于三副本机制，纠删码可以大大提高存储效率，本文将简介纠删码的原理。</p>
@@ -135,39 +168,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中like与rlike的区别</title>
-    <url>/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p>
-<span id="more"></span>
-
-<h1 id="like"><a href="#like" class="headerlink" title="like"></a>like</h1><p>% 代替 0 或多个字符</p>
-<p>_ 代替一个字符</p>
-<p><strong>举个例子：</strong></p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;%a%&#x27;</span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;_a_&#x27;</span></span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="rlike"><a href="#rlike" class="headerlink" title="rlike"></a>rlike</h1><p>rlike 采用正则表达式，以下总结几个常用的</p>
-<p>\： 转义用，序列 \ 匹配 \</p>
-<p>^： 匹配输入字符串开始的位置</p>
-<p>$： 匹配输入字符串结尾的位置</p>
-<p>*： 零次或多次匹配前面的字符或子表达式</p>
-<p>?： 零次或一次匹配前面的字符或子表达式</p>
-<p>x|y： 匹配 x 或 y</p>
-<p>[xyz]： 字符集。匹配包含的任一字符</p>
-<p>\w： 匹配任何字类字符，包括下划线</p>
-<p>.： 匹配所有单个字符</p>
-<p>此外，还可以用 regexp 替换 rlike，用 not regexp 替换 not rlike ，效果一样。</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^he&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 FALSE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^e&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;llo$&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;hello|world&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;h[\\w]llo&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> rlike <span class="string">&#x27;h.llo&#x27;</span> </span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive中的Skew Join</title>
     <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
     <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
@@ -239,6 +239,34 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
+<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
+<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
+<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
+<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
+<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
+<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
+<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
+<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
+
+<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
     <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
@@ -278,6 +306,50 @@
 <h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
 <p>中number值的设置调整reducer个数。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive宏(Macro)简介</title>
+    <url>/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
+<span id="more"></span>
+
+
+
+<h2 id="什么是-Macro"><a href="#什么是-Macro" class="headerlink" title="什么是 Macro"></a>什么是 Macro</h2><p>在进行 Hive SQL 开发的时候，有一些逻辑需要反复使用，如果代码中每次都把所需逻辑复制粘贴一遍，不仅会造成代码冗余，还会增加维护难度，这时使用 Hive宏 对逻辑进行提炼，可以起到简化代码，提高开发效率，提升程序可读性的效果。</p>
+<h2 id="如何使用-Macro"><a href="#如何使用-Macro" class="headerlink" title="如何使用 Macro"></a>如何使用 Macro</h2><p>宏的使用主要分为：创建、使用、销毁这三步，其中最重要的是创建部分，定义好后可以将宏像函数一样使用，最后的销毁是出于开发规范的需要。下面举一个简单例子：</p>
+<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a><strong>1、创建</strong></h4><p>创建宏的标准语法：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO macro_name([col_name col_type, ...]) expression;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建一个简单的字符串拼接宏：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> temporary macro test_macro(input_string string)</span><br><span class="line">concat(<span class="string">&#x27;hello&#x27;</span> , <span class="string">&#x27; &#x27;</span> , input_string);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建一个两个参数的求和宏：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO simple_add (x <span class="type">int</span>, y <span class="type">int</span>) x <span class="operator">+</span> y;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2、使用"><a href="#2、使用" class="headerlink" title="2、使用"></a><strong>2、使用</strong></h4><p>类似于UDF，直接传参使用：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> test_macro(<span class="string">&#x27;test&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3、销毁"><a href="#3、销毁" class="headerlink" title="3、销毁"></a><strong>3、销毁</strong></h4><p> 标准语法：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">DROP</span> TEMPORARY MACRO [IF <span class="keyword">EXISTS</span>] macro_name;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="为什么要使用-Macro"><a href="#为什么要使用-Macro" class="headerlink" title="为什么要使用 Macro"></a>为什么要使用 Macro</h2><ol>
+<li>Macro 的开发过程比 UDF 更简单</li>
+<li>与 UDF 相比，因为 UDF 是用 Java 代码开发的，堆变量的内存回收不受开发者控制，由虚拟机决定，并且实际生产中需要将 UDF 嵌套到 HQL 中，因此如果表的数据量比较大，存在发生 OOM 的风险。</li>
+</ol>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -337,78 +409,6 @@
 <h2 id="distribute-by语句的使用"><a href="#distribute-by语句的使用" class="headerlink" title="distribute by语句的使用"></a>distribute by语句的使用</h2><p>distribute by控制map的输出在reduce中是如何划分的，可以指定distribute by的值，将相同值得数据分发到一个reducer中去，类似于group by。在分发后的数据中可以调用sort by 进行reducer内部的排序。<br>按用户ID做distribute，再按客户端时间做排序</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SELECT</span><br><span class="line">* </span><br><span class="line">from your_table</span><br><span class="line">DISTRIBUTE BY user_id</span><br><span class="line">SORT BY client_event_time</span><br></pre></td></tr></table></figure>
 <p>当distribute by和sort by中的字段相同时，可以使用<strong>cluster by</strong>做替代，达成相同的效果，但是使用cluster by会剥夺sort by的并行性，而且cluster by也不能指定ASC或者desc，只能按降序排列，但是可以实现数据的全局有序。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive宏(Macro)简介</title>
-    <url>/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
-<span id="more"></span>
-
-
-
-<h2 id="什么是-Macro"><a href="#什么是-Macro" class="headerlink" title="什么是 Macro"></a>什么是 Macro</h2><p>在进行 Hive SQL 开发的时候，有一些逻辑需要反复使用，如果代码中每次都把所需逻辑复制粘贴一遍，不仅会造成代码冗余，还会增加维护难度，这时使用 Hive宏 对逻辑进行提炼，可以起到简化代码，提高开发效率，提升程序可读性的效果。</p>
-<h2 id="如何使用-Macro"><a href="#如何使用-Macro" class="headerlink" title="如何使用 Macro"></a>如何使用 Macro</h2><p>宏的使用主要分为：创建、使用、销毁这三步，其中最重要的是创建部分，定义好后可以将宏像函数一样使用，最后的销毁是出于开发规范的需要。下面举一个简单例子：</p>
-<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a><strong>1、创建</strong></h4><p>创建宏的标准语法：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO macro_name([col_name col_type, ...]) expression;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>创建一个简单的字符串拼接宏：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> temporary macro test_macro(input_string string)</span><br><span class="line">concat(<span class="string">&#x27;hello&#x27;</span> , <span class="string">&#x27; &#x27;</span> , input_string);</span><br></pre></td></tr></table></figure>
-
-
-
-<p>创建一个两个参数的求和宏：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO simple_add (x <span class="type">int</span>, y <span class="type">int</span>) x <span class="operator">+</span> y;</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="2、使用"><a href="#2、使用" class="headerlink" title="2、使用"></a><strong>2、使用</strong></h4><p>类似于UDF，直接传参使用：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> test_macro(<span class="string">&#x27;test&#x27;</span>);</span><br></pre></td></tr></table></figure>
-
-
-
-<h4 id="3、销毁"><a href="#3、销毁" class="headerlink" title="3、销毁"></a><strong>3、销毁</strong></h4><p> 标准语法：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">DROP</span> TEMPORARY MACRO [IF <span class="keyword">EXISTS</span>] macro_name;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="为什么要使用-Macro"><a href="#为什么要使用-Macro" class="headerlink" title="为什么要使用 Macro"></a>为什么要使用 Macro</h2><ol>
-<li>Macro 的开发过程比 UDF 更简单</li>
-<li>与 UDF 相比，因为 UDF 是用 Java 代码开发的，堆变量的内存回收不受开发者控制，由虚拟机决定，并且实际生产中需要将 UDF 嵌套到 HQL 中，因此如果表的数据量比较大，存在发生 OOM 的风险。</li>
-</ol>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -502,6 +502,69 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark入门之基础知识（二）RDD编程</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
+    <content><![CDATA[<p>摘要：RDD基础知识总结</p>
+<span id="more"></span>
+
+<h2 id="什么是RDD"><a href="#什么是RDD" class="headerlink" title="什么是RDD"></a>什么是RDD</h2><p>弹性分布式数据集RDD是Spark的核心抽象。RDD其实就是分布式的元素集合，Spark中的操作创建、转化、或对RDD进行求值，Spark会自动将RDD的数据分发到集群上并并行执行。<br>RDD是一个不可变的分布式对象集合，每个RDD都被分为多个分区，这些分区在集群中不同的节点上运行。<br>”弹性“的解读：弹性意味着在任何时候都能进行重算，当某一部分数据丢失时，可以根据血缘关系将丢失的部分计算出来，而不是从头开始计算全部数据。</p>
+<h2 id="RDD的属性"><a href="#RDD的属性" class="headerlink" title="RDD的属性"></a>RDD的属性</h2><p>（1）一组分片（Partition），即数据集的基本组成单位。对于RDD来说，每个分片都会被一个计算任务处理，并决定并行计算的粒度。用户可以在创建RDD时指定RDD的分片个数，如果没有指定，那么就会采用默认值。默认值就是程序所分配到的CPU Core的数目。</p>
+<p>（2）一个计算每个分区的函数。Spark中RDD的计算是以分片为单位的，每个RDD都会实现compute函数以达到这个目的。compute函数会对迭代器进行复合，不需要保存每次计算的结果。</p>
+<p>（3）RDD之间的依赖关系。RDD的每次转换都会生成一个新的RDD，所以RDD之间就会形成类似于流水线一样的前后依赖关系。在部分分区数据丢失时，Spark可以通过这个依赖关系重新计算丢失的分区数据，而不是对RDD的所有分区进行重新计算。</p>
+<p>（4）一个Partitioner，即RDD的分片函数。当前Spark中实现了两种类型的分片函数，一个是基于哈希的HashPartitioner，另外一个是基于范围的RangePartitioner。只有对于于key-value的RDD，才会有Partitioner，非key-value的RDD的Parititioner的值是None。Partitioner函数不但决定了RDD本身的分片数量，也决定了parent RDD Shuffle输出时的分片数量。</p>
+<p>（5）一个列表，存储存取每个Partition的优先位置（preferred location）。对于一个HDFS文件来说，这个列表保存的就是每个Partition所在的块的位置。按照“移动数据不如移动计算”的理念，Spark在进行任务调度的时候，会尽可能地将计算任务分配到其所要处理数据块的存储位置。</p>
+<h2 id="创建RDD的方法"><a href="#创建RDD的方法" class="headerlink" title="创建RDD的方法"></a>创建RDD的方法</h2><p>1）读取外部数据及</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val lines = sc.textFile(&quot;test.txt&quot;) // 从HDFS读取数据</span><br></pre></td></tr></table></figure>
+<p>读取数据的操作同样也是惰性的，执行上面这行代码时，数据并没有真正被读取进来。<br>2）在Driver Program中分发驱动器程序中的对象集合。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = context.parallelize(List(1,2,3,4,5)) // 创建RDD最简单的方式</span><br></pre></td></tr></table></figure>
+<h2 id="RDD的操作方法"><a href="#RDD的操作方法" class="headerlink" title="RDD的操作方法"></a>RDD的操作方法</h2><p>1）转化操作：transformation 会由一个RDD生成一个<em>新的</em>RDD。<br>Spark使用血缘关系图来记录不同RDD之间的依赖关系：<br><img src="https://img-blog.csdnimg.cn/201912161540010.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>2）行动操作：action会将RDD计算出一个结果，返回到Driver Program中或存到HDFS等外部存储中。</p>
+<h5 id="转化操作和行动操作的区别"><a href="#转化操作和行动操作的区别" class="headerlink" title="转化操作和行动操作的区别"></a>转化操作和行动操作的区别</h5><p>transformation是惰性的，一个transformation操作并不会被立即计算，只有在action中用到时，才会去真正的计算。<br>转化操作返回的是一个RDD，行动操作返回的是其他的数据类型。</p>
+<h5 id="为什么要区分转化和行动操作"><a href="#为什么要区分转化和行动操作" class="headerlink" title="为什么要区分转化和行动操作"></a>为什么要区分转化和行动操作</h5><p>主要是出于对资源和效率上的考虑，如果我们有1000行文本，先把前800行读出来记为RDD1，再将RDD1的前200行读出来记为RDD2，再读取RDD2的第一行记为RDD3，最后把RDD3存到HDFS上。<br>如果每一步都立刻计算的话，就会造成很大的开销。然而事实上我们只需要第一行的数据，在采取惰性计算后，在真正的action被执行时，Spark已经获知了整个转化操作链，只会计算我们真正需要的数据，大大加快了执行速度。</p>
+<h2 id="关于RDD缓存"><a href="#关于RDD缓存" class="headerlink" title="关于RDD缓存"></a>关于RDD缓存</h2><h5 id="为什么要缓存"><a href="#为什么要缓存" class="headerlink" title="为什么要缓存"></a>为什么要缓存</h5><p>RDD会在每次对其进行action操作时重新计算，实际生产中很多情况下需要多次重用一个RDD（例如我们读取了一个大宽表，之后在这个宽表上产出各种维度数据），此时最好对RDD进行缓存。</p>
+<h2 id="常见transformation与action操作讲解"><a href="#常见transformation与action操作讲解" class="headerlink" title="常见transformation与action操作讲解"></a>常见transformation与action操作讲解</h2><h4 id="transformation"><a href="#transformation" class="headerlink" title="transformation"></a>transformation</h4><p>1）map()：接受一个函数，将其应用于RDD中的每个元素，将函数返回值作为结果RDD中元素的对应值。返回值类型不需要和输入值类型一样。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = context.parallelize(List(1,2,3,4,5))</span><br><span class="line">    val dataAdd = data.map(x =&gt; x+1)</span><br><span class="line">    dataAdd.take(6)</span><br></pre></td></tr></table></figure>
+<p>对每一个元素加一，结果为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">res11: Array[Int] = Array(2, 3, 4, 5, 6)</span><br></pre></td></tr></table></figure>
+<p>2）filter()：接受一个函数，将RDD中满足函数要求的元素放入结果RDD中返回。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val dataFilter = data.filter(x =&gt; x &gt; 3)</span><br><span class="line">   dataFilter.take(5)</span><br></pre></td></tr></table></figure>
+<p>筛选出大于3的元素，结果为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">res12: Array[Int] = Array(4, 5)</span><br></pre></td></tr></table></figure>
+<p>3）flatMap()：对每个输入元素生成多个输出元素，可以理解为将输入的RDD拍扁。<br><img src="https://img-blog.csdnimg.cn/20191216161042645.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>经过flatmap拍扁之后，得到的是一个由各列表中元素组成的RDD，而不是一个由多列表组成的RDD。</p>
+<h5 id="RDD集合操作"><a href="#RDD集合操作" class="headerlink" title="RDD集合操作"></a>RDD集合操作</h5><p>集合操作要求RDD之间的数据类型相同。<br>1）union操作：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val union = rdd1.union(rdd2)</span><br><span class="line">union.take(10)</span><br><span class="line">res14: Array[Int] = Array(1, 3, 5, 7, 10, 2, 4, 6, 8, 10)</span><br></pre></td></tr></table></figure>
+<p>返回包含两个RDD中全部元素的新RDD，重复元素也会保留。</p>
+<p>2）intersection操作：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val intersection = rdd1.intersection(rdd2)</span><br><span class="line">intersection.take(10)</span><br><span class="line">res15: Array[Int] = Array(10)   </span><br></pre></td></tr></table></figure>
+<p>结果为两个RDD的交集，会对结果去重。</p>
+<p>3）subtract操作：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val sub = rdd1.subtract(rdd2)</span><br><span class="line">sub.take(10)</span><br><span class="line">res16: Array[Int] = Array(1, 3, 5, 7)         </span><br></pre></td></tr></table></figure>
+<p>返回存在第一个RDD中，不存在第二个RDD中的元素</p>
+<p>4）cartesian操作：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = sc.parallelize(List(1, 3, 5))</span><br><span class="line">val rdd2 = sc.parallelize(List(2, 4, 6))</span><br><span class="line">val cartesian = rdd1.cartesian(rdd2)</span><br><span class="line">cartesian.take(9)</span><br><span class="line">res17: Array[(Int, Int)] = Array((1,2), (1,4), (1,6), (3,2), (5,2), (3,4), (3,6), (5,4), (5,6))</span><br></pre></td></tr></table></figure>
+<p>对两个RDD求笛卡尔积</p>
+<h4 id="action"><a href="#action" class="headerlink" title="action"></a>action</h4><p>1）reduce：<br>操作两个RDD元素类型的数据并返回一个同样类型的新元素</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.reduce((x,y) =&gt; x+y)</span><br><span class="line">res2: Int = 15</span><br></pre></td></tr></table></figure>
+
+<p>2）fold：<br>与reduce相同，只不过加了个初始值的设定<br>初始值为100，最后求和结果为115</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.fold(100)((x,y) =&gt; x+y)</span><br><span class="line">res3: Int = 115</span><br></pre></td></tr></table></figure>
+<p>3）aggregate：<br>reduce和fold都只能返回和RDD中元素类型相同的值，例如前面的例子中。list中的是int，那么我们最后得到的返回值也是int，但是aggregate却没有这个限制，可以有不同类型的返回值。<br>举个经典的求平均值例子：<br>aggregate采用柯里化的方式接受三个参数，在本例中(0,0)代表初始值，第一个函数(x, y) =&gt; (x._1 + y, x._2 + 1)代表（目前已统计的数值之和，目前已统计的元素个数），第二个函数(x, y) =&gt; (x._1 + y._1, x._2 + y._2)代表对分布式计算的结果进行累加计算，例如从两个RDD统计的结果为（10，2），（10，3），对这两部分进行合并得到（20，5），最后用20/5即可得到平均值。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; val data = sc.parallelize(List(1,2,3,4,5))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at &lt;console&gt;:24</span><br><span class="line">scala&gt; val result = data.aggregate(0, 0)((x, y) =&gt; (x._1 + y, x._2 + 1), (x, y) =&gt; (x._1 + y._1, x._2 + y._2))</span><br><span class="line">result: (Int, Int) = (15,5)</span><br><span class="line">scala&gt; val avg = result._1/result._2.toDouble</span><br><span class="line">avg: Double = 3.0                                                     </span><br></pre></td></tr></table></figure>
+<p>4）collect：<br>会将整个RDD的内容返回，要求所有数据都必须能一同放入单台机器的内存中。所以不建议在数据量很大时使用，一般用来测试代码。<br>5）take：<br>返回RDD中的n个元素</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.take(3)</span><br><span class="line">res4: List[Int] = List(1, 2, 3)</span><br></pre></td></tr></table></figure>
+<p>6）top：<br>从RDD中提取前n个元素</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; val data = sc.parallelize(List(1,2,3,4,5))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at &lt;console&gt;:24</span><br><span class="line">scala&gt; data.top(2)</span><br><span class="line">res10: Array[Int] = Array(5, 4)</span><br></pre></td></tr></table></figure>
+<p>7）takeSample：<br>从数据采样<br>该方法仅在预期结果数组很小的情况下使用，因为所有数据都被加载到driver的内存中。<br>第一个参数true or false 表示是否可以重复抽样，在选为false的情况下，抽取的元素不会发生重复。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; data.takeSample(false,2)</span><br><span class="line">res11: Array[Int] = Array(4, 1)       </span><br><span class="line">scala&gt; data.takeSample(false,2)</span><br><span class="line">res12: Array[Int] = Array(2, 4) </span><br></pre></td></tr></table></figure>
+
+<h4 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h4><p>当我们对RDD进行缓存时，计算出RDD的节点会分别保存他们计算出的数据，如果某个节点的数据丢失，当我们用到RDD时，Spark会重算这部分的数据。<br>在Scala中，默认情况下persist()会把数据以序列化的形式缓存在JVM的堆空间中。</p>
+<p>各个缓存级别的差异如图所示：<br><img src="https://img-blog.csdnimg.cn/20191217153950699.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>persist()的调用不会触发求值，当缓存的数据太多内存放不下时，Spark会使用LRU删除最近最少使用的那部分数据，如果缓存级别为只放在内存中时，再次用到这部分的数据就需要重新计算。</p>
+<p>下篇文章将介绍基本的键值对操作。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark入门之基础知识（三）键值对操作</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E9%94%AE%E5%80%BC%E5%AF%B9%E6%93%8D%E4%BD%9C/</url>
     <content><![CDATA[<p>摘要：键值对算子简介</p>
@@ -571,69 +634,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（二）RDD编程</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
-    <content><![CDATA[<p>摘要：RDD基础知识总结</p>
-<span id="more"></span>
-
-<h2 id="什么是RDD"><a href="#什么是RDD" class="headerlink" title="什么是RDD"></a>什么是RDD</h2><p>弹性分布式数据集RDD是Spark的核心抽象。RDD其实就是分布式的元素集合，Spark中的操作创建、转化、或对RDD进行求值，Spark会自动将RDD的数据分发到集群上并并行执行。<br>RDD是一个不可变的分布式对象集合，每个RDD都被分为多个分区，这些分区在集群中不同的节点上运行。<br>”弹性“的解读：弹性意味着在任何时候都能进行重算，当某一部分数据丢失时，可以根据血缘关系将丢失的部分计算出来，而不是从头开始计算全部数据。</p>
-<h2 id="RDD的属性"><a href="#RDD的属性" class="headerlink" title="RDD的属性"></a>RDD的属性</h2><p>（1）一组分片（Partition），即数据集的基本组成单位。对于RDD来说，每个分片都会被一个计算任务处理，并决定并行计算的粒度。用户可以在创建RDD时指定RDD的分片个数，如果没有指定，那么就会采用默认值。默认值就是程序所分配到的CPU Core的数目。</p>
-<p>（2）一个计算每个分区的函数。Spark中RDD的计算是以分片为单位的，每个RDD都会实现compute函数以达到这个目的。compute函数会对迭代器进行复合，不需要保存每次计算的结果。</p>
-<p>（3）RDD之间的依赖关系。RDD的每次转换都会生成一个新的RDD，所以RDD之间就会形成类似于流水线一样的前后依赖关系。在部分分区数据丢失时，Spark可以通过这个依赖关系重新计算丢失的分区数据，而不是对RDD的所有分区进行重新计算。</p>
-<p>（4）一个Partitioner，即RDD的分片函数。当前Spark中实现了两种类型的分片函数，一个是基于哈希的HashPartitioner，另外一个是基于范围的RangePartitioner。只有对于于key-value的RDD，才会有Partitioner，非key-value的RDD的Parititioner的值是None。Partitioner函数不但决定了RDD本身的分片数量，也决定了parent RDD Shuffle输出时的分片数量。</p>
-<p>（5）一个列表，存储存取每个Partition的优先位置（preferred location）。对于一个HDFS文件来说，这个列表保存的就是每个Partition所在的块的位置。按照“移动数据不如移动计算”的理念，Spark在进行任务调度的时候，会尽可能地将计算任务分配到其所要处理数据块的存储位置。</p>
-<h2 id="创建RDD的方法"><a href="#创建RDD的方法" class="headerlink" title="创建RDD的方法"></a>创建RDD的方法</h2><p>1）读取外部数据及</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val lines = sc.textFile(&quot;test.txt&quot;) // 从HDFS读取数据</span><br></pre></td></tr></table></figure>
-<p>读取数据的操作同样也是惰性的，执行上面这行代码时，数据并没有真正被读取进来。<br>2）在Driver Program中分发驱动器程序中的对象集合。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = context.parallelize(List(1,2,3,4,5)) // 创建RDD最简单的方式</span><br></pre></td></tr></table></figure>
-<h2 id="RDD的操作方法"><a href="#RDD的操作方法" class="headerlink" title="RDD的操作方法"></a>RDD的操作方法</h2><p>1）转化操作：transformation 会由一个RDD生成一个<em>新的</em>RDD。<br>Spark使用血缘关系图来记录不同RDD之间的依赖关系：<br><img src="https://img-blog.csdnimg.cn/201912161540010.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>2）行动操作：action会将RDD计算出一个结果，返回到Driver Program中或存到HDFS等外部存储中。</p>
-<h5 id="转化操作和行动操作的区别"><a href="#转化操作和行动操作的区别" class="headerlink" title="转化操作和行动操作的区别"></a>转化操作和行动操作的区别</h5><p>transformation是惰性的，一个transformation操作并不会被立即计算，只有在action中用到时，才会去真正的计算。<br>转化操作返回的是一个RDD，行动操作返回的是其他的数据类型。</p>
-<h5 id="为什么要区分转化和行动操作"><a href="#为什么要区分转化和行动操作" class="headerlink" title="为什么要区分转化和行动操作"></a>为什么要区分转化和行动操作</h5><p>主要是出于对资源和效率上的考虑，如果我们有1000行文本，先把前800行读出来记为RDD1，再将RDD1的前200行读出来记为RDD2，再读取RDD2的第一行记为RDD3，最后把RDD3存到HDFS上。<br>如果每一步都立刻计算的话，就会造成很大的开销。然而事实上我们只需要第一行的数据，在采取惰性计算后，在真正的action被执行时，Spark已经获知了整个转化操作链，只会计算我们真正需要的数据，大大加快了执行速度。</p>
-<h2 id="关于RDD缓存"><a href="#关于RDD缓存" class="headerlink" title="关于RDD缓存"></a>关于RDD缓存</h2><h5 id="为什么要缓存"><a href="#为什么要缓存" class="headerlink" title="为什么要缓存"></a>为什么要缓存</h5><p>RDD会在每次对其进行action操作时重新计算，实际生产中很多情况下需要多次重用一个RDD（例如我们读取了一个大宽表，之后在这个宽表上产出各种维度数据），此时最好对RDD进行缓存。</p>
-<h2 id="常见transformation与action操作讲解"><a href="#常见transformation与action操作讲解" class="headerlink" title="常见transformation与action操作讲解"></a>常见transformation与action操作讲解</h2><h4 id="transformation"><a href="#transformation" class="headerlink" title="transformation"></a>transformation</h4><p>1）map()：接受一个函数，将其应用于RDD中的每个元素，将函数返回值作为结果RDD中元素的对应值。返回值类型不需要和输入值类型一样。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val data = context.parallelize(List(1,2,3,4,5))</span><br><span class="line">    val dataAdd = data.map(x =&gt; x+1)</span><br><span class="line">    dataAdd.take(6)</span><br></pre></td></tr></table></figure>
-<p>对每一个元素加一，结果为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">res11: Array[Int] = Array(2, 3, 4, 5, 6)</span><br></pre></td></tr></table></figure>
-<p>2）filter()：接受一个函数，将RDD中满足函数要求的元素放入结果RDD中返回。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val dataFilter = data.filter(x =&gt; x &gt; 3)</span><br><span class="line">   dataFilter.take(5)</span><br></pre></td></tr></table></figure>
-<p>筛选出大于3的元素，结果为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">res12: Array[Int] = Array(4, 5)</span><br></pre></td></tr></table></figure>
-<p>3）flatMap()：对每个输入元素生成多个输出元素，可以理解为将输入的RDD拍扁。<br><img src="https://img-blog.csdnimg.cn/20191216161042645.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>经过flatmap拍扁之后，得到的是一个由各列表中元素组成的RDD，而不是一个由多列表组成的RDD。</p>
-<h5 id="RDD集合操作"><a href="#RDD集合操作" class="headerlink" title="RDD集合操作"></a>RDD集合操作</h5><p>集合操作要求RDD之间的数据类型相同。<br>1）union操作：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val union = rdd1.union(rdd2)</span><br><span class="line">union.take(10)</span><br><span class="line">res14: Array[Int] = Array(1, 3, 5, 7, 10, 2, 4, 6, 8, 10)</span><br></pre></td></tr></table></figure>
-<p>返回包含两个RDD中全部元素的新RDD，重复元素也会保留。</p>
-<p>2）intersection操作：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val intersection = rdd1.intersection(rdd2)</span><br><span class="line">intersection.take(10)</span><br><span class="line">res15: Array[Int] = Array(10)   </span><br></pre></td></tr></table></figure>
-<p>结果为两个RDD的交集，会对结果去重。</p>
-<p>3）subtract操作：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = context.parallelize(List(1, 3, 5, 7, 10))</span><br><span class="line">val rdd2 = context.parallelize(List(2, 4, 6, 8, 10))</span><br><span class="line">val sub = rdd1.subtract(rdd2)</span><br><span class="line">sub.take(10)</span><br><span class="line">res16: Array[Int] = Array(1, 3, 5, 7)         </span><br></pre></td></tr></table></figure>
-<p>返回存在第一个RDD中，不存在第二个RDD中的元素</p>
-<p>4）cartesian操作：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">val rdd1 = sc.parallelize(List(1, 3, 5))</span><br><span class="line">val rdd2 = sc.parallelize(List(2, 4, 6))</span><br><span class="line">val cartesian = rdd1.cartesian(rdd2)</span><br><span class="line">cartesian.take(9)</span><br><span class="line">res17: Array[(Int, Int)] = Array((1,2), (1,4), (1,6), (3,2), (5,2), (3,4), (3,6), (5,4), (5,6))</span><br></pre></td></tr></table></figure>
-<p>对两个RDD求笛卡尔积</p>
-<h4 id="action"><a href="#action" class="headerlink" title="action"></a>action</h4><p>1）reduce：<br>操作两个RDD元素类型的数据并返回一个同样类型的新元素</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.reduce((x,y) =&gt; x+y)</span><br><span class="line">res2: Int = 15</span><br></pre></td></tr></table></figure>
-
-<p>2）fold：<br>与reduce相同，只不过加了个初始值的设定<br>初始值为100，最后求和结果为115</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.fold(100)((x,y) =&gt; x+y)</span><br><span class="line">res3: Int = 115</span><br></pre></td></tr></table></figure>
-<p>3）aggregate：<br>reduce和fold都只能返回和RDD中元素类型相同的值，例如前面的例子中。list中的是int，那么我们最后得到的返回值也是int，但是aggregate却没有这个限制，可以有不同类型的返回值。<br>举个经典的求平均值例子：<br>aggregate采用柯里化的方式接受三个参数，在本例中(0,0)代表初始值，第一个函数(x, y) =&gt; (x._1 + y, x._2 + 1)代表（目前已统计的数值之和，目前已统计的元素个数），第二个函数(x, y) =&gt; (x._1 + y._1, x._2 + y._2)代表对分布式计算的结果进行累加计算，例如从两个RDD统计的结果为（10，2），（10，3），对这两部分进行合并得到（20，5），最后用20/5即可得到平均值。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; val data = sc.parallelize(List(1,2,3,4,5))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at &lt;console&gt;:24</span><br><span class="line">scala&gt; val result = data.aggregate(0, 0)((x, y) =&gt; (x._1 + y, x._2 + 1), (x, y) =&gt; (x._1 + y._1, x._2 + y._2))</span><br><span class="line">result: (Int, Int) = (15,5)</span><br><span class="line">scala&gt; val avg = result._1/result._2.toDouble</span><br><span class="line">avg: Double = 3.0                                                     </span><br></pre></td></tr></table></figure>
-<p>4）collect：<br>会将整个RDD的内容返回，要求所有数据都必须能一同放入单台机器的内存中。所以不建议在数据量很大时使用，一般用来测试代码。<br>5）take：<br>返回RDD中的n个元素</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; list</span><br><span class="line">res0: List[Int] = List(1, 2, 3, 4, 5)</span><br><span class="line">scala&gt; list.take(3)</span><br><span class="line">res4: List[Int] = List(1, 2, 3)</span><br></pre></td></tr></table></figure>
-<p>6）top：<br>从RDD中提取前n个元素</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; val data = sc.parallelize(List(1,2,3,4,5))</span><br><span class="line">data: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at &lt;console&gt;:24</span><br><span class="line">scala&gt; data.top(2)</span><br><span class="line">res10: Array[Int] = Array(5, 4)</span><br></pre></td></tr></table></figure>
-<p>7）takeSample：<br>从数据采样<br>该方法仅在预期结果数组很小的情况下使用，因为所有数据都被加载到driver的内存中。<br>第一个参数true or false 表示是否可以重复抽样，在选为false的情况下，抽取的元素不会发生重复。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">scala&gt; data.takeSample(false,2)</span><br><span class="line">res11: Array[Int] = Array(4, 1)       </span><br><span class="line">scala&gt; data.takeSample(false,2)</span><br><span class="line">res12: Array[Int] = Array(2, 4) </span><br></pre></td></tr></table></figure>
-
-<h4 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h4><p>当我们对RDD进行缓存时，计算出RDD的节点会分别保存他们计算出的数据，如果某个节点的数据丢失，当我们用到RDD时，Spark会重算这部分的数据。<br>在Scala中，默认情况下persist()会把数据以序列化的形式缓存在JVM的堆空间中。</p>
-<p>各个缓存级别的差异如图所示：<br><img src="https://img-blog.csdnimg.cn/20191217153950699.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>persist()的调用不会触发求值，当缓存的数据太多内存放不下时，Spark会使用LRU删除最近最少使用的那部分数据，如果缓存级别为只放在内存中时，再次用到这部分的数据就需要重新计算。</p>
-<p>下篇文章将介绍基本的键值对操作。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Spark算子之foldByKey</title>
     <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
     <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
@@ -689,6 +689,22 @@
       </categories>
   </entry>
   <entry>
+    <title>git commit 时提示please tell me who you are解决方法</title>
+    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<p>先是按照git的提示</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#117;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#109;">&#121;&#111;&#117;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#x75;&#x40;&#x65;&#x78;&#97;&#x6d;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#109;">&#121;&#x6f;&#x75;&#x40;&#x65;&#x78;&#97;&#x6d;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>按如上步骤操作，最后成功commit</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
     <title>catalog和schema的区别</title>
     <url>/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<p>摘要：什么是catalog，什么是schema</p>
@@ -705,22 +721,6 @@
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>git commit 时提示please tell me who you are解决方法</title>
-    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#x63;&#x6f;&#109;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#x63;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
-<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;">&#121;&#111;&#x75;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
-<p>按如上步骤操作，最后成功commit</p>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
       </categories>
   </entry>
   <entry>
@@ -1029,6 +1029,41 @@
       <categories>
         <category>大数据技术&amp;数据仓库</category>
       </categories>
+  </entry>
+  <entry>
+    <title>数据治理过程中的几种优化手段</title>
+    <url>/2021/10/12/%E6%95%B0%E6%8D%AE%E6%B2%BB%E7%90%86%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%A0%E7%A7%8D%E4%BC%98%E5%8C%96%E6%89%8B%E6%AE%B5/</url>
+    <content><![CDATA[<p>当企业数仓发展到一定规模后，就会出现模型迭代速度远慢于业务发展速度的现象，为了满足业务需要，DE 往往会面向需求进行快速开发，由此造成了烟囱表、数据安全、计算冗余、存储浪费等各种各样的问题。为了解决这些问题，保持离线数仓长期向好的健康状态，需要开展数据治理工作。</p>
+<p>但在多数公司中，开展数据治理的原因往往是为了节约成本，减少计算开销和存储开销。。。下面总结一些可以优化计算和存储开销的常见方法。</p>
+<span id="more"></span>
+
+
+
+<h3 id="1-删除-TOPk-存储的无下游，且近-N-天无更新的-ODS-表"><a href="#1-删除-TOPk-存储的无下游，且近-N-天无更新的-ODS-表" class="headerlink" title="1. 删除 TOPk 存储的无下游，且近 N 天无更新的 ODS 表"></a>1. 删除 TOPk 存储的无下游，且近 N 天无更新的 ODS 表</h3><p>业务风险高，数据不可恢复，需要跟业务确认</p>
+<h3 id="2-如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）"><a href="#2-如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）" class="headerlink" title="2. 如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）"></a>2. 如果存在新旧模型（新旧链路）并行运行的现象，将旧模型（老链路下线）</h3><p>业务风险中，可能存在回溯数据的需求</p>
+<h3 id="3-删除-TOPk-存储的-DWD-表-N-年前的数据"><a href="#3-删除-TOPk-存储的-DWD-表-N-年前的数据" class="headerlink" title="3. 删除 TOPk 存储的 DWD 表 N 年前的数据"></a>3. 删除 TOPk 存储的 DWD 表 N 年前的数据</h3><p>业务风险中，可能存在回溯数据的需求</p>
+<h3 id="4-对未执行完-EC-的表进行-EC-操作"><a href="#4-对未执行完-EC-的表进行-EC-操作" class="headerlink" title="4. 对未执行完 EC 的表进行 EC 操作"></a>4. 对未执行完 EC 的表进行 EC 操作</h3><p>业务风险低</p>
+<h3 id="5-缩短-Hive-表-EC-的时间窗口（如缩短为7天）"><a href="#5-缩短-Hive-表-EC-的时间窗口（如缩短为7天）" class="headerlink" title="5. 缩短 Hive 表 EC 的时间窗口（如缩短为7天）"></a>5. 缩短 Hive 表 EC 的时间窗口（如缩短为7天）</h3><p>业务风险低</p>
+<h3 id="6-埋点模型优化治理"><a href="#6-埋点模型优化治理" class="headerlink" title="6. 埋点模型优化治理"></a>6. 埋点模型优化治理</h3><ul>
+<li>对埋点模型本身进行优化，剪裁无效列，减少原始日志数据上报量，并去清理历史数据，将无效字段删除。</li>
+<li>针对原始上报数据，上报数据量 TOP 的埋点，与业务侧确认后，以埋点合并、埋点下线等方式进行优化，减少每天新增的数据量。</li>
+<li>将埋点平台未注册的埋点逐步下线。</li>
+<li>开展埋点生命周期管理。对于功能迭代、活动结束、埋点重新设计场景，可以主动下线埋点，同步客户端删除代码。对于长时间无访问且无人维护的埋点，可以由埋点平台主动识别并下线。</li>
+</ul>
+<p>业务风险低，清除历史数据会消耗一定的计算资源。</p>
+<h3 id="7-分离业务日志与技术日志"><a href="#7-分离业务日志与技术日志" class="headerlink" title="7. 分离业务日志与技术日志"></a>7. 分离业务日志与技术日志</h3><p>业务风险低</p>
+<h3 id="8-MySQL-同步到-HIve-的快照表只保留近-N-天数据"><a href="#8-MySQL-同步到-HIve-的快照表只保留近-N-天数据" class="headerlink" title="8. MySQL 同步到 HIve 的快照表只保留近 N 天数据"></a>8. MySQL 同步到 HIve 的快照表只保留近 N 天数据</h3><p>业务风险中，可能存在回溯数据的需求</p>
+<h3 id="9-TOP存储的中间表，生命周期设为-N-天"><a href="#9-TOP存储的中间表，生命周期设为-N-天" class="headerlink" title="9. TOP存储的中间表，生命周期设为 N 天"></a>9. TOP存储的中间表，生命周期设为 N 天</h3><p>业务风险低</p>
+<h3 id="10-删除不持续产出的-TOP-表"><a href="#10-删除不持续产出的-TOP-表" class="headerlink" title="10. 删除不持续产出的 TOP 表"></a>10. 删除不持续产出的 TOP 表</h3><p>业务风险低</p>
+<h3 id="11-TOP-存储的-ODS-表冷存"><a href="#11-TOP-存储的-ODS-表冷存" class="headerlink" title="11. TOP 存储的 ODS 表冷存"></a>11. TOP 存储的 ODS 表冷存</h3><p>业务风险低</p>
+<h3 id="12-DWD-表技术埋点裁剪"><a href="#12-DWD-表技术埋点裁剪" class="headerlink" title="12. DWD 表技术埋点裁剪"></a>12. DWD 表技术埋点裁剪</h3><p>业务风险高，可能需要切换使用方式</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+      <tags>
+        <tag>数据治理</tag>
+      </tags>
   </entry>
   <entry>
     <title>详解TCP/IP协议栈</title>
