@@ -371,6 +371,50 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive宏(Macro)简介</title>
+    <url>/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
+<span id="more"></span>
+
+
+
+<h2 id="什么是-Macro"><a href="#什么是-Macro" class="headerlink" title="什么是 Macro"></a>什么是 Macro</h2><p>在进行 Hive SQL 开发的时候，有一些逻辑需要反复使用，如果代码中每次都把所需逻辑复制粘贴一遍，不仅会造成代码冗余，还会增加维护难度，这时使用 Hive宏 对逻辑进行提炼，可以起到简化代码，提高开发效率，提升程序可读性的效果。</p>
+<h2 id="如何使用-Macro"><a href="#如何使用-Macro" class="headerlink" title="如何使用 Macro"></a>如何使用 Macro</h2><p>宏的使用主要分为：创建、使用、销毁这三步，其中最重要的是创建部分，定义好后可以将宏像函数一样使用，最后的销毁是出于开发规范的需要。下面举一个简单例子：</p>
+<h4 id="1、创建"><a href="#1、创建" class="headerlink" title="1、创建"></a><strong>1、创建</strong></h4><p>创建宏的标准语法：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO macro_name([col_name col_type, ...]) expression;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建一个简单的字符串拼接宏：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> temporary macro test_macro(input_string string)</span><br><span class="line">concat(<span class="string">&#x27;hello&#x27;</span> , <span class="string">&#x27; &#x27;</span> , input_string);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建一个两个参数的求和宏：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TEMPORARY MACRO simple_add (x <span class="type">int</span>, y <span class="type">int</span>) x <span class="operator">+</span> y;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2、使用"><a href="#2、使用" class="headerlink" title="2、使用"></a><strong>2、使用</strong></h4><p>类似于UDF，直接传参使用：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> test_macro(<span class="string">&#x27;test&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3、销毁"><a href="#3、销毁" class="headerlink" title="3、销毁"></a><strong>3、销毁</strong></h4><p> 标准语法：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">DROP</span> TEMPORARY MACRO [IF <span class="keyword">EXISTS</span>] macro_name;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="为什么要使用-Macro"><a href="#为什么要使用-Macro" class="headerlink" title="为什么要使用 Macro"></a>为什么要使用 Macro</h2><ol>
+<li>Macro 的开发过程比 UDF 更简单</li>
+<li>与 UDF 相比，因为 UDF 是用 Java 代码开发的，堆变量的内存回收不受开发者控制，由虚拟机决定，并且实际生产中需要将 UDF 嵌套到 HQL 中，因此如果表的数据量比较大，存在发生 OOM 的风险。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
     <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
     <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
@@ -670,9 +714,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#x40;&#101;&#120;&#x61;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#x6d;">&#121;&#111;&#x75;&#x40;&#101;&#120;&#x61;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#x63;&#x6f;&#109;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#x63;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#99;&#111;&#x6d;">&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#99;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;">&#121;&#111;&#x75;&#64;&#x65;&#120;&#97;&#x6d;&#112;&#108;&#x65;&#46;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
