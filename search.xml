@@ -41,6 +41,101 @@
       </categories>
   </entry>
   <entry>
+    <title>Hadoop纠删码（Erasure Coding）简介</title>
+    <url>/2021/10/12/Hadoop%E7%BA%A0%E5%88%A0%E7%A0%81%EF%BC%88Erasure-Coding%EF%BC%89%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>摘要：相比于三副本机制，纠删码可以大大提高存储效率，本文将简介纠删码的原理。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;!--more--&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="三副本机制"><a href="#三副本机制" class="headerlink" title="三副本机制"></a>三副本机制</h1><h3 id="1、什么是三副本"><a href="#1、什么是三副本" class="headerlink" title="1、什么是三副本"></a>1、什么是三副本</h3><p>默认情况下，HDFS会使用三副本机制来保证数据可用性，第一个副本存放在本地机架节点上，另一个副本存放在同一机架的另一个节点上，第三个副本存放在在不同机架的节点上。三副本机制可以减少机架间的数据传输，提高写操作的效率，保证数据的可用性，因为机架错误的概率要小于节点出错的概率</p>
+<h3 id="2、三副本带来的问题"><a href="#2、三副本带来的问题" class="headerlink" title="2、三副本带来的问题"></a>2、三副本带来的问题</h3><p>三副本会造成存储空间200%的额外开销，还会在其他资源上造成浪费，比如在写数据时会造成额外的带宽消耗。尤其对于冷数据，因为查询的频率很低，第二个和第三个副本很少被访问，却依然占用了同样大小的存储空间，在数据治理的过程中，我们需要着重关注这部分数据，能删掉的要及时下线，但对于一些必须保留却很少使用的冷数据（如某个已结束的促销活动），最好能有一种办法替代三副本，达到既能保证数据可用性，又能降低存储开销的效果。由此我们引入了 Erasure Coding（简称EC）技术。</p>
+<h1 id="Erasure-Coding"><a href="#Erasure-Coding" class="headerlink" title="Erasure Coding"></a>Erasure Coding</h1><h3 id="1、什么是-Erasure-Coding"><a href="#1、什么是-Erasure-Coding" class="headerlink" title="1、什么是 Erasure Coding"></a>1、什么是 Erasure Coding</h3><p>纠删码技术（Erasure coding）简称 EC，是一种编码容错技术。EC 最早用于通信行业，用于数据传输中的数据恢复。它通过对数据进行分块，然后计算出校验数据，使得各个部分的数据产生关联性。当一部分数据块丢失时，可以通过剩余的数据块和校验块计算出丢失的数据块。<br>在 Hadoop 3.0 中，Cloudera 与 Intel 的工程师在 HDFS-7285 下启动了 EC 项目，引入了纠删码技术，它可以提高 50% 以上的存储利用率，并且保证数据的可靠性。</p>
+<h3 id="2、Erasure-Coding-的原理"><a href="#2、Erasure-Coding-的原理" class="headerlink" title="2、Erasure Coding 的原理"></a>2、Erasure Coding 的原理</h3><p>EC 的基本思想是将ｋ块原始的数据元素通过一定的编码计算，得到 ｍ 块校验元素。对于这 ｋ+ｍ 块元素，当其中任意的 ｍ 块元素出错（包括数据和校验出错），均可以通过对应的重构算法恢复出原来的ｋ块数据。生成校验的过程被成为编码（encoding），恢复丢失数据块的过程被称为解码（decoding）。</p>
+<h4 id=""><a href="#" class="headerlink" title=""></a></h4><h5 id="目前-HDFS-中内置的-EC-编解码算法有以下三种："><a href="#目前-HDFS-中内置的-EC-编解码算法有以下三种：" class="headerlink" title="目前 HDFS 中内置的 EC 编解码算法有以下三种："></a>目前 HDFS 中内置的 EC 编解码算法有以下三种：</h5><ul>
+<li>XOR</li>
+<li>RS-LEGACY（旧版Reed-Solomon，性能较差）</li>
+<li>RS（新版Reed-Solomon，性能是RS-LEGACY的5倍）</li>
+</ul>
+<h5 id="HDFS-的内置-EC-策略有以下几种："><a href="#HDFS-的内置-EC-策略有以下几种：" class="headerlink" title="HDFS 的内置 EC 策略有以下几种："></a>HDFS 的内置 EC 策略有以下几种：</h5><ul>
+<li>RS-3-2-1024k</li>
+<li>RS-6-3-1024k</li>
+<li>RS-10-4-1024k</li>
+<li>RS-LEGACY-6-3-1024k</li>
+<li>XOR-2-1-1024k</li>
+</ul>
+<h5 id="以-RS-6-3-1024k-为例解释下该-EC-策略的定义："><a href="#以-RS-6-3-1024k-为例解释下该-EC-策略的定义：" class="headerlink" title="以 RS-6-3-1024k 为例解释下该 EC 策略的定义："></a>以 RS-6-3-1024k 为例解释下该 EC 策略的定义：</h5><ul>
+<li>RS 代表使用 RS 算法压缩</li>
+<li>6 代表有 6 个原始数据块，分别存储在 6 个 DataNode 节点</li>
+<li>3 代表有 3 个校验块，存储在 3 个 DataNode 节点，可以容忍最多 3 个块丢失的情况</li>
+<li>1024k 代表每个块大小为 1024k</li>
+</ul>
+<p>因为实际生产中几乎不会用到 RS-LEGACY，因此这里只介绍 <strong>XOR</strong> 算法和 <strong>RS</strong> 算法。</p>
+<h4 id="1）XOR码"><a href="#1）XOR码" class="headerlink" title="1）XOR码"></a>1）XOR码</h4><p>XOR 编解码是 EC 算法的最简单实现。XOR 代表异或运算，异或运算的一个特点就是：<strong>如果对一个值连续做两次 XOR，会返回这个值本身</strong>。以下图为例：</p>
+<p><img src="https://img-blog.csdnimg.cn/05a1bf6c88d5489fb4e6c3d35a843d48.png#pic_center"></p>
+<p><strong>数据 X</strong>： 0 0 1 1<br><strong>数据 Y</strong>： 0 1 0 1<br><strong>X XOR Y</strong>： 0 1 1 0<br>数据 X 与数据 Y 通过异或运算生成校验码，当丢失任意一份数据时，如丢失数据 X 的第一位 0，可以通过 Y 的第一位 0 和校验码的第一位 0 还原出 X 的数据（因为只有 0 和 0 异或结果才为 0）。</p>
+<p>但 XOR 码的弊端也很明显，当丢失的数据超过一位时，如数据 X 和数据 Y 的第一位都丢失，则无法进行还原（因为无法确定 X 和 Y 是都为 0 还是都为 1）。</p>
+<p>由此可见，XOR 码适合 <strong>可保证错误数较少的场景</strong>，但实际生产中并不能保证每次只有一个数据出错，要考虑多个数据丢失的情况，要尽量提高容错率，因此还要了解第二种编解码方法——RS码。</p>
+<h4 id="2）RS码"><a href="#2）RS码" class="headerlink" title="2）RS码"></a>2）RS码</h4><p>RS 码全名为 Reed-Solomon Codes，中文名称里德所罗门码。RS 码通过线性代数计算生成多个奇偶校验块，因此可以承受数据多处出错，所以生产上我们一般都是用 RS 码。<br>RS需要配置2个参数，k和m。</p>
+<ul>
+<li>k 代表数据块的个数</li>
+<li>m 代表校验块的个数</li>
+</ul>
+<p>RS（k，m）通过将 k 个数据块的向量与生成矩阵（GT）相乘来实现，相乘得到一个码字（codeword）向量，码字向量由 k 个数据块和 m 个校验块构成，如下图所示，即为 RS（4，2）</p>
+<p><img src="https://img-blog.csdnimg.cn/6e2ad5fc9f6841f88311000befe7807e.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p>如果某个数据块丢失，可以用生成矩阵（GT）的逆矩阵乘以码字向量来还原出丢失的数据，RS(k，m)]最多可容忍 m 个块（包括数据块和校验块）丢失。</p>
+<p><strong>举个例子：</strong></p>
+<p><strong>1、</strong> 假设现在有三个数据块组成一个向量，如下图所示：</p>
+<img src="https://img-blog.csdnimg.cn/74b7e5a9f7f84aa9b6c152d6a54f8648.png" alt="在这里插入图片描述" style="zoom:150%;" />
+
+<p>对应的生成矩阵如下图所示：</p>
+<img src="https://img-blog.csdnimg.cn/7b464f09c2e74feb9c8d902286b467d3.png" style="zoom:150%;" />
+
+
+
+<p>根据公式，我们可以计算出码字：</p>
+<p><img src="https://img-blog.csdnimg.cn/623c2ad472464072b3b5a29539e7aed8.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p><strong>2、</strong> 现在我们假设码字中丢失了两份数据 1 和 14 ，我们该怎么还原出原始数据？</p>
+<p>因为 1 和 14 丢失，所以我们可以去掉生成矩阵中的第一行和倒数第二行得到新的生成矩阵GT2，假设它们未参与</p>
+<p>计算，用现有的 2 3 36 构造等式如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/1c0af0dabdfe466f86b46c2da9d293c3.png#pic_center" alt="在这里插入图片描述"></p>
+<p>3、 在此基础上，为了还原出原始数据 1 2 3 ，只需要在等式两边同时乘新生成矩阵GT2的逆矩阵，即可还原出数据。</p>
+<p><img src="https://img-blog.csdnimg.cn/4b3f493ec2e84f33b802e0efb93c2d41.png#pic_center"></p>
+<p>因为 逆矩阵 × 矩阵 = 单位矩阵，因此只需要计算右边的等式：<br>-4 * 2 + -9 * 3 + 1 *36 = 1<br>1 * 2 + 0 * 3 + 0 * 36 = 2<br>0 * 2 + 1 * 3 + 0 * 36 = 3<br>即可还原出原始数据。</p>
+<p>在 RS 算法中，通过设置 k 和 m 的值，可以灵活调整 RS 算法下的数据持久性和存储效率，m 代表可以容忍的同时发生的故障数，k / (k+m) 代表了当前的存储效率。</p>
+<p>HDFS 中的 RS-6-3-1024k、RS-10-4-1024k 和三副本相比，既可以同时容忍 3~4 个故障，又能大大降低存储开销，下图展示了 0 副本、3 副本、XOR、RS 算法的存储效率：</p>
+<p><img src="https://img-blog.csdnimg.cn/ae05a54179064a3eb456f27408409dee.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70"></p>
+<h4 id="3、EC在-Hadoop-上的实现"><a href="#3、EC在-Hadoop-上的实现" class="headerlink" title="3、EC在 Hadoop 上的实现"></a>3、EC在 Hadoop 上的实现</h4><p>传统模式下，HDFS中的文件是由一个个块（block）组成，而在 EC 模式下，文件的组成单位变成了 block group，以 RS(10,4) 为例，一个 block group 包含了 10 个数据块，4个校验块。而 EC 模式下这些数据在 HDFS 上有着两种布局方式。</p>
+<h5 id="连续布局"><a href="#连续布局" class="headerlink" title="连续布局"></a>连续布局</h5><p>文件数据被依次写入块中，一个块写满之后再写入下一个块，这种分布方式称为连续布局。如下图所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/cb72c81076fd4b9b8fdfefcd4025bb74.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p>优点：</p>
+<ul>
+<li><p>容易实现</p>
+</li>
+<li><p>容易和三副本策略互相转换</p>
+</li>
+</ul>
+<p>缺点：</p>
+<p>连续布局虽然实现简单，但缺点也极其明显，就是<strong>不适合存储小文件</strong>，仅适用于文件非常大的情况。假设我们使用 RS(10,4)，在面对小文件的情况下，只需要第一个数据块就足够存储数据了，但此时仍要写入 4 个校验块，存储开销达到 400%，还不如用三副本。。此外，连续布局也仅适用于<strong>离线</strong>或<strong>后台EC</strong>，否则客户端需要缓存 GB 级的数据块以计算奇偶校验。</p>
+<p>因此，只有在我们确定文件非常大，能连续、完整的写入多个数据块时，才能达到节省存储的效果。</p>
+<h5 id="条形布局"><a href="#条形布局" class="headerlink" title="条形布局"></a>条形布局</h5><p>条（stripe）是由若干个相同大小的单元（cell）构成的序列。文件数据被依次写入条的各个单元中，当一个条写满之后再写入下一个条，一个条的不同单元位于不同的数据块中。这种分布方式称为条形布局。条形布局如下图所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/845b1d4d18ee4655b8c5b642eb9d7a24.webp?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p>条形布局的优缺点正好与连续布局相反</p>
+<p>优点：</p>
+<ul>
+<li>因为 cell 较小因此可以做在线EC，客户端缓存数据量较少，可以直接写入纠删码数据。</li>
+<li>大小文件均适用</li>
+</ul>
+<p>缺点：</p>
+<p>条形布局的缺点也很明显，首先原本一个节点上的块现在被分割到了多个不同的节点上，当 MapReduce 作业执行时将增大网络开销，失去数据本地性的优势，其次当进行编解码、DataNode 挂了计算丢失数据时都会消耗更多的 CPU，客户端在读写文件时，也需要同时连接所有涉及的 DataNode 读写数据块和校验块。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>EC 虽然存在着与三副本转化麻烦、会增大 CPU 及网络开销等问题，但当数仓中存在大量冷数据时，EC 仍然是一种</p>
+<p>数据治理的高效手段，能大大降低集群的存储消耗同时保证数据的可靠性，在我们的生产实践中，EC 为我们带来了巨大的收益。</p>
+]]></content>
+      <categories>
+        <category>Hadoop</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive中like与rlike的区别</title>
     <url>/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p>
@@ -74,24 +169,17 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中的Sort Merge Bucket Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
-    <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
 <span id="more"></span>
 
-<h4 id="map-join"><a href="#map-join" class="headerlink" title="map join"></a><em><strong>map join</strong></em></h4><p>我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由此引出了 Sort Merge Bucket Join。</p>
-<h4 id="SMB-join"><a href="#SMB-join" class="headerlink" title="SMB join"></a><em><strong>SMB join</strong></em></h4><p>要使用 SMB Join，所有的表都必须按相同的列进行分桶并使用相同的桶数（或一个表桶数是另一个表桶数的倍数）且保证数据有序。这样才能确保 hash 值相同的 key 被分到同一个桶中，SMB join 的结果才是有效的。可以在建表时通过使用 <code>CLUSTERED BY user_id INTO 256 BUCKETS</code>  来对某一列进行分桶并指定桶数。</p>
-<p>分桶后在插入时需要：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.enforce.bucketing<span class="operator">=</span><span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>强制 hive 为目标分桶表设置正确的reducer数，如果不指定，需要自己设置正确的reducer数：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> mapred.reduce.tasks<span class="operator">=</span><span class="number">256</span></span><br></pre></td></tr></table></figure>
-
-<p>在使用前，需要：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin.sortedmerge <span class="operator">=</span> <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
-
-
-<p>之后每个 mapper 从第一个表中读取一个 bucket 的数据，并读取第二个表中相应 bucket 的数据，在此之后就可以进行 SMB join了，大大缩短执行时间。</p>
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -128,17 +216,24 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+    <title>Hive中的Sort Merge Bucket Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
+    <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
 <span id="more"></span>
 
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
+<h4 id="map-join"><a href="#map-join" class="headerlink" title="map join"></a><em><strong>map join</strong></em></h4><p>我们知道在 Hive 中当小表 join 大表时可以通过 map join 将小表中的数据读入内存，在 map 端 join 大表，从而省略 reduce 过程，大大加快连接的速度，但是当小表数据量过大内存放不下时就无法使用 map join 了，由此引出了 Sort Merge Bucket Join。</p>
+<h4 id="SMB-join"><a href="#SMB-join" class="headerlink" title="SMB join"></a><em><strong>SMB join</strong></em></h4><p>要使用 SMB Join，所有的表都必须按相同的列进行分桶并使用相同的桶数（或一个表桶数是另一个表桶数的倍数）且保证数据有序。这样才能确保 hash 值相同的 key 被分到同一个桶中，SMB join 的结果才是有效的。可以在建表时通过使用 <code>CLUSTERED BY user_id INTO 256 BUCKETS</code>  来对某一列进行分桶并指定桶数。</p>
+<p>分桶后在插入时需要：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.enforce.bucketing<span class="operator">=</span><span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>强制 hive 为目标分桶表设置正确的reducer数，如果不指定，需要自己设置正确的reducer数：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> mapred.reduce.tasks<span class="operator">=</span><span class="number">256</span></span><br></pre></td></tr></table></figure>
+
+<p>在使用前，需要：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line"><span class="keyword">set</span> hive.optimize.bucketmapjoin.sortedmerge <span class="operator">=</span> <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>之后每个 mapper 从第一个表中读取一个 bucket 的数据，并读取第二个表中相应 bucket 的数据，在此之后就可以进行 SMB join了，大大缩短执行时间。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -249,34 +344,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
     <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
     <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
@@ -342,6 +409,34 @@
 ]]></content>
       <categories>
         <category>Java</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
+<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
+<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
+<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
+<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
+<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
+<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
+<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
+<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
+
+<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
       </categories>
   </entry>
   <entry>
@@ -430,6 +525,27 @@
 ]]></content>
       <categories>
         <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
+    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<ol>
+<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
+</li>
+<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
+</li>
+<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
+</li>
+<li><p>需要重启 IDEA ，即可正常运行。</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
       </categories>
   </entry>
   <entry>
@@ -530,43 +646,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
-    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<ol>
-<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
-</li>
-<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
-</li>
-<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
-</li>
-<li><p>需要重启 IDEA ，即可正常运行。</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>git commit 时提示please tell me who you are解决方法</title>
-    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
-<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;">&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
-<p>按如上步骤操作，最后成功commit</p>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
     <title>catalog和schema的区别</title>
     <url>/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<p>摘要：什么是catalog，什么是schema</p>
@@ -583,6 +662,63 @@
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>使用VuePress搭建一个简洁的技术文档</title>
+    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
+    <content><![CDATA[<p>摘要：VuePress入门教程</p>
+<span id="more"></span>
+
+<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
+<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
+
+<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
+<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
+<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<ol>
+<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
+<li>images下存放各种图片资源，包括导航栏的logo等</li>
+<li>data-guide-book存放所有文章</li>
+</ol>
+<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>heroImage可以引用images下的图片资源</li>
+<li>actionLink为点击快速上手后跳转到的那篇文章</li>
+</ol>
+<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>修改 config.js 中的配置如下：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
+<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>git commit 时提示please tell me who you are解决方法</title>
+    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<p>先是按照git的提示</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#101;&#120;&#97;&#109;&#112;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;">&#121;&#111;&#117;&#64;&#101;&#120;&#97;&#109;&#112;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#117;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#109;">&#x79;&#111;&#117;&#64;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>按如上步骤操作，最后成功commit</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
       </categories>
   </entry>
   <entry>
@@ -661,47 +797,6 @@
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>使用VuePress搭建一个简洁的技术文档</title>
-    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
-    <content><![CDATA[<p>摘要：VuePress入门教程</p>
-<span id="more"></span>
-
-<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
-<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
-
-<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
-
-<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
-
-<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
-
-<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
-<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
-<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<ol>
-<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
-<li>images下存放各种图片资源，包括导航栏的logo等</li>
-<li>data-guide-book存放所有文章</li>
-</ol>
-<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>heroImage可以引用images下的图片资源</li>
-<li>actionLink为点击快速上手后跳转到的那篇文章</li>
-</ol>
-<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<p>修改 config.js 中的配置如下：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
-<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
-      <categories>
-        <category>其他</category>
       </categories>
   </entry>
   <entry>
@@ -839,6 +934,60 @@
       </categories>
   </entry>
   <entry>
+    <title>数据仓库工具箱笔记 - 第一章</title>
+    <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
+    <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
+<span id="more"></span>
+
+<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><h2 id="为什么使用维度建模不使用ER模型"><a href="#为什么使用维度建模不使用ER模型" class="headerlink" title="为什么使用维度建模不使用ER模型"></a>为什么使用维度建模不使用ER模型</h2><p>规范化的模型主要用于操作型过程中，因为对事物的更新和插入仅触及数据库单一的地方。</p>
+<p>对BI查询来说，规范化的模型太复杂，用户难以理解和检索，复杂查询时将耗尽数据库的优化器性能，严重影响查询的性能，不能高性能检索。</p>
+<h2 id="度建模的核心原则"><a href="#度建模的核心原则" class="headerlink" title="度建模的核心原则"></a>度建模的核心原则</h2><p>1、建立事实表时使用统一的细节级别（粒度），可以避免出现重复计算度量的问题。（事实表中每一行对应一个度量事件）</p>
+<p>2、文本数据应尽量放在维表中，尽量不冗余到事实表。</p>
+<h2 id="总线矩阵存在的意义"><a href="#总线矩阵存在的意义" class="headerlink" title="总线矩阵存在的意义"></a>总线矩阵存在的意义</h2><p>多数情况下，用户获得有限的数据源，并用于解决特定的问题，输出独立的、烟囱式的数据系统，其他人不能复用，也不能与组织的其他分析信息相关联。</p>
+<p>采用总线矩阵可以为敏捷开发提供框架和主生产计划，提供可用的、公共的维度，保障数据一致性。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>数据仓库工具箱笔记 - 第二章</title>
+    <url>/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/</url>
+    <content><![CDATA[<p>《数据仓库工具箱》第二章读书笔记</p>
+<span id="more"></span>
+
+<h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h3 id="维度模型设计四步骤"><a href="#维度模型设计四步骤" class="headerlink" title="维度模型设计四步骤"></a>维度模型设计四步骤</h3><p>​        1、选择业务过程</p>
+<p>​                每个业务过程对应数仓总线矩阵的一行。</p>
+<p>​        2、确认粒度</p>
+<p>​                粒度用于确定事实表中的行表示什么。</p>
+<p>​        3、确认维度</p>
+<p>​                维度描述业务过程事件所涉及的“谁、什么、何处、何时、为什么、如何”等背景。</p>
+<p>​        4、确认事实</p>
+<p>​                事实涉及来自业务过程事件的度量，基本以数值表示。</p>
+<p>​                一个事实表中的每一行，都与按照事实表粒度描述的度量事件存在一对一的关系。</p>
+<h1 id="事实表技术基础"><a href="#事实表技术基础" class="headerlink" title="事实表技术基础"></a>事实表技术基础</h1><h4 id="事实表结构"><a href="#事实表结构" class="headerlink" title="事实表结构"></a>事实表结构</h4><p>​        事实表行对应一个度量事件，事实表的设计完全依赖于物理活动，不受最终产出报表的影响。事实表还包含外键（用于维度关联）、可选的退化维度键、日期时间戳。</p>
+<h4 id="可加、半可加、不可加事实"><a href="#可加、半可加、不可加事实" class="headerlink" title="可加、半可加、不可加事实"></a>可加、半可加、不可加事实</h4><p>​        可加性数字度量：可以按任意维度汇总</p>
+<p>​        半可加性数字度量：可以对某些维度汇总（例如差额）</p>
+<p>​        不可加性数字度量：完全不可加（例如比率）</p>
+<h4 id="一致性事实"><a href="#一致性事实" class="headerlink" title="一致性事实"></a>一致性事实</h4><p>​        比较、计算不同事实表中的事实，必须保证事实的技术定义一致，如果一致，应该采用相同的命名。</p>
+<h4 id="事务事实表"><a href="#事务事实表" class="headerlink" title="事务事实表"></a>事务事实表</h4><p>​        一行对应空间上或时间上某点的度量事件。</p>
+<h4 id="周期快照事实表"><a href="#周期快照事实表" class="headerlink" title="周期快照事实表"></a>周期快照事实表</h4><p>​        一行汇总了发生在某个标准周期（一天、一周）内的多个度量事件。粒度是周期性的，不是个体的事务，表中通常包含许多事实。</p>
+<h4 id="累积快照事实表"><a href="#累积快照事实表" class="headerlink" title="累积快照事实表"></a>累积快照事实表</h4><p>​        一行汇总了发生在过程开始到结束之间的、可预测的度量事件。</p>
+<h4 id="聚集事实表"><a href="#聚集事实表" class="headerlink" title="聚集事实表"></a>聚集事实表</h4><p>​        对原子粒度事实数据表进行简单的上卷操作，目的是提高查询性能。</p>
+<h4 id="合并事实表"><a href="#合并事实表" class="headerlink" title="合并事实表"></a>合并事实表</h4><p>​        将来自多个过程的，粒度相同的事实表合并为一个单一的事实表。</p>
+<p>​        增加了ETL的处理负担，降低了BI应用的分析代价，适合经常需要共同分析的多过程度量（指标）。</p>
+<h1 id="维度表技术基础"><a href="#维度表技术基础" class="headerlink" title="维度表技术基础"></a>维度表技术基础</h1><h4 id="退化维度"><a href="#退化维度" class="headerlink" title="退化维度"></a>退化维度</h4><p>​        事实表中存在着看起来像关联维度表的外键，但事实上没有维度表和维度关联，也就是说退化维度相关的数据都在事实表中。</p>
+<h4 id="杂项维度"><a href="#杂项维度" class="headerlink" title="杂项维度"></a>杂项维度</h4><p>​        将多个不同维度合并到一起形成单个维度。</p>
+<h4 id="支架维度"><a href="#支架维度" class="headerlink" title="支架维度"></a>支架维度</h4><p>​        维度包含对其他维度的引用，事实表关联维度表A，维度表A引用维度表B，B称为支架维度。</p>
+<h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
+<h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
+<h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>详解TCP/IP协议栈</title>
     <url>/2021/06/08/%E8%AF%A6%E8%A7%A3TCP-IP%E5%8D%8F%E8%AE%AE%E6%A0%88/</url>
     <content><![CDATA[<p>之前对网络各层作用的了解一直都比较模糊，对各个协议的作用也不甚清楚，最近看到了一篇对TCP/IP协议栈讲解比较清晰的博文，特地转载过来。</p>
@@ -896,60 +1045,6 @@
 ]]></content>
       <categories>
         <category>计算机基础知识</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>数据仓库工具箱笔记 - 第一章</title>
-    <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
-    <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
-<span id="more"></span>
-
-<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><h2 id="为什么使用维度建模不使用ER模型"><a href="#为什么使用维度建模不使用ER模型" class="headerlink" title="为什么使用维度建模不使用ER模型"></a>为什么使用维度建模不使用ER模型</h2><p>规范化的模型主要用于操作型过程中，因为对事物的更新和插入仅触及数据库单一的地方。</p>
-<p>对BI查询来说，规范化的模型太复杂，用户难以理解和检索，复杂查询时将耗尽数据库的优化器性能，严重影响查询的性能，不能高性能检索。</p>
-<h2 id="度建模的核心原则"><a href="#度建模的核心原则" class="headerlink" title="度建模的核心原则"></a>度建模的核心原则</h2><p>1、建立事实表时使用统一的细节级别（粒度），可以避免出现重复计算度量的问题。（事实表中每一行对应一个度量事件）</p>
-<p>2、文本数据应尽量放在维表中，尽量不冗余到事实表。</p>
-<h2 id="总线矩阵存在的意义"><a href="#总线矩阵存在的意义" class="headerlink" title="总线矩阵存在的意义"></a>总线矩阵存在的意义</h2><p>多数情况下，用户获得有限的数据源，并用于解决特定的问题，输出独立的、烟囱式的数据系统，其他人不能复用，也不能与组织的其他分析信息相关联。</p>
-<p>采用总线矩阵可以为敏捷开发提供框架和主生产计划，提供可用的、公共的维度，保障数据一致性。</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>数据仓库工具箱笔记 - 第二章</title>
-    <url>/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/</url>
-    <content><![CDATA[<p>《数据仓库工具箱》第二章读书笔记</p>
-<span id="more"></span>
-
-<h1 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h1><h3 id="维度模型设计四步骤"><a href="#维度模型设计四步骤" class="headerlink" title="维度模型设计四步骤"></a>维度模型设计四步骤</h3><p>​        1、选择业务过程</p>
-<p>​                每个业务过程对应数仓总线矩阵的一行。</p>
-<p>​        2、确认粒度</p>
-<p>​                粒度用于确定事实表中的行表示什么。</p>
-<p>​        3、确认维度</p>
-<p>​                维度描述业务过程事件所涉及的“谁、什么、何处、何时、为什么、如何”等背景。</p>
-<p>​        4、确认事实</p>
-<p>​                事实涉及来自业务过程事件的度量，基本以数值表示。</p>
-<p>​                一个事实表中的每一行，都与按照事实表粒度描述的度量事件存在一对一的关系。</p>
-<h1 id="事实表技术基础"><a href="#事实表技术基础" class="headerlink" title="事实表技术基础"></a>事实表技术基础</h1><h4 id="事实表结构"><a href="#事实表结构" class="headerlink" title="事实表结构"></a>事实表结构</h4><p>​        事实表行对应一个度量事件，事实表的设计完全依赖于物理活动，不受最终产出报表的影响。事实表还包含外键（用于维度关联）、可选的退化维度键、日期时间戳。</p>
-<h4 id="可加、半可加、不可加事实"><a href="#可加、半可加、不可加事实" class="headerlink" title="可加、半可加、不可加事实"></a>可加、半可加、不可加事实</h4><p>​        可加性数字度量：可以按任意维度汇总</p>
-<p>​        半可加性数字度量：可以对某些维度汇总（例如差额）</p>
-<p>​        不可加性数字度量：完全不可加（例如比率）</p>
-<h4 id="一致性事实"><a href="#一致性事实" class="headerlink" title="一致性事实"></a>一致性事实</h4><p>​        比较、计算不同事实表中的事实，必须保证事实的技术定义一致，如果一致，应该采用相同的命名。</p>
-<h4 id="事务事实表"><a href="#事务事实表" class="headerlink" title="事务事实表"></a>事务事实表</h4><p>​        一行对应空间上或时间上某点的度量事件。</p>
-<h4 id="周期快照事实表"><a href="#周期快照事实表" class="headerlink" title="周期快照事实表"></a>周期快照事实表</h4><p>​        一行汇总了发生在某个标准周期（一天、一周）内的多个度量事件。粒度是周期性的，不是个体的事务，表中通常包含许多事实。</p>
-<h4 id="累积快照事实表"><a href="#累积快照事实表" class="headerlink" title="累积快照事实表"></a>累积快照事实表</h4><p>​        一行汇总了发生在过程开始到结束之间的、可预测的度量事件。</p>
-<h4 id="聚集事实表"><a href="#聚集事实表" class="headerlink" title="聚集事实表"></a>聚集事实表</h4><p>​        对原子粒度事实数据表进行简单的上卷操作，目的是提高查询性能。</p>
-<h4 id="合并事实表"><a href="#合并事实表" class="headerlink" title="合并事实表"></a>合并事实表</h4><p>​        将来自多个过程的，粒度相同的事实表合并为一个单一的事实表。</p>
-<p>​        增加了ETL的处理负担，降低了BI应用的分析代价，适合经常需要共同分析的多过程度量（指标）。</p>
-<h1 id="维度表技术基础"><a href="#维度表技术基础" class="headerlink" title="维度表技术基础"></a>维度表技术基础</h1><h4 id="退化维度"><a href="#退化维度" class="headerlink" title="退化维度"></a>退化维度</h4><p>​        事实表中存在着看起来像关联维度表的外键，但事实上没有维度表和维度关联，也就是说退化维度相关的数据都在事实表中。</p>
-<h4 id="杂项维度"><a href="#杂项维度" class="headerlink" title="杂项维度"></a>杂项维度</h4><p>​        将多个不同维度合并到一起形成单个维度。</p>
-<h4 id="支架维度"><a href="#支架维度" class="headerlink" title="支架维度"></a>支架维度</h4><p>​        维度包含对其他维度的引用，事实表关联维度表A，维度表A引用维度表B，B称为支架维度。</p>
-<h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
-<h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
-<h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
       </categories>
   </entry>
   <entry>

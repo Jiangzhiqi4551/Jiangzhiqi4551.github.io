@@ -6,7 +6,7 @@
   <link href="https://jiangzhiqi4551.github.io/atom.xml" rel="self"/>
   
   <link href="https://jiangzhiqi4551.github.io/"/>
-  <updated>2021-10-11T15:22:23.596Z</updated>
+  <updated>2021-10-12T06:51:06.764Z</updated>
   <id>https://jiangzhiqi4551.github.io/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Hadoop纠删码（Erasure Coding）简介</title>
+    <link href="https://jiangzhiqi4551.github.io/2021/10/12/Hadoop%E7%BA%A0%E5%88%A0%E7%A0%81%EF%BC%88Erasure-Coding%EF%BC%89%E7%AE%80%E4%BB%8B/"/>
+    <id>https://jiangzhiqi4551.github.io/2021/10/12/Hadoop%E7%BA%A0%E5%88%A0%E7%A0%81%EF%BC%88Erasure-Coding%EF%BC%89%E7%AE%80%E4%BB%8B/</id>
+    <published>2021-10-12T06:28:32.000Z</published>
+    <updated>2021-10-12T06:51:06.764Z</updated>
+    
+    <content type="html"><![CDATA[<p>摘要：相比于三副本机制，纠删码可以大大提高存储效率，本文将简介纠删码的原理。</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--more--&gt;</span><br></pre></td></tr></table></figure><h1 id="三副本机制"><a href="#三副本机制" class="headerlink" title="三副本机制"></a>三副本机制</h1><h3 id="1、什么是三副本"><a href="#1、什么是三副本" class="headerlink" title="1、什么是三副本"></a>1、什么是三副本</h3><p>默认情况下，HDFS会使用三副本机制来保证数据可用性，第一个副本存放在本地机架节点上，另一个副本存放在同一机架的另一个节点上，第三个副本存放在在不同机架的节点上。三副本机制可以减少机架间的数据传输，提高写操作的效率，保证数据的可用性，因为机架错误的概率要小于节点出错的概率</p><h3 id="2、三副本带来的问题"><a href="#2、三副本带来的问题" class="headerlink" title="2、三副本带来的问题"></a>2、三副本带来的问题</h3><p>三副本会造成存储空间200%的额外开销，还会在其他资源上造成浪费，比如在写数据时会造成额外的带宽消耗。尤其对于冷数据，因为查询的频率很低，第二个和第三个副本很少被访问，却依然占用了同样大小的存储空间，在数据治理的过程中，我们需要着重关注这部分数据，能删掉的要及时下线，但对于一些必须保留却很少使用的冷数据（如某个已结束的促销活动），最好能有一种办法替代三副本，达到既能保证数据可用性，又能降低存储开销的效果。由此我们引入了 Erasure Coding（简称EC）技术。</p><h1 id="Erasure-Coding"><a href="#Erasure-Coding" class="headerlink" title="Erasure Coding"></a>Erasure Coding</h1><h3 id="1、什么是-Erasure-Coding"><a href="#1、什么是-Erasure-Coding" class="headerlink" title="1、什么是 Erasure Coding"></a>1、什么是 Erasure Coding</h3><p>纠删码技术（Erasure coding）简称 EC，是一种编码容错技术。EC 最早用于通信行业，用于数据传输中的数据恢复。它通过对数据进行分块，然后计算出校验数据，使得各个部分的数据产生关联性。当一部分数据块丢失时，可以通过剩余的数据块和校验块计算出丢失的数据块。<br>在 Hadoop 3.0 中，Cloudera 与 Intel 的工程师在 HDFS-7285 下启动了 EC 项目，引入了纠删码技术，它可以提高 50% 以上的存储利用率，并且保证数据的可靠性。</p><h3 id="2、Erasure-Coding-的原理"><a href="#2、Erasure-Coding-的原理" class="headerlink" title="2、Erasure Coding 的原理"></a>2、Erasure Coding 的原理</h3><p>EC 的基本思想是将ｋ块原始的数据元素通过一定的编码计算，得到 ｍ 块校验元素。对于这 ｋ+ｍ 块元素，当其中任意的 ｍ 块元素出错（包括数据和校验出错），均可以通过对应的重构算法恢复出原来的ｋ块数据。生成校验的过程被成为编码（encoding），恢复丢失数据块的过程被称为解码（decoding）。</p><h4 id=""><a href="#" class="headerlink" title=""></a></h4><h5 id="目前-HDFS-中内置的-EC-编解码算法有以下三种："><a href="#目前-HDFS-中内置的-EC-编解码算法有以下三种：" class="headerlink" title="目前 HDFS 中内置的 EC 编解码算法有以下三种："></a>目前 HDFS 中内置的 EC 编解码算法有以下三种：</h5><ul><li>XOR</li><li>RS-LEGACY（旧版Reed-Solomon，性能较差）</li><li>RS（新版Reed-Solomon，性能是RS-LEGACY的5倍）</li></ul><h5 id="HDFS-的内置-EC-策略有以下几种："><a href="#HDFS-的内置-EC-策略有以下几种：" class="headerlink" title="HDFS 的内置 EC 策略有以下几种："></a>HDFS 的内置 EC 策略有以下几种：</h5><ul><li>RS-3-2-1024k</li><li>RS-6-3-1024k</li><li>RS-10-4-1024k</li><li>RS-LEGACY-6-3-1024k</li><li>XOR-2-1-1024k</li></ul><h5 id="以-RS-6-3-1024k-为例解释下该-EC-策略的定义："><a href="#以-RS-6-3-1024k-为例解释下该-EC-策略的定义：" class="headerlink" title="以 RS-6-3-1024k 为例解释下该 EC 策略的定义："></a>以 RS-6-3-1024k 为例解释下该 EC 策略的定义：</h5><ul><li>RS 代表使用 RS 算法压缩</li><li>6 代表有 6 个原始数据块，分别存储在 6 个 DataNode 节点</li><li>3 代表有 3 个校验块，存储在 3 个 DataNode 节点，可以容忍最多 3 个块丢失的情况</li><li>1024k 代表每个块大小为 1024k</li></ul><p>因为实际生产中几乎不会用到 RS-LEGACY，因此这里只介绍 <strong>XOR</strong> 算法和 <strong>RS</strong> 算法。</p><h4 id="1）XOR码"><a href="#1）XOR码" class="headerlink" title="1）XOR码"></a>1）XOR码</h4><p>XOR 编解码是 EC 算法的最简单实现。XOR 代表异或运算，异或运算的一个特点就是：<strong>如果对一个值连续做两次 XOR，会返回这个值本身</strong>。以下图为例：</p><p><img src="https://img-blog.csdnimg.cn/05a1bf6c88d5489fb4e6c3d35a843d48.png#pic_center"></p><p><strong>数据 X</strong>： 0 0 1 1<br><strong>数据 Y</strong>： 0 1 0 1<br><strong>X XOR Y</strong>： 0 1 1 0<br>数据 X 与数据 Y 通过异或运算生成校验码，当丢失任意一份数据时，如丢失数据 X 的第一位 0，可以通过 Y 的第一位 0 和校验码的第一位 0 还原出 X 的数据（因为只有 0 和 0 异或结果才为 0）。</p><p>但 XOR 码的弊端也很明显，当丢失的数据超过一位时，如数据 X 和数据 Y 的第一位都丢失，则无法进行还原（因为无法确定 X 和 Y 是都为 0 还是都为 1）。</p><p>由此可见，XOR 码适合 <strong>可保证错误数较少的场景</strong>，但实际生产中并不能保证每次只有一个数据出错，要考虑多个数据丢失的情况，要尽量提高容错率，因此还要了解第二种编解码方法——RS码。</p><h4 id="2）RS码"><a href="#2）RS码" class="headerlink" title="2）RS码"></a>2）RS码</h4><p>RS 码全名为 Reed-Solomon Codes，中文名称里德所罗门码。RS 码通过线性代数计算生成多个奇偶校验块，因此可以承受数据多处出错，所以生产上我们一般都是用 RS 码。<br>RS需要配置2个参数，k和m。</p><ul><li>k 代表数据块的个数</li><li>m 代表校验块的个数</li></ul><p>RS（k，m）通过将 k 个数据块的向量与生成矩阵（GT）相乘来实现，相乘得到一个码字（codeword）向量，码字向量由 k 个数据块和 m 个校验块构成，如下图所示，即为 RS（4，2）</p><p><img src="https://img-blog.csdnimg.cn/6e2ad5fc9f6841f88311000befe7807e.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p><p>如果某个数据块丢失，可以用生成矩阵（GT）的逆矩阵乘以码字向量来还原出丢失的数据，RS(k，m)]最多可容忍 m 个块（包括数据块和校验块）丢失。</p><p><strong>举个例子：</strong></p><p><strong>1、</strong> 假设现在有三个数据块组成一个向量，如下图所示：</p><img src="https://img-blog.csdnimg.cn/74b7e5a9f7f84aa9b6c152d6a54f8648.png" alt="在这里插入图片描述" style="zoom:150%;" /><p>对应的生成矩阵如下图所示：</p><img src="https://img-blog.csdnimg.cn/7b464f09c2e74feb9c8d902286b467d3.png" style="zoom:150%;" /><p>根据公式，我们可以计算出码字：</p><p><img src="https://img-blog.csdnimg.cn/623c2ad472464072b3b5a29539e7aed8.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p><p><strong>2、</strong> 现在我们假设码字中丢失了两份数据 1 和 14 ，我们该怎么还原出原始数据？</p><p>因为 1 和 14 丢失，所以我们可以去掉生成矩阵中的第一行和倒数第二行得到新的生成矩阵GT2，假设它们未参与</p><p>计算，用现有的 2 3 36 构造等式如下：</p><p><img src="https://img-blog.csdnimg.cn/1c0af0dabdfe466f86b46c2da9d293c3.png#pic_center" alt="在这里插入图片描述"></p><p>3、 在此基础上，为了还原出原始数据 1 2 3 ，只需要在等式两边同时乘新生成矩阵GT2的逆矩阵，即可还原出数据。</p><p><img src="https://img-blog.csdnimg.cn/4b3f493ec2e84f33b802e0efb93c2d41.png#pic_center"></p><p>因为 逆矩阵 × 矩阵 = 单位矩阵，因此只需要计算右边的等式：<br>-4 * 2 + -9 * 3 + 1 *36 = 1<br>1 * 2 + 0 * 3 + 0 * 36 = 2<br>0 * 2 + 1 * 3 + 0 * 36 = 3<br>即可还原出原始数据。</p><p>在 RS 算法中，通过设置 k 和 m 的值，可以灵活调整 RS 算法下的数据持久性和存储效率，m 代表可以容忍的同时发生的故障数，k / (k+m) 代表了当前的存储效率。</p><p>HDFS 中的 RS-6-3-1024k、RS-10-4-1024k 和三副本相比，既可以同时容忍 3~4 个故障，又能大大降低存储开销，下图展示了 0 副本、3 副本、XOR、RS 算法的存储效率：</p><p><img src="https://img-blog.csdnimg.cn/ae05a54179064a3eb456f27408409dee.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70"></p><h4 id="3、EC在-Hadoop-上的实现"><a href="#3、EC在-Hadoop-上的实现" class="headerlink" title="3、EC在 Hadoop 上的实现"></a>3、EC在 Hadoop 上的实现</h4><p>传统模式下，HDFS中的文件是由一个个块（block）组成，而在 EC 模式下，文件的组成单位变成了 block group，以 RS(10,4) 为例，一个 block group 包含了 10 个数据块，4个校验块。而 EC 模式下这些数据在 HDFS 上有着两种布局方式。</p><h5 id="连续布局"><a href="#连续布局" class="headerlink" title="连续布局"></a>连续布局</h5><p>文件数据被依次写入块中，一个块写满之后再写入下一个块，这种分布方式称为连续布局。如下图所示：</p><p><img src="https://img-blog.csdnimg.cn/cb72c81076fd4b9b8fdfefcd4025bb74.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p><p>优点：</p><ul><li><p>容易实现</p></li><li><p>容易和三副本策略互相转换</p></li></ul><p>缺点：</p><p>连续布局虽然实现简单，但缺点也极其明显，就是<strong>不适合存储小文件</strong>，仅适用于文件非常大的情况。假设我们使用 RS(10,4)，在面对小文件的情况下，只需要第一个数据块就足够存储数据了，但此时仍要写入 4 个校验块，存储开销达到 400%，还不如用三副本。。此外，连续布局也仅适用于<strong>离线</strong>或<strong>后台EC</strong>，否则客户端需要缓存 GB 级的数据块以计算奇偶校验。</p><p>因此，只有在我们确定文件非常大，能连续、完整的写入多个数据块时，才能达到节省存储的效果。</p><h5 id="条形布局"><a href="#条形布局" class="headerlink" title="条形布局"></a>条形布局</h5><p>条（stripe）是由若干个相同大小的单元（cell）构成的序列。文件数据被依次写入条的各个单元中，当一个条写满之后再写入下一个条，一个条的不同单元位于不同的数据块中。这种分布方式称为条形布局。条形布局如下图所示：</p><p><img src="https://img-blog.csdnimg.cn/845b1d4d18ee4655b8c5b642eb9d7a24.webp?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p><p>条形布局的优缺点正好与连续布局相反</p><p>优点：</p><ul><li>因为 cell 较小因此可以做在线EC，客户端缓存数据量较少，可以直接写入纠删码数据。</li><li>大小文件均适用</li></ul><p>缺点：</p><p>条形布局的缺点也很明显，首先原本一个节点上的块现在被分割到了多个不同的节点上，当 MapReduce 作业执行时将增大网络开销，失去数据本地性的优势，其次当进行编解码、DataNode 挂了计算丢失数据时都会消耗更多的 CPU，客户端在读写文件时，也需要同时连接所有涉及的 DataNode 读写数据块和校验块。</p><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>EC 虽然存在着与三副本转化麻烦、会增大 CPU 及网络开销等问题，但当数仓中存在大量冷数据时，EC 仍然是一种</p><p>数据治理的高效手段，能大大降低集群的存储消耗同时保证数据的可靠性，在我们的生产实践中，EC 为我们带来了巨大的收益。</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;摘要：相比于三副本机制，纠删码可以大大提高存储效率，本文将简介纠删码的原理。&lt;/p&gt;
+&lt;figure class=&quot;highlight plaintext&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/s</summary>
+      
+    
+    
+    
+    <category term="Hadoop" scheme="https://jiangzhiqi4551.github.io/categories/Hadoop/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>Hive中like与rlike的区别</title>
@@ -373,25 +396,6 @@
     
     
     <category term="计算机基础知识" scheme="https://jiangzhiqi4551.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>git commit 时提示please tell me who you are解决方法</title>
-    <link href="https://jiangzhiqi4551.github.io/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
-    <id>https://jiangzhiqi4551.github.io/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</id>
-    <published>2021-06-08T09:15:25.000Z</published>
-    <updated>2021-10-11T04:17:55.020Z</updated>
-    
-    <content type="html"><![CDATA[<p>一些排坑记录。。</p><span id="more"></span><p>先是按照git的提示</p><p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p><p>进行设置，结果发现还是报错，最后找到解决方案如下：</p><p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;">&#x79;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p><p>按如上步骤操作，最后成功commit</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;一些排坑记录。。&lt;/p&gt;</summary>
-    
-    
-    
-    <category term="排坑记录" scheme="https://jiangzhiqi4551.github.io/categories/%E6%8E%92%E5%9D%91%E8%AE%B0%E5%BD%95/"/>
     
     
   </entry>
