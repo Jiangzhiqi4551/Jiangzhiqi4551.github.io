@@ -517,34 +517,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive入门之基础知识（二）之数据操作与查询</title>
     <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
@@ -604,6 +576,34 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
+<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
+<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
+<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
+<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
+<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
+<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
+<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
+<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
+
+<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive宏(Macro)简介</title>
     <url>/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
@@ -646,77 +646,6 @@
       <categories>
         <category>Hive</category>
       </categories>
-  </entry>
-  <entry>
-    <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
-    <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
-    <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
-<span id="more"></span>
-
-<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><p>先上图<br><img src="https://img-blog.csdnimg.cn/20200219111728915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h4 id="堆内存（线程间共享）"><a href="#堆内存（线程间共享）" class="headerlink" title="堆内存（线程间共享）"></a>堆内存（线程间共享）</h4><p>在虚拟机启动时创建，此内存区域的唯一目的就是存放对象实例，是垃圾收集器管理的主要区域（也叫GC堆），Java堆可以处于物理上不连续的内存空间中，只要逻辑上是连续的即可，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时（通过-Xmx和-Xms控制扩展），将会抛出OutOfMemoryError异常。</p>
-<h4 id="方法区（线程间共享）（因为GC较少也叫永久代）"><a href="#方法区（线程间共享）（因为GC较少也叫永久代）" class="headerlink" title="方法区（线程间共享）（因为GC较少也叫永久代）"></a>方法区（线程间共享）（因为GC较少也叫永久代）</h4><p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。不需要连续的内存和可以选择固定大小或者可扩展，还可以选择不实现垃圾收集，这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError异常。 </p>
-<h4 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h4><p>生命周期与线程相同。描述的是Java方法执行的内存模型，每个方法被执行的时候都会同时创建一个栈帧（Stack Frame）用于存储局部变量表、操作栈、动态链接、方法出口等信息。每一个方法被调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。<br>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；虚拟机动态扩展时无法申请到足够的内存时OOM</p>
-<h4 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h4><p>类似于虚拟机栈，虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的Native方法服务，与虚拟机栈一样，本地方法栈区域也会抛出StackOverflowError和OutOfMemoryError异常。</p>
-<h4 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h4><p>当前线程所执行的字节码的行号指示器。如果线程正在执行的是一个Java方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie方法，这个计数器值则为空（Undefined）。</p>
-<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，由于Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器。此区域是唯一一个不会OOM的区域。</p>
-<h4 id="如何通过参数控制各个区域的大小"><a href="#如何通过参数控制各个区域的大小" class="headerlink" title="如何通过参数控制各个区域的大小"></a>如何通过参数控制各个区域的大小</h4><p><img src="https://img-blog.csdnimg.cn/20200219112104266.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h1 id="Java的垃圾收集"><a href="#Java的垃圾收集" class="headerlink" title="Java的垃圾收集"></a>Java的垃圾收集</h1><h4 id="如何判断对象是否存活"><a href="#如何判断对象是否存活" class="headerlink" title="如何判断对象是否存活"></a>如何判断对象是否存活</h4><ol>
-<li>引用计数<br>每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计数为0时可以回收，但是无法解决循环引用的问题。</li>
-<li>可达性分析<br>从GC Roots开始向下搜索，搜索所走过的路径称为引用链。当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。<br>GC Roots包括：<br>虚拟机栈中引用的对象；<br>方法区中类静态属性实体引用的对象；<br>方法区中常量引用的对象；<br>本地方法栈中JNI引用的对象。</li>
-</ol>
-<h4 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h4><h6 id="标记-—-清除算法"><a href="#标记-—-清除算法" class="headerlink" title="标记 — 清除算法"></a>标记 — 清除算法</h6><p>算法分为“标记”和“清除”两个阶段：首先标记出所有需要回收的对象，在标记完成后统一回收掉所有被标记的对象。<br><img src="https://img-blog.csdnimg.cn/20200219112558756.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="
-"><br>主要问题：<br>1、效率较低<br>2、会产生大量不连续的内存碎片，可能导致当程序在以后的运行过程中需要分配较大对象时，虽然总的空间足够，但是连续的内存空间却不足，不得不提前触发另一次垃圾收集动作。</p>
-<h6 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h6><p>将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。<br><img src="https://img-blog.csdnimg.cn/20200219112825305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>主要问题：<br>虽然解决了内存碎片的问题，但是可用内存却减小了一半。<br>在实际应用中，因为多数对象都是很快就会被垃圾收集的，所以把整个内存区域分成了一个Eden区，两个survivor区，大小比为8:1：1，当回收时，将一个Eden区和一个survivor区活着的对象复制到另一个survivor区，再将这次的Eden和survivor区清理。</p>
-<h6 id="标记-—-整理"><a href="#标记-—-整理" class="headerlink" title="标记 — 整理"></a>标记 — 整理</h6><p>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向一端移动，然后直接清理掉端边界以外的内存。<br><img src="https://img-blog.csdnimg.cn/2020021911335743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h6 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h6><p>把Java堆分为新生代和老年代，对各代分别用适当的算法，新生代采用复制算法，老年代采用标记清除或标记整理算法。</p>
-<h4 id="垃圾回收器"><a href="#垃圾回收器" class="headerlink" title="垃圾回收器"></a>垃圾回收器</h4><h6 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h6><ol>
-<li>串行收集器，收集时stop the world，单线程收集器；</li>
-<li>默认的client模式下的新生代收集器；</li>
-<li>新生代复制，老年代标记整理，简单高效<br><img src="https://img-blog.csdnimg.cn/20200219113821725.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h6><ol>
-<li>Serial收集器的多线程版本，新生代并行，老年代串行，收集时stop the world，server模式下默认的新生代收集器，能搭配CMS；</li>
-<li>新生代复制算法、老年代标记-整理；</li>
-<li>CPU好的环境里，停顿时间好于serial，并发能力差的环境里不如serial；<br><img src="https://img-blog.csdnimg.cn/202002191141021.png" alt="在这里插入图片描述"><h6 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h6></li>
-<li>类似ParNew收集器，Parallel收集器更关注系统的<font color='yellow'>吞吐量</font>，适合在后台运算不需要太多交互的任务。</li>
-<li>新生代复制算法、老年代标记-整理</li>
-<li>可以设置GC最大停顿时间，具有自适应调节策略，以达到最大吞吐量<br><img src="https://img-blog.csdnimg.cn/20200219114309545.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h6><p>以获取<font color='yellow'>最短回收停顿时间</font>为目标的收集器，系统停顿时间最短，给用户带来较好的体验，基于标记—清除，具体过程为：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象，速度很快</li>
-<li>并发标记（耗时最长）：进行GC Roots Tracing的过程，收集器线程与用户线程一起工作</li>
-<li>重新标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间比初始标记阶段稍长一些，但远比并发标记的时间短。 </li>
-<li>并发清除（耗时最长）：并发回收垃圾，收集器线程与用户线程一起工作<br><img src="https://img-blog.csdnimg.cn/2020021912050944.png" alt="在这里插入图片描述"><br>整个过程中耗时最长的并发标记和并发清除过程中，收集器线程都可以与用户线程一起工作，但是并发阶段应用程序变慢，降低吞吐量，产生大量空间碎片，也无法处理浮动垃圾（并发清除时产生的垃圾，只能等到下次清除）</li>
-</ol>
-<h6 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h6><ol>
-<li>面向<font color='yellow'>服务端</font>应用的垃圾收集器，整体看基于标记整理算法，局部看基于复制（两个region之间），不会产生内存空间碎片</li>
-<li>可预测停顿，能让使用者明确指定在一个长度为N毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒</li>
-<li>使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），新生代和老年代不再是物理隔阂了，它们都是一部分（可以不连续）Region的集合。G1跟踪各个region中垃圾堆积的价值大小（回收空间及所需时间），在后台维护一个优先列表，在每次被允许的时间内，优先回收高价值的。</li>
-</ol>
-<p>回收过程分如下阶段：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象</li>
-<li>并发标记：进行GC Roots Tracing的过程（进行可达性分析），可与用户程序并发执行</li>
-<li>最终标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，并行执行</li>
-<li>筛选回收：对各个region回收价值和成本排序，制定回收计划。</li>
-</ol>
-<h4 id="什么时候进行Minor-GC（新生代GC）"><a href="#什么时候进行Minor-GC（新生代GC）" class="headerlink" title="什么时候进行Minor GC（新生代GC）"></a>什么时候进行Minor GC（新生代GC）</h4><p>Eden区没有足够的空间时</p>
-<h4 id="什么时候进行Full-GC（Major-GC）"><a href="#什么时候进行Full-GC（Major-GC）" class="headerlink" title="什么时候进行Full GC（Major GC）"></a>什么时候进行Full GC（Major GC）</h4><p>只要老年代的连续空间 &gt; 新生代对象总大小  或  历次晋升的平均大小，就Minor GC，否则进行Full GC </p>
-<h4 id="对象什么时候进入老年代"><a href="#对象什么时候进入老年代" class="headerlink" title="对象什么时候进入老年代"></a>对象什么时候进入老年代</h4><ol>
-<li>大对象直接进入老年代，避免在Eden区和两个survivor区之间进行大量内存复制</li>
-<li>长期存活的对象进入老年代，Eden区出生，Minor GC后进入Survivor区，年龄为1，之后每过一次Minor GC，年龄+1，到15岁进入老年代</li>
-<li>Survivor空间中年龄相同的所有对象内存大小之和&gt;survivor空间的一半，大于等于该年龄的对象进入老年代</li>
-<li>空间分配担保，复制算法时，8：1：1 比例下，存活的对象大小超过survivor区时，通过老年代进行担保</li>
-</ol>
-]]></content>
-      <categories>
-        <category>计算机基础知识</category>
-      </categories>
-      <tags>
-        <tag>Java</tag>
-      </tags>
   </entry>
   <entry>
     <title>Python学习笔记(一)</title>
@@ -861,23 +790,75 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（一）</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
-    <content><![CDATA[<p>Spark 基础知识</p>
+    <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
+    <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
+    <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
 <span id="more"></span>
 
-<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
-<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
-<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
-<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
-<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
-<p>SparkStreaming：提供了用来操作数据流的API。</p>
-<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
-<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
+<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><p>先上图<br><img src="https://img-blog.csdnimg.cn/20200219111728915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h4 id="堆内存（线程间共享）"><a href="#堆内存（线程间共享）" class="headerlink" title="堆内存（线程间共享）"></a>堆内存（线程间共享）</h4><p>在虚拟机启动时创建，此内存区域的唯一目的就是存放对象实例，是垃圾收集器管理的主要区域（也叫GC堆），Java堆可以处于物理上不连续的内存空间中，只要逻辑上是连续的即可，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时（通过-Xmx和-Xms控制扩展），将会抛出OutOfMemoryError异常。</p>
+<h4 id="方法区（线程间共享）（因为GC较少也叫永久代）"><a href="#方法区（线程间共享）（因为GC较少也叫永久代）" class="headerlink" title="方法区（线程间共享）（因为GC较少也叫永久代）"></a>方法区（线程间共享）（因为GC较少也叫永久代）</h4><p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。不需要连续的内存和可以选择固定大小或者可扩展，还可以选择不实现垃圾收集，这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError异常。 </p>
+<h4 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h4><p>生命周期与线程相同。描述的是Java方法执行的内存模型，每个方法被执行的时候都会同时创建一个栈帧（Stack Frame）用于存储局部变量表、操作栈、动态链接、方法出口等信息。每一个方法被调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。<br>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；虚拟机动态扩展时无法申请到足够的内存时OOM</p>
+<h4 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h4><p>类似于虚拟机栈，虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的Native方法服务，与虚拟机栈一样，本地方法栈区域也会抛出StackOverflowError和OutOfMemoryError异常。</p>
+<h4 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h4><p>当前线程所执行的字节码的行号指示器。如果线程正在执行的是一个Java方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie方法，这个计数器值则为空（Undefined）。</p>
+<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，由于Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器。此区域是唯一一个不会OOM的区域。</p>
+<h4 id="如何通过参数控制各个区域的大小"><a href="#如何通过参数控制各个区域的大小" class="headerlink" title="如何通过参数控制各个区域的大小"></a>如何通过参数控制各个区域的大小</h4><p><img src="https://img-blog.csdnimg.cn/20200219112104266.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h1 id="Java的垃圾收集"><a href="#Java的垃圾收集" class="headerlink" title="Java的垃圾收集"></a>Java的垃圾收集</h1><h4 id="如何判断对象是否存活"><a href="#如何判断对象是否存活" class="headerlink" title="如何判断对象是否存活"></a>如何判断对象是否存活</h4><ol>
+<li>引用计数<br>每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计数为0时可以回收，但是无法解决循环引用的问题。</li>
+<li>可达性分析<br>从GC Roots开始向下搜索，搜索所走过的路径称为引用链。当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。<br>GC Roots包括：<br>虚拟机栈中引用的对象；<br>方法区中类静态属性实体引用的对象；<br>方法区中常量引用的对象；<br>本地方法栈中JNI引用的对象。</li>
+</ol>
+<h4 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h4><h6 id="标记-—-清除算法"><a href="#标记-—-清除算法" class="headerlink" title="标记 — 清除算法"></a>标记 — 清除算法</h6><p>算法分为“标记”和“清除”两个阶段：首先标记出所有需要回收的对象，在标记完成后统一回收掉所有被标记的对象。<br><img src="https://img-blog.csdnimg.cn/20200219112558756.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="
+"><br>主要问题：<br>1、效率较低<br>2、会产生大量不连续的内存碎片，可能导致当程序在以后的运行过程中需要分配较大对象时，虽然总的空间足够，但是连续的内存空间却不足，不得不提前触发另一次垃圾收集动作。</p>
+<h6 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h6><p>将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。<br><img src="https://img-blog.csdnimg.cn/20200219112825305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>主要问题：<br>虽然解决了内存碎片的问题，但是可用内存却减小了一半。<br>在实际应用中，因为多数对象都是很快就会被垃圾收集的，所以把整个内存区域分成了一个Eden区，两个survivor区，大小比为8:1：1，当回收时，将一个Eden区和一个survivor区活着的对象复制到另一个survivor区，再将这次的Eden和survivor区清理。</p>
+<h6 id="标记-—-整理"><a href="#标记-—-整理" class="headerlink" title="标记 — 整理"></a>标记 — 整理</h6><p>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向一端移动，然后直接清理掉端边界以外的内存。<br><img src="https://img-blog.csdnimg.cn/2020021911335743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h6 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h6><p>把Java堆分为新生代和老年代，对各代分别用适当的算法，新生代采用复制算法，老年代采用标记清除或标记整理算法。</p>
+<h4 id="垃圾回收器"><a href="#垃圾回收器" class="headerlink" title="垃圾回收器"></a>垃圾回收器</h4><h6 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h6><ol>
+<li>串行收集器，收集时stop the world，单线程收集器；</li>
+<li>默认的client模式下的新生代收集器；</li>
+<li>新生代复制，老年代标记整理，简单高效<br><img src="https://img-blog.csdnimg.cn/20200219113821725.png" alt="在这里插入图片描述"></li>
+</ol>
+<h6 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h6><ol>
+<li>Serial收集器的多线程版本，新生代并行，老年代串行，收集时stop the world，server模式下默认的新生代收集器，能搭配CMS；</li>
+<li>新生代复制算法、老年代标记-整理；</li>
+<li>CPU好的环境里，停顿时间好于serial，并发能力差的环境里不如serial；<br><img src="https://img-blog.csdnimg.cn/202002191141021.png" alt="在这里插入图片描述"><h6 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h6></li>
+<li>类似ParNew收集器，Parallel收集器更关注系统的<font color='yellow'>吞吐量</font>，适合在后台运算不需要太多交互的任务。</li>
+<li>新生代复制算法、老年代标记-整理</li>
+<li>可以设置GC最大停顿时间，具有自适应调节策略，以达到最大吞吐量<br><img src="https://img-blog.csdnimg.cn/20200219114309545.png" alt="在这里插入图片描述"></li>
+</ol>
+<h6 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h6><p>以获取<font color='yellow'>最短回收停顿时间</font>为目标的收集器，系统停顿时间最短，给用户带来较好的体验，基于标记—清除，具体过程为：</p>
+<ol>
+<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象，速度很快</li>
+<li>并发标记（耗时最长）：进行GC Roots Tracing的过程，收集器线程与用户线程一起工作</li>
+<li>重新标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间比初始标记阶段稍长一些，但远比并发标记的时间短。 </li>
+<li>并发清除（耗时最长）：并发回收垃圾，收集器线程与用户线程一起工作<br><img src="https://img-blog.csdnimg.cn/2020021912050944.png" alt="在这里插入图片描述"><br>整个过程中耗时最长的并发标记和并发清除过程中，收集器线程都可以与用户线程一起工作，但是并发阶段应用程序变慢，降低吞吐量，产生大量空间碎片，也无法处理浮动垃圾（并发清除时产生的垃圾，只能等到下次清除）</li>
+</ol>
+<h6 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h6><ol>
+<li>面向<font color='yellow'>服务端</font>应用的垃圾收集器，整体看基于标记整理算法，局部看基于复制（两个region之间），不会产生内存空间碎片</li>
+<li>可预测停顿，能让使用者明确指定在一个长度为N毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒</li>
+<li>使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），新生代和老年代不再是物理隔阂了，它们都是一部分（可以不连续）Region的集合。G1跟踪各个region中垃圾堆积的价值大小（回收空间及所需时间），在后台维护一个优先列表，在每次被允许的时间内，优先回收高价值的。</li>
+</ol>
+<p>回收过程分如下阶段：</p>
+<ol>
+<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象</li>
+<li>并发标记：进行GC Roots Tracing的过程（进行可达性分析），可与用户程序并发执行</li>
+<li>最终标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，并行执行</li>
+<li>筛选回收：对各个region回收价值和成本排序，制定回收计划。</li>
+</ol>
+<h4 id="什么时候进行Minor-GC（新生代GC）"><a href="#什么时候进行Minor-GC（新生代GC）" class="headerlink" title="什么时候进行Minor GC（新生代GC）"></a>什么时候进行Minor GC（新生代GC）</h4><p>Eden区没有足够的空间时</p>
+<h4 id="什么时候进行Full-GC（Major-GC）"><a href="#什么时候进行Full-GC（Major-GC）" class="headerlink" title="什么时候进行Full GC（Major GC）"></a>什么时候进行Full GC（Major GC）</h4><p>只要老年代的连续空间 &gt; 新生代对象总大小  或  历次晋升的平均大小，就Minor GC，否则进行Full GC </p>
+<h4 id="对象什么时候进入老年代"><a href="#对象什么时候进入老年代" class="headerlink" title="对象什么时候进入老年代"></a>对象什么时候进入老年代</h4><ol>
+<li>大对象直接进入老年代，避免在Eden区和两个survivor区之间进行大量内存复制</li>
+<li>长期存活的对象进入老年代，Eden区出生，Minor GC后进入Survivor区，年龄为1，之后每过一次Minor GC，年龄+1，到15岁进入老年代</li>
+<li>Survivor空间中年龄相同的所有对象内存大小之和&gt;survivor空间的一半，大于等于该年龄的对象进入老年代</li>
+<li>空间分配担保，复制算法时，8：1：1 比例下，存活的对象大小超过survivor区时，通过老年代进行担保</li>
+</ol>
 ]]></content>
       <categories>
-        <category>Spark</category>
+        <category>计算机基础知识</category>
       </categories>
+      <tags>
+        <tag>Java</tag>
+      </tags>
   </entry>
   <entry>
     <title>Spark入门之基础知识（三）键值对操作</title>
@@ -1012,6 +993,74 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
+    <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
+<span id="more"></span>
+
+<p>bin 目录下启动失败</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  bin pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2/bin</span><br><span class="line">➜  bin spark-shell</span><br><span class="line">zsh: command not found: spark-shell</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在 spark 主目录下执行成功</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-shell</span><br><span class="line">WARNING: An illegal reflective access operation has occurred # 启动成功</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p><a href="https://stackoverflow.com/questions/35620687/unable-to-run-spark-shell-from-bin">Stack Overflow原文链接</a></p>
+<p>简单来说，终端会到 <strong>$PATH</strong> 中寻找可执行文件，如果你要执行的程序不在 <strong>$PATH</strong> 中，就需要指明这个可执行文件在文件系统中的绝对路径。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如果不希望每次都 cd 到 spark 目录下再执行命令启动 spark，我们就需要把 SPARK_HOME 添加到 $PATH 中。</p>
+<p>首先先在 spark 目录下执行 pwd 记下这个路径</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来到根目录下修改 <strong>.bash_profile</strong> 文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd ~</span><br><span class="line"># 如果还没有 .bash_profile ，则需要先创建文件</span><br><span class="line"># touch .bash_profile</span><br><span class="line">vim .bash_profile </span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来复制粘贴如下内容，把第一条中的路径换成自己的</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后执行 source 命令使修改生效</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure>
+
+
+
+<p>再次执行 spark-shell 就会发现 spark 已经成功启动了~</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
+    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<ol>
+<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
+</li>
+<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
+</li>
+<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
+</li>
+<li><p>需要重启 IDEA ，即可正常运行。</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark算子之foldByKey</title>
     <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
     <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
@@ -1046,24 +1095,22 @@
       </categories>
   </entry>
   <entry>
-    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
-    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
+    <title>Spark入门之基础知识（一）</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <content><![CDATA[<p>Spark 基础知识</p>
 <span id="more"></span>
 
-<ol>
-<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
-</li>
-<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
-</li>
-<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
-</li>
-<li><p>需要重启 IDEA ，即可正常运行。</p>
-</li>
-</ol>
+<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
+<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
+<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
+<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
+<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
+<p>SparkStreaming：提供了用来操作数据流的API。</p>
+<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
+<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
 ]]></content>
       <categories>
-        <category>排坑记录</category>
+        <category>Spark</category>
       </categories>
   </entry>
   <entry>
@@ -1092,9 +1139,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#111;&#117;&#x40;&#101;&#120;&#x61;&#x6d;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;">&#121;&#111;&#117;&#x40;&#101;&#120;&#x61;&#x6d;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#111;&#109;">&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#109;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;">&#x79;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#109;&#x70;&#x6c;&#x65;&#46;&#x63;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#109;">&#121;&#111;&#117;&#64;&#x65;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -1124,6 +1171,47 @@
 ]]></content>
       <categories>
         <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>使用VuePress搭建一个简洁的技术文档</title>
+    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
+    <content><![CDATA[<p>摘要：VuePress入门教程</p>
+<span id="more"></span>
+
+<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
+<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
+
+<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
+<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
+<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<ol>
+<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
+<li>images下存放各种图片资源，包括导航栏的logo等</li>
+<li>data-guide-book存放所有文章</li>
+</ol>
+<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>heroImage可以引用images下的图片资源</li>
+<li>actionLink为点击快速上手后跳转到的那篇文章</li>
+</ol>
+<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>修改 config.js 中的配置如下：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
+<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
+      <categories>
+        <category>其他</category>
       </categories>
   </entry>
   <entry>
@@ -1177,47 +1265,6 @@
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>使用VuePress搭建一个简洁的技术文档</title>
-    <url>/2021/06/08/%E4%BD%BF%E7%94%A8VuePress%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E6%B4%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/</url>
-    <content><![CDATA[<p>摘要：VuePress入门教程</p>
-<span id="more"></span>
-
-<h4 id="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。"><a href="#长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用-VuePress-来构建。" class="headerlink" title="长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。"></a>长期搬砖难免遇到各种各样的问题，新人入职后也需要一份完整、清晰的文档指导其展开工作，而Hexo更适合做个人博客，因此这里选用 VuePress 来构建。</h4><h2 id="1、安装Node-js"><a href="#1、安装Node-js" class="headerlink" title="1、安装Node.js"></a>1、安装Node.js</h2><p><a href="https://www.jianshu.com/p/3b30c4c846d1">Node.js安装教程</a></p>
-<h2 id="2、创建并进入目录"><a href="#2、创建并进入目录" class="headerlink" title="2、创建并进入目录"></a>2、创建并进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir vuepress-starter &amp;&amp; <span class="built_in">cd</span> vuepress-starter</span><br></pre></td></tr></table></figure>
-
-<h2 id="3、初始化"><a href="#3、初始化" class="headerlink" title="3、初始化"></a>3、初始化</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm init</span><br></pre></td></tr></table></figure>
-
-<h2 id="4、安装依赖"><a href="#4、安装依赖" class="headerlink" title="4、安装依赖"></a>4、安装依赖</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install -D vuepress</span><br></pre></td></tr></table></figure>
-
-<h2 id="5、创建文档"><a href="#5、创建文档" class="headerlink" title="5、创建文档"></a>5、创建文档</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkdir docs &amp;&amp; <span class="built_in">echo</span> <span class="string">&#x27;# Hello VuePress&#x27;</span> &gt; docs/README.md</span><br></pre></td></tr></table></figure>
-
-<h2 id="6、修改-package-json"><a href="#6、修改-package-json" class="headerlink" title="6、修改 package.json"></a>6、修改 package.json</h2><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">&quot;scripts&quot;:</span> &#123;</span><br><span class="line">    <span class="attr">&quot;docs:dev&quot;:</span> <span class="string">&quot;vuepress dev docs&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;docs:build&quot;:</span> <span class="string">&quot;vuepress build docs&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="7、启动服务器本地预览"><a href="#7、启动服务器本地预览" class="headerlink" title="7、启动服务器本地预览"></a>7、启动服务器本地预览</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm run docs:dev</span><br></pre></td></tr></table></figure>
-<p>在<em><strong><a href="http://localhost:8080/">http://localhost:8080</a></strong></em>即可预览</p>
-<h1 id="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"><a href="#上面的内容与官网文档一致，接下来简单介绍一些进阶配置" class="headerlink" title="上面的内容与官网文档一致，接下来简单介绍一些进阶配置"></a>上面的内容与官网文档一致，接下来简单介绍一些进阶配置</h1><h2 id="1、进入-docs-文件夹并构建如下目录"><a href="#1、进入-docs-文件夹并构建如下目录" class="headerlink" title="1、进入 docs 文件夹并构建如下目录"></a>1、进入 <em><strong>docs</strong></em> 文件夹并构建如下目录</h2><p><img src="https://img-blog.csdnimg.cn/20210517161446334.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<ol>
-<li>.vuepress下的config.js存放配置信息，包括导航栏、侧边栏等。</li>
-<li>images下存放各种图片资源，包括导航栏的logo等</li>
-<li>data-guide-book存放所有文章</li>
-</ol>
-<h2 id="2、使用默认主题"><a href="#2、使用默认主题" class="headerlink" title="2、使用默认主题"></a>2、使用默认主题</h2><p>修改 <strong>README.md</strong></p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">home:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">heroImage:</span> <span class="string">/assets/images/logo1.png</span></span><br><span class="line"><span class="attr">heroText:</span> <span class="string">Data</span> <span class="string">Guide</span></span><br><span class="line"><span class="attr">tagline:</span> <span class="string">技术文档</span></span><br><span class="line"><span class="attr">actionText:</span> <span class="string">快速上手</span> <span class="string">→</span></span><br><span class="line"><span class="attr">actionLink:</span> <span class="string">/data-guide-book/01-getting-started/01-config-env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">footer:</span> <span class="string">Copyright</span> <span class="string">©</span> <span class="number">2021</span><span class="string">-present</span> <span class="string">某某人</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>heroImage可以引用images下的图片资源</li>
-<li>actionLink为点击快速上手后跳转到的那篇文章</li>
-</ol>
-<h2 id="3、配置"><a href="#3、配置" class="headerlink" title="3、配置"></a>3、配置</h2><p>新建几篇测试文章<br><img src="https://img-blog.csdnimg.cn/20210517170716947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
-<p>修改 config.js 中的配置如下：</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">module.exports</span> <span class="string">=</span> &#123;</span><br><span class="line">  <span class="attr">title:</span> <span class="string">&#x27;技术文档&#x27;</span>,</span><br><span class="line">  <span class="attr">themeConfig:</span> &#123;</span><br><span class="line">  	<span class="string">//</span> <span class="string">导航栏logo</span></span><br><span class="line">    <span class="attr">logo:</span> <span class="string">&#x27;/assets/images/logo1.png&#x27;</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">导航栏链接</span></span><br><span class="line">    <span class="attr">nav:</span> [</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试01&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试02&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试03&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">            &#123;<span class="attr">text:</span> <span class="string">&#x27;测试04&#x27;</span>, <span class="attr">link:</span> <span class="string">&#x27;https://www.baidu.com/&#x27;</span>&#125;,</span><br><span class="line">        ],</span><br><span class="line">    <span class="string">//</span> <span class="string">侧边栏</span></span><br><span class="line">    <span class="attr">sidebar:</span> [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录1&#x27;</span>,   <span class="string">//</span> <span class="string">必要的</span></span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/01&#x27;</span>, <span class="string">&#x27;文章1&#x27;</span>],</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/01/02&#x27;</span>, <span class="string">&#x27;文章2&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录2&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, </span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/02/01&#x27;</span>, <span class="string">&#x27;文章3&#x27;</span>]</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title:</span> <span class="string">&#x27;主目录3&#x27;</span>,</span><br><span class="line">        <span class="attr">collapsable:</span> <span class="literal">false</span>, <span class="string">//</span> <span class="string">让一个组永远都是展开状态</span></span><br><span class="line">        <span class="attr">children:</span> [</span><br><span class="line">          [<span class="string">&#x27;/data-guide-book/03/01&#x27;</span>, <span class="string">&#x27;二级目录&#x27;</span>],</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">title:</span> <span class="string">&#x27;常见问题2&#x27;</span>,</span><br><span class="line">            <span class="attr">path:</span> <span class="string">&#x27;/data-guide-book/03/02&#x27;</span>,</span><br><span class="line">            <span class="attr">collapsable:</span> <span class="literal">true</span>,</span><br><span class="line">            <span class="attr">children:</span> [</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/02&#x27;</span>, <span class="string">&#x27;文章4&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/03&#x27;</span>, <span class="string">&#x27;文章5&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/04&#x27;</span>, <span class="string">&#x27;文章6&#x27;</span>],</span><br><span class="line">                 [<span class="string">&#x27;/data-guide-book/03/05&#x27;</span>, <span class="string">&#x27;文章7&#x27;</span>]</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">sidebarDepth:</span> <span class="number">2</span>,</span><br><span class="line">    <span class="attr">editLinks:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">lastUpdated:</span> <span class="string">&#x27;最后修改于&#x27;</span>,</span><br><span class="line">    <span class="attr">search:</span> <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>效果如下图所示：<br><img src="https://img-blog.csdnimg.cn/2021051717090686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"><br>子目录的使用、目录的对应关系不再赘述，把上面的配置粘到本地自己修改后查看页面变化，试几次就清楚各部分的作用了。</p>
-<h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
-      <categories>
-        <category>其他</category>
       </categories>
   </entry>
   <entry>
