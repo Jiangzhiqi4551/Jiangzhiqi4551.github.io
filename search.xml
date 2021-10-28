@@ -1284,11 +1284,11 @@
 
 
 <p>点击 File –&gt; Project Structure –&gt; Artifacts –&gt; 加号 –&gt; JAR –&gt; From modules with dependencies</p>
-<p><img src="/Users/jiangzhiqi/Downloads/my-hexo-blog/public/images/20211028_img1.png" alt="截屏2021-10-28 下午4.40.11"></p>
+<p><img src="/images/20211028_img1.png" alt="截屏2021-10-28 下午4.40.11"></p>
 <p>Module 处选择你的项目，Main class 选择入口，点击 OK</p>
-<p><img src="/Users/jiangzhiqi/Downloads/my-hexo-blog/public/images/20211028_img2.png" alt="截屏2021-10-28 下午4.41.59"></p>
+<p><img src="/images/20211028_img2.png" alt="截屏2021-10-28 下午4.41.59"></p>
 <p>选中所有外部依赖，点击 减号 删除，只保留项目 jar 包</p>
-<p><img src="/Users/jiangzhiqi/Downloads/my-hexo-blog/public/images/20211028_img3.png" alt="截屏2021-10-28 下午4.42.35"></p>
+<p><img src="/images/20211028_img3.png" alt="截屏2021-10-28 下午4.42.35"></p>
 <p>最后在 terminal 中提交 jar 包即可。</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  ~ spark-submit \</span><br><span class="line">--master local \</span><br><span class="line">--class &quot;SimpleApp&quot; \</span><br><span class="line">/Users/jiangzhiqi/IdeaProjects/SbtExampleProject/out/artifacts/SbtExampleProject_jar/SbtExampleProject.jar</span><br></pre></td></tr></table></figure>
 
