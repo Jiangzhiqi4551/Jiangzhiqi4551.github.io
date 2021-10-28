@@ -401,23 +401,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<span id="more"></span>
-
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive中的Sort Merge Bucket Join</title>
     <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
     <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
@@ -576,6 +559,23 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+<span id="more"></span>
+
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
     <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
@@ -646,6 +646,77 @@
       <categories>
         <category>Hive</category>
       </categories>
+  </entry>
+  <entry>
+    <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
+    <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
+    <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
+<span id="more"></span>
+
+<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><p>先上图<br><img src="https://img-blog.csdnimg.cn/20200219111728915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h4 id="堆内存（线程间共享）"><a href="#堆内存（线程间共享）" class="headerlink" title="堆内存（线程间共享）"></a>堆内存（线程间共享）</h4><p>在虚拟机启动时创建，此内存区域的唯一目的就是存放对象实例，是垃圾收集器管理的主要区域（也叫GC堆），Java堆可以处于物理上不连续的内存空间中，只要逻辑上是连续的即可，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时（通过-Xmx和-Xms控制扩展），将会抛出OutOfMemoryError异常。</p>
+<h4 id="方法区（线程间共享）（因为GC较少也叫永久代）"><a href="#方法区（线程间共享）（因为GC较少也叫永久代）" class="headerlink" title="方法区（线程间共享）（因为GC较少也叫永久代）"></a>方法区（线程间共享）（因为GC较少也叫永久代）</h4><p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。不需要连续的内存和可以选择固定大小或者可扩展，还可以选择不实现垃圾收集，这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError异常。 </p>
+<h4 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h4><p>生命周期与线程相同。描述的是Java方法执行的内存模型，每个方法被执行的时候都会同时创建一个栈帧（Stack Frame）用于存储局部变量表、操作栈、动态链接、方法出口等信息。每一个方法被调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。<br>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；虚拟机动态扩展时无法申请到足够的内存时OOM</p>
+<h4 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h4><p>类似于虚拟机栈，虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的Native方法服务，与虚拟机栈一样，本地方法栈区域也会抛出StackOverflowError和OutOfMemoryError异常。</p>
+<h4 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h4><p>当前线程所执行的字节码的行号指示器。如果线程正在执行的是一个Java方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie方法，这个计数器值则为空（Undefined）。</p>
+<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，由于Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器。此区域是唯一一个不会OOM的区域。</p>
+<h4 id="如何通过参数控制各个区域的大小"><a href="#如何通过参数控制各个区域的大小" class="headerlink" title="如何通过参数控制各个区域的大小"></a>如何通过参数控制各个区域的大小</h4><p><img src="https://img-blog.csdnimg.cn/20200219112104266.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h1 id="Java的垃圾收集"><a href="#Java的垃圾收集" class="headerlink" title="Java的垃圾收集"></a>Java的垃圾收集</h1><h4 id="如何判断对象是否存活"><a href="#如何判断对象是否存活" class="headerlink" title="如何判断对象是否存活"></a>如何判断对象是否存活</h4><ol>
+<li>引用计数<br>每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计数为0时可以回收，但是无法解决循环引用的问题。</li>
+<li>可达性分析<br>从GC Roots开始向下搜索，搜索所走过的路径称为引用链。当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。<br>GC Roots包括：<br>虚拟机栈中引用的对象；<br>方法区中类静态属性实体引用的对象；<br>方法区中常量引用的对象；<br>本地方法栈中JNI引用的对象。</li>
+</ol>
+<h4 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h4><h6 id="标记-—-清除算法"><a href="#标记-—-清除算法" class="headerlink" title="标记 — 清除算法"></a>标记 — 清除算法</h6><p>算法分为“标记”和“清除”两个阶段：首先标记出所有需要回收的对象，在标记完成后统一回收掉所有被标记的对象。<br><img src="https://img-blog.csdnimg.cn/20200219112558756.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="
+"><br>主要问题：<br>1、效率较低<br>2、会产生大量不连续的内存碎片，可能导致当程序在以后的运行过程中需要分配较大对象时，虽然总的空间足够，但是连续的内存空间却不足，不得不提前触发另一次垃圾收集动作。</p>
+<h6 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h6><p>将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。<br><img src="https://img-blog.csdnimg.cn/20200219112825305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>主要问题：<br>虽然解决了内存碎片的问题，但是可用内存却减小了一半。<br>在实际应用中，因为多数对象都是很快就会被垃圾收集的，所以把整个内存区域分成了一个Eden区，两个survivor区，大小比为8:1：1，当回收时，将一个Eden区和一个survivor区活着的对象复制到另一个survivor区，再将这次的Eden和survivor区清理。</p>
+<h6 id="标记-—-整理"><a href="#标记-—-整理" class="headerlink" title="标记 — 整理"></a>标记 — 整理</h6><p>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向一端移动，然后直接清理掉端边界以外的内存。<br><img src="https://img-blog.csdnimg.cn/2020021911335743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h6 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h6><p>把Java堆分为新生代和老年代，对各代分别用适当的算法，新生代采用复制算法，老年代采用标记清除或标记整理算法。</p>
+<h4 id="垃圾回收器"><a href="#垃圾回收器" class="headerlink" title="垃圾回收器"></a>垃圾回收器</h4><h6 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h6><ol>
+<li>串行收集器，收集时stop the world，单线程收集器；</li>
+<li>默认的client模式下的新生代收集器；</li>
+<li>新生代复制，老年代标记整理，简单高效<br><img src="https://img-blog.csdnimg.cn/20200219113821725.png" alt="在这里插入图片描述"></li>
+</ol>
+<h6 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h6><ol>
+<li>Serial收集器的多线程版本，新生代并行，老年代串行，收集时stop the world，server模式下默认的新生代收集器，能搭配CMS；</li>
+<li>新生代复制算法、老年代标记-整理；</li>
+<li>CPU好的环境里，停顿时间好于serial，并发能力差的环境里不如serial；<br><img src="https://img-blog.csdnimg.cn/202002191141021.png" alt="在这里插入图片描述"><h6 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h6></li>
+<li>类似ParNew收集器，Parallel收集器更关注系统的<font color='yellow'>吞吐量</font>，适合在后台运算不需要太多交互的任务。</li>
+<li>新生代复制算法、老年代标记-整理</li>
+<li>可以设置GC最大停顿时间，具有自适应调节策略，以达到最大吞吐量<br><img src="https://img-blog.csdnimg.cn/20200219114309545.png" alt="在这里插入图片描述"></li>
+</ol>
+<h6 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h6><p>以获取<font color='yellow'>最短回收停顿时间</font>为目标的收集器，系统停顿时间最短，给用户带来较好的体验，基于标记—清除，具体过程为：</p>
+<ol>
+<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象，速度很快</li>
+<li>并发标记（耗时最长）：进行GC Roots Tracing的过程，收集器线程与用户线程一起工作</li>
+<li>重新标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间比初始标记阶段稍长一些，但远比并发标记的时间短。 </li>
+<li>并发清除（耗时最长）：并发回收垃圾，收集器线程与用户线程一起工作<br><img src="https://img-blog.csdnimg.cn/2020021912050944.png" alt="在这里插入图片描述"><br>整个过程中耗时最长的并发标记和并发清除过程中，收集器线程都可以与用户线程一起工作，但是并发阶段应用程序变慢，降低吞吐量，产生大量空间碎片，也无法处理浮动垃圾（并发清除时产生的垃圾，只能等到下次清除）</li>
+</ol>
+<h6 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h6><ol>
+<li>面向<font color='yellow'>服务端</font>应用的垃圾收集器，整体看基于标记整理算法，局部看基于复制（两个region之间），不会产生内存空间碎片</li>
+<li>可预测停顿，能让使用者明确指定在一个长度为N毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒</li>
+<li>使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），新生代和老年代不再是物理隔阂了，它们都是一部分（可以不连续）Region的集合。G1跟踪各个region中垃圾堆积的价值大小（回收空间及所需时间），在后台维护一个优先列表，在每次被允许的时间内，优先回收高价值的。</li>
+</ol>
+<p>回收过程分如下阶段：</p>
+<ol>
+<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象</li>
+<li>并发标记：进行GC Roots Tracing的过程（进行可达性分析），可与用户程序并发执行</li>
+<li>最终标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，并行执行</li>
+<li>筛选回收：对各个region回收价值和成本排序，制定回收计划。</li>
+</ol>
+<h4 id="什么时候进行Minor-GC（新生代GC）"><a href="#什么时候进行Minor-GC（新生代GC）" class="headerlink" title="什么时候进行Minor GC（新生代GC）"></a>什么时候进行Minor GC（新生代GC）</h4><p>Eden区没有足够的空间时</p>
+<h4 id="什么时候进行Full-GC（Major-GC）"><a href="#什么时候进行Full-GC（Major-GC）" class="headerlink" title="什么时候进行Full GC（Major GC）"></a>什么时候进行Full GC（Major GC）</h4><p>只要老年代的连续空间 &gt; 新生代对象总大小  或  历次晋升的平均大小，就Minor GC，否则进行Full GC </p>
+<h4 id="对象什么时候进入老年代"><a href="#对象什么时候进入老年代" class="headerlink" title="对象什么时候进入老年代"></a>对象什么时候进入老年代</h4><ol>
+<li>大对象直接进入老年代，避免在Eden区和两个survivor区之间进行大量内存复制</li>
+<li>长期存活的对象进入老年代，Eden区出生，Minor GC后进入Survivor区，年龄为1，之后每过一次Minor GC，年龄+1，到15岁进入老年代</li>
+<li>Survivor空间中年龄相同的所有对象内存大小之和&gt;survivor空间的一半，大于等于该年龄的对象进入老年代</li>
+<li>空间分配担保，复制算法时，8：1：1 比例下，存活的对象大小超过survivor区时，通过老年代进行担保</li>
+</ol>
+]]></content>
+      <categories>
+        <category>计算机基础知识</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
+      </tags>
   </entry>
   <entry>
     <title>Python学习笔记(一)</title>
@@ -790,75 +861,23 @@
       </categories>
   </entry>
   <entry>
-    <title>JVM内存结构及Java垃圾收集（GC算法、GC收集器）</title>
-    <url>/2021/06/08/JVM%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%8F%8AJava%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%EF%BC%88GC%E7%AE%97%E6%B3%95%E3%80%81GC%E6%94%B6%E9%9B%86%E5%99%A8%EF%BC%89/</url>
-    <content><![CDATA[<p>最近正在复习Java相关的知识，总结一下JVM相关的知识点。</p>
+    <title>Spark入门之基础知识（一）</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <content><![CDATA[<p>Spark 基础知识</p>
 <span id="more"></span>
 
-<h1 id="JVM内存结构"><a href="#JVM内存结构" class="headerlink" title="JVM内存结构"></a>JVM内存结构</h1><p>先上图<br><img src="https://img-blog.csdnimg.cn/20200219111728915.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h4 id="堆内存（线程间共享）"><a href="#堆内存（线程间共享）" class="headerlink" title="堆内存（线程间共享）"></a>堆内存（线程间共享）</h4><p>在虚拟机启动时创建，此内存区域的唯一目的就是存放对象实例，是垃圾收集器管理的主要区域（也叫GC堆），Java堆可以处于物理上不连续的内存空间中，只要逻辑上是连续的即可，如果在堆中没有内存完成实例分配，并且堆也无法再扩展时（通过-Xmx和-Xms控制扩展），将会抛出OutOfMemoryError异常。</p>
-<h4 id="方法区（线程间共享）（因为GC较少也叫永久代）"><a href="#方法区（线程间共享）（因为GC较少也叫永久代）" class="headerlink" title="方法区（线程间共享）（因为GC较少也叫永久代）"></a>方法区（线程间共享）（因为GC较少也叫永久代）</h4><p>用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。不需要连续的内存和可以选择固定大小或者可扩展，还可以选择不实现垃圾收集，这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载，当方法区无法满足内存分配需求时，将抛出OutOfMemoryError异常。 </p>
-<h4 id="虚拟机栈（线程私有）"><a href="#虚拟机栈（线程私有）" class="headerlink" title="虚拟机栈（线程私有）"></a>虚拟机栈（线程私有）</h4><p>生命周期与线程相同。描述的是Java方法执行的内存模型，每个方法被执行的时候都会同时创建一个栈帧（Stack Frame）用于存储局部变量表、操作栈、动态链接、方法出口等信息。每一个方法被调用直至执行完成的过程，就对应着一个栈帧在虚拟机栈中从入栈到出栈的过程。<br>如果线程请求的栈深度大于虚拟机所允许的深度，将抛出StackOverflowError异常；虚拟机动态扩展时无法申请到足够的内存时OOM</p>
-<h4 id="本地方法栈（线程私有）"><a href="#本地方法栈（线程私有）" class="headerlink" title="本地方法栈（线程私有）"></a>本地方法栈（线程私有）</h4><p>类似于虚拟机栈，虚拟机栈为虚拟机执行Java方法服务，而本地方法栈则是为虚拟机使用到的Native方法服务，与虚拟机栈一样，本地方法栈区域也会抛出StackOverflowError和OutOfMemoryError异常。</p>
-<h4 id="程序计数器（线程私有）"><a href="#程序计数器（线程私有）" class="headerlink" title="程序计数器（线程私有）"></a>程序计数器（线程私有）</h4><p>当前线程所执行的字节码的行号指示器。如果线程正在执行的是一个Java方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是Natvie方法，这个计数器值则为空（Undefined）。</p>
-<p>字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令，由于Java虚拟机的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，在任何一个确定的时刻，一个处理器只会执行一条线程中的指令。因此，为了线程切换后能恢复到正确的执行位置，每条线程都需要有一个独立的程序计数器。此区域是唯一一个不会OOM的区域。</p>
-<h4 id="如何通过参数控制各个区域的大小"><a href="#如何通过参数控制各个区域的大小" class="headerlink" title="如何通过参数控制各个区域的大小"></a>如何通过参数控制各个区域的大小</h4><p><img src="https://img-blog.csdnimg.cn/20200219112104266.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h1 id="Java的垃圾收集"><a href="#Java的垃圾收集" class="headerlink" title="Java的垃圾收集"></a>Java的垃圾收集</h1><h4 id="如何判断对象是否存活"><a href="#如何判断对象是否存活" class="headerlink" title="如何判断对象是否存活"></a>如何判断对象是否存活</h4><ol>
-<li>引用计数<br>每个对象有一个引用计数属性，新增一个引用时计数加1，引用释放时计数减1，计数为0时可以回收，但是无法解决循环引用的问题。</li>
-<li>可达性分析<br>从GC Roots开始向下搜索，搜索所走过的路径称为引用链。当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。<br>GC Roots包括：<br>虚拟机栈中引用的对象；<br>方法区中类静态属性实体引用的对象；<br>方法区中常量引用的对象；<br>本地方法栈中JNI引用的对象。</li>
-</ol>
-<h4 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h4><h6 id="标记-—-清除算法"><a href="#标记-—-清除算法" class="headerlink" title="标记 — 清除算法"></a>标记 — 清除算法</h6><p>算法分为“标记”和“清除”两个阶段：首先标记出所有需要回收的对象，在标记完成后统一回收掉所有被标记的对象。<br><img src="https://img-blog.csdnimg.cn/20200219112558756.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="
-"><br>主要问题：<br>1、效率较低<br>2、会产生大量不连续的内存碎片，可能导致当程序在以后的运行过程中需要分配较大对象时，虽然总的空间足够，但是连续的内存空间却不足，不得不提前触发另一次垃圾收集动作。</p>
-<h6 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h6><p>将可用内存按容量划分为大小相等的两块，每次只使用其中的一块。当这一块的内存用完了，就将还存活着的对象复制到另外一块上面，然后再把已使用过的内存空间一次清理掉。<br><img src="https://img-blog.csdnimg.cn/20200219112825305.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>主要问题：<br>虽然解决了内存碎片的问题，但是可用内存却减小了一半。<br>在实际应用中，因为多数对象都是很快就会被垃圾收集的，所以把整个内存区域分成了一个Eden区，两个survivor区，大小比为8:1：1，当回收时，将一个Eden区和一个survivor区活着的对象复制到另一个survivor区，再将这次的Eden和survivor区清理。</p>
-<h6 id="标记-—-整理"><a href="#标记-—-整理" class="headerlink" title="标记 — 整理"></a>标记 — 整理</h6><p>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向一端移动，然后直接清理掉端边界以外的内存。<br><img src="https://img-blog.csdnimg.cn/2020021911335743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h6 id="分代收集"><a href="#分代收集" class="headerlink" title="分代收集"></a>分代收集</h6><p>把Java堆分为新生代和老年代，对各代分别用适当的算法，新生代采用复制算法，老年代采用标记清除或标记整理算法。</p>
-<h4 id="垃圾回收器"><a href="#垃圾回收器" class="headerlink" title="垃圾回收器"></a>垃圾回收器</h4><h6 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h6><ol>
-<li>串行收集器，收集时stop the world，单线程收集器；</li>
-<li>默认的client模式下的新生代收集器；</li>
-<li>新生代复制，老年代标记整理，简单高效<br><img src="https://img-blog.csdnimg.cn/20200219113821725.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h6><ol>
-<li>Serial收集器的多线程版本，新生代并行，老年代串行，收集时stop the world，server模式下默认的新生代收集器，能搭配CMS；</li>
-<li>新生代复制算法、老年代标记-整理；</li>
-<li>CPU好的环境里，停顿时间好于serial，并发能力差的环境里不如serial；<br><img src="https://img-blog.csdnimg.cn/202002191141021.png" alt="在这里插入图片描述"><h6 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h6></li>
-<li>类似ParNew收集器，Parallel收集器更关注系统的<font color='yellow'>吞吐量</font>，适合在后台运算不需要太多交互的任务。</li>
-<li>新生代复制算法、老年代标记-整理</li>
-<li>可以设置GC最大停顿时间，具有自适应调节策略，以达到最大吞吐量<br><img src="https://img-blog.csdnimg.cn/20200219114309545.png" alt="在这里插入图片描述"></li>
-</ol>
-<h6 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h6><p>以获取<font color='yellow'>最短回收停顿时间</font>为目标的收集器，系统停顿时间最短，给用户带来较好的体验，基于标记—清除，具体过程为：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象，速度很快</li>
-<li>并发标记（耗时最长）：进行GC Roots Tracing的过程，收集器线程与用户线程一起工作</li>
-<li>重新标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，时间比初始标记阶段稍长一些，但远比并发标记的时间短。 </li>
-<li>并发清除（耗时最长）：并发回收垃圾，收集器线程与用户线程一起工作<br><img src="https://img-blog.csdnimg.cn/2020021912050944.png" alt="在这里插入图片描述"><br>整个过程中耗时最长的并发标记和并发清除过程中，收集器线程都可以与用户线程一起工作，但是并发阶段应用程序变慢，降低吞吐量，产生大量空间碎片，也无法处理浮动垃圾（并发清除时产生的垃圾，只能等到下次清除）</li>
-</ol>
-<h6 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h6><ol>
-<li>面向<font color='yellow'>服务端</font>应用的垃圾收集器，整体看基于标记整理算法，局部看基于复制（两个region之间），不会产生内存空间碎片</li>
-<li>可预测停顿，能让使用者明确指定在一个长度为N毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒</li>
-<li>使用G1收集器时，Java堆的内存布局与其他收集器有很大差别，它将整个Java堆划分为多个大小相等的独立区域（Region），新生代和老年代不再是物理隔阂了，它们都是一部分（可以不连续）Region的集合。G1跟踪各个region中垃圾堆积的价值大小（回收空间及所需时间），在后台维护一个优先列表，在每次被允许的时间内，优先回收高价值的。</li>
-</ol>
-<p>回收过程分如下阶段：</p>
-<ol>
-<li>初始标记：stop the world，仅仅只是标记一下GC Roots能直接关联到的对象</li>
-<li>并发标记：进行GC Roots Tracing的过程（进行可达性分析），可与用户程序并发执行</li>
-<li>最终标记：stop the world，为了修正并发标记期间，因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，并行执行</li>
-<li>筛选回收：对各个region回收价值和成本排序，制定回收计划。</li>
-</ol>
-<h4 id="什么时候进行Minor-GC（新生代GC）"><a href="#什么时候进行Minor-GC（新生代GC）" class="headerlink" title="什么时候进行Minor GC（新生代GC）"></a>什么时候进行Minor GC（新生代GC）</h4><p>Eden区没有足够的空间时</p>
-<h4 id="什么时候进行Full-GC（Major-GC）"><a href="#什么时候进行Full-GC（Major-GC）" class="headerlink" title="什么时候进行Full GC（Major GC）"></a>什么时候进行Full GC（Major GC）</h4><p>只要老年代的连续空间 &gt; 新生代对象总大小  或  历次晋升的平均大小，就Minor GC，否则进行Full GC </p>
-<h4 id="对象什么时候进入老年代"><a href="#对象什么时候进入老年代" class="headerlink" title="对象什么时候进入老年代"></a>对象什么时候进入老年代</h4><ol>
-<li>大对象直接进入老年代，避免在Eden区和两个survivor区之间进行大量内存复制</li>
-<li>长期存活的对象进入老年代，Eden区出生，Minor GC后进入Survivor区，年龄为1，之后每过一次Minor GC，年龄+1，到15岁进入老年代</li>
-<li>Survivor空间中年龄相同的所有对象内存大小之和&gt;survivor空间的一半，大于等于该年龄的对象进入老年代</li>
-<li>空间分配担保，复制算法时，8：1：1 比例下，存活的对象大小超过survivor区时，通过老年代进行担保</li>
-</ol>
+<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
+<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
+<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
+<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
+<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
+<p>SparkStreaming：提供了用来操作数据流的API。</p>
+<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
+<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
 ]]></content>
       <categories>
-        <category>计算机基础知识</category>
+        <category>Spark</category>
       </categories>
-      <tags>
-        <tag>Java</tag>
-      </tags>
   </entry>
   <entry>
     <title>Spark入门之基础知识（三）键值对操作</title>
@@ -1040,27 +1059,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
-    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<ol>
-<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
-</li>
-<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
-</li>
-<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
-</li>
-<li><p>需要重启 IDEA ，即可正常运行。</p>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Spark算子之foldByKey</title>
     <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
     <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
@@ -1095,22 +1093,24 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（一）</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
-    <content><![CDATA[<p>Spark 基础知识</p>
+    <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
+    <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
 <span id="more"></span>
 
-<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
-<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
-<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
-<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
-<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
-<p>SparkStreaming：提供了用来操作数据流的API。</p>
-<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
-<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
+<ol>
+<li><p>在 <a href="https://github.com/steveloughran/winutils">https://github.com/steveloughran/winutils</a> 找到自己对应的 Hadoop 版本，下载解压</p>
+</li>
+<li><p>在用户变量中添加 HADOOP_HOME ，值为解压的路径<br><img src="https://img-blog.csdnimg.cn/20200429112633527.png" alt="在这里插入图片描述"></p>
+</li>
+<li><p>配置系统变量中的 Path ，添加 $HADOOP_HOME\bin</p>
+</li>
+<li><p>需要重启 IDEA ，即可正常运行。</p>
+</li>
+</ol>
 ]]></content>
       <categories>
-        <category>Spark</category>
+        <category>排坑记录</category>
       </categories>
   </entry>
   <entry>
@@ -1139,9 +1139,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#111;&#109;">&#121;&#x6f;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#108;&#x65;&#x2e;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#x6f;&#109;">&#121;&#x6f;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#108;&#x65;&#46;&#99;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#109;">&#121;&#111;&#117;&#64;&#x65;&#120;&#x61;&#109;&#112;&#x6c;&#101;&#46;&#x63;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#x75;&#x40;&#x65;&#120;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#109;">&#x79;&#111;&#x75;&#x40;&#x65;&#120;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#x63;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -1268,43 +1268,33 @@
       </categories>
   </entry>
   <entry>
-    <title>将DB数据同步到数据仓库中的两种方法（简介）</title>
-    <url>/2021/10/12/%E5%B0%86DB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E5%88%B0%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%88%E7%AE%80%E4%BB%8B%EF%BC%89/</url>
-    <content><![CDATA[<p>在数据仓库中，ODS 层数据一般来源于客户端的日志和业务数据库中的数据，对于 MYSQL 等关系型数据库，我们需要将库中数据同步到 Hive 中进行查询与分析。这里简单介绍两种同步的方法。</p>
+    <title>如何在IDEA中用sbt打包运行Spark程序</title>
+    <url>/2021/10/28/%E5%A6%82%E4%BD%95%E5%9C%A8IDEA%E4%B8%AD%E7%94%A8sbt%E6%89%93%E5%8C%85%E8%BF%90%E8%A1%8CSpark%E7%A8%8B%E5%BA%8F/</url>
+    <content><![CDATA[<p>记录一下如何在 IDEA 中通过 sbt 打包写好的 Spark 代码，并通过 spark-submit 提交运行</p>
 <span id="more"></span>
 
 
 
-<h2 id="低性能同步法"><a href="#低性能同步法" class="headerlink" title="低性能同步法"></a>低性能同步法</h2><ol>
-<li>直连 MySQL 并 select 表中数据</li>
-<li>将 select 的结果存储到本地作为中间存储</li>
-<li>将中间存储的文件 load 进 Hive 表中</li>
-</ol>
-<p>这种方法实现起来比较简单，但也有较大的缺陷，主要有以下几点：</p>
-<ol>
-<li>随着业务规模不断扩大，每次 select 得到的数据量不断加大，将结果存本地再 load 进 Hive 这种方式会造成性能问题，无法满足下游数仓生产的时效性要求</li>
-<li>从 MySQL 中 select 大量数据，会对 MySQL 造成过大压力，可能会影响线上服务</li>
-<li>Hive 无法有效支持 MySQL 中的 update、delete 操作</li>
-</ol>
-<p>为了解决上述问题，大多数互联网公司都采用了<strong>实时Binlog采集 + 离线处理Binlog还原业务数据</strong>的方案，由于Binlog是流式产生的，因此将数据处理需求由每天同步一次均摊到实时流中，减小了对MySQL的访问压力，减小了对线上性能可能造成的影响。另外，因为Binlog是MySQL的二进制日志，其记录了MySQL中发生的所有数据变更，因此也能够记录数据的 insert、update、delete操作，通过一些语义方面的处理，能做到数据的精准还原。</p>
-<h2 id="利用-MySQL-Binlog-的同步法"><a href="#利用-MySQL-Binlog-的同步法" class="headerlink" title="利用 MySQL Binlog 的同步法"></a>利用 MySQL Binlog 的同步法</h2><p>这一部分仅介绍大致思路</p>
-<h4 id="Binlog实时采集"><a href="#Binlog实时采集" class="headerlink" title="Binlog实时采集"></a>Binlog实时采集</h4><p>采用开源项目Canal，从MySQL实时拉取Binlog，并进行适当解析，将采集到的数据暂存到kafka上供下游消费</p>
-<h4 id="还原MySQL数据"><a href="#还原MySQL数据" class="headerlink" title="还原MySQL数据"></a>还原MySQL数据</h4><p>采用开源项目Camus，将kafka上的Binlog数据拉取到hive上。</p>
-<p>对每张ODS表，先采取直接select的方式从MySQL获取一份存量数据，再基于存量数据和每天的增量产生的Binlog日志做合并，从而还原出业务数据。</p>
-<h4 id="merge-流程举例"><a href="#merge-流程举例" class="headerlink" title="merge 流程举例"></a>merge 流程举例</h4><p>整个流程分为以下两个步骤：</p>
-<ol>
-<li>将Binlog中的数据存储到delta表中</li>
-<li>将delta表中的数据和存量数据做基于主键的merge</li>
-</ol>
-<p>当一条数据一天发生多次变更时，delta表只保存最新的更新状态。</p>
-<p>在merge的过程中，通过主键关联后，如果一条数据既存在于delta表中，又存在于存量表中，说明数据发生了更新，需要取delta表中的数据作为最终结果，如果只存在于存量表中，不在delta表中，则说明该数据没有被更新过，取存量表中的数据作为最终结果。</p>
-<p><strong>示例1</strong>：</p>
-<p><img src="https://img-blog.csdnimg.cn/0afd82f415544bb883f219ad5dadf300.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
-<p><strong>示例2</strong>：</p>
-<p><img src="https://img-blog.csdnimg.cn/2897bd4aec3b4b66b6247ad7025c20bb.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p>一开始尝试在 terminal 中直接用 sbt package 进行打包，结果并没有 jar 包被打出来。。第一次用 sbt 也不知道是哪里出了问题，之后用如下方法成功打包。</p>
+<p>文件目录机构如下：</p>
+<p>![截屏2021-10-28 下午4.36.49](/Users/jiangzhiqi/Library/Application Support/typora-user-images/截屏2021-10-28 下午4.36.49.png)</p>
+<p>SimpleApp 代码如下：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.spark.sql.<span class="type">SparkSession</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @author jiangzhiqi &lt;jiangzhiqi@kuaishou.com&gt;</span></span><br><span class="line"><span class="comment"> *         Created on 2021-10-28</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">SimpleApp</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]): <span class="type">Unit</span> = &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> logFile = <span class="string">&quot;/Users/jiangzhiqi/Project/spark-3.2.0-bin-hadoop3.2/README.md&quot;</span></span><br><span class="line">    <span class="keyword">val</span> session = <span class="type">SparkSession</span>.builder().appName(<span class="string">&quot;simple application&quot;</span>).getOrCreate()</span><br><span class="line">    <span class="keyword">val</span> logData = session.read.textFile(logFile).cache()</span><br><span class="line">    <span class="keyword">val</span> numAs = logData.filter(line =&gt; line.contains(<span class="string">&quot;a&quot;</span>)).count()</span><br><span class="line">    <span class="keyword">val</span> numBs = logData.filter(line =&gt; line.contains(<span class="string">&quot;b&quot;</span>)).count()</span><br><span class="line"></span><br><span class="line">    println(<span class="string">s&quot;Line with a : <span class="subst">$numAs</span> , b : <span class="subst">$numBs</span>&quot;</span>)</span><br><span class="line">    session.stop()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>点击 File –&gt; Project Structure –&gt; Artifacts –&gt; 加号 –&gt; JAR –&gt; From modules with dependencies</p>
+<p>![截屏2021-10-28 下午4.40.11](/Users/jiangzhiqi/Library/Application Support/typora-user-images/截屏2021-10-28 下午4.40.11.png)</p>
+<p>Module 处选择你的项目，Main class 选择入口，点击 OK</p>
+<p>![截屏2021-10-28 下午4.41.59](/Users/jiangzhiqi/Library/Application Support/typora-user-images/截屏2021-10-28 下午4.41.59.png)</p>
+<p>选中所有外部依赖，点击 减号 删除，只保留项目 jar 包</p>
+<p>![截屏2021-10-28 下午4.42.35](/Users/jiangzhiqi/Desktop/截屏2021-10-28 下午4.42.35.png)</p>
+<p>最后在 terminal 中提交 jar 包即可。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  ~ spark-submit \</span><br><span class="line">--master local \</span><br><span class="line">--class &quot;SimpleApp&quot; \</span><br><span class="line">/Users/jiangzhiqi/IdeaProjects/SbtExampleProject/out/artifacts/SbtExampleProject_jar/SbtExampleProject.jar</span><br></pre></td></tr></table></figure>
+
 ]]></content>
       <categories>
-        <category>大数据技术&amp;数据仓库</category>
+        <category>Spark</category>
       </categories>
   </entry>
   <entry>
@@ -1490,6 +1480,46 @@
 <h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
 <h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
 <h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>将DB数据同步到数据仓库中的两种方法（简介）</title>
+    <url>/2021/10/12/%E5%B0%86DB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E5%88%B0%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%88%E7%AE%80%E4%BB%8B%EF%BC%89/</url>
+    <content><![CDATA[<p>在数据仓库中，ODS 层数据一般来源于客户端的日志和业务数据库中的数据，对于 MYSQL 等关系型数据库，我们需要将库中数据同步到 Hive 中进行查询与分析。这里简单介绍两种同步的方法。</p>
+<span id="more"></span>
+
+
+
+<h2 id="低性能同步法"><a href="#低性能同步法" class="headerlink" title="低性能同步法"></a>低性能同步法</h2><ol>
+<li>直连 MySQL 并 select 表中数据</li>
+<li>将 select 的结果存储到本地作为中间存储</li>
+<li>将中间存储的文件 load 进 Hive 表中</li>
+</ol>
+<p>这种方法实现起来比较简单，但也有较大的缺陷，主要有以下几点：</p>
+<ol>
+<li>随着业务规模不断扩大，每次 select 得到的数据量不断加大，将结果存本地再 load 进 Hive 这种方式会造成性能问题，无法满足下游数仓生产的时效性要求</li>
+<li>从 MySQL 中 select 大量数据，会对 MySQL 造成过大压力，可能会影响线上服务</li>
+<li>Hive 无法有效支持 MySQL 中的 update、delete 操作</li>
+</ol>
+<p>为了解决上述问题，大多数互联网公司都采用了<strong>实时Binlog采集 + 离线处理Binlog还原业务数据</strong>的方案，由于Binlog是流式产生的，因此将数据处理需求由每天同步一次均摊到实时流中，减小了对MySQL的访问压力，减小了对线上性能可能造成的影响。另外，因为Binlog是MySQL的二进制日志，其记录了MySQL中发生的所有数据变更，因此也能够记录数据的 insert、update、delete操作，通过一些语义方面的处理，能做到数据的精准还原。</p>
+<h2 id="利用-MySQL-Binlog-的同步法"><a href="#利用-MySQL-Binlog-的同步法" class="headerlink" title="利用 MySQL Binlog 的同步法"></a>利用 MySQL Binlog 的同步法</h2><p>这一部分仅介绍大致思路</p>
+<h4 id="Binlog实时采集"><a href="#Binlog实时采集" class="headerlink" title="Binlog实时采集"></a>Binlog实时采集</h4><p>采用开源项目Canal，从MySQL实时拉取Binlog，并进行适当解析，将采集到的数据暂存到kafka上供下游消费</p>
+<h4 id="还原MySQL数据"><a href="#还原MySQL数据" class="headerlink" title="还原MySQL数据"></a>还原MySQL数据</h4><p>采用开源项目Camus，将kafka上的Binlog数据拉取到hive上。</p>
+<p>对每张ODS表，先采取直接select的方式从MySQL获取一份存量数据，再基于存量数据和每天的增量产生的Binlog日志做合并，从而还原出业务数据。</p>
+<h4 id="merge-流程举例"><a href="#merge-流程举例" class="headerlink" title="merge 流程举例"></a>merge 流程举例</h4><p>整个流程分为以下两个步骤：</p>
+<ol>
+<li>将Binlog中的数据存储到delta表中</li>
+<li>将delta表中的数据和存量数据做基于主键的merge</li>
+</ol>
+<p>当一条数据一天发生多次变更时，delta表只保存最新的更新状态。</p>
+<p>在merge的过程中，通过主键关联后，如果一条数据既存在于delta表中，又存在于存量表中，说明数据发生了更新，需要取delta表中的数据作为最终结果，如果只存在于存量表中，不在delta表中，则说明该数据没有被更新过，取存量表中的数据作为最终结果。</p>
+<p><strong>示例1</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/0afd82f415544bb883f219ad5dadf300.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p><strong>示例2</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/2897bd4aec3b4b66b6247ad7025c20bb.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
