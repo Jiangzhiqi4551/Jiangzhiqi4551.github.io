@@ -410,23 +410,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<span id="more"></span>
-
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive中的Sort Merge Bucket Join</title>
     <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
     <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
@@ -445,6 +428,23 @@
 
 
 <p>之后每个 mapper 从第一个表中读取一个 bucket 的数据，并读取第二个表中相应 bucket 的数据，在此之后就可以进行 SMB join了，大大缩短执行时间。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+<span id="more"></span>
+
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -728,25 +728,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Spark入门之基础知识（一）</title>
-    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
-    <content><![CDATA[<p>Spark 基础知识</p>
-<span id="more"></span>
-
-<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
-<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
-<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
-<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
-<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
-<p>SparkStreaming：提供了用来操作数据流的API。</p>
-<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
-<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Python学习笔记(一)</title>
     <url>/2021/10/12/Python%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%B8%80/</url>
     <content><![CDATA[<p>初学 Python，记录 Python 的基础知识。</p>
@@ -886,6 +867,25 @@
 ]]></content>
       <categories>
         <category>计算机基础知识</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Spark入门之基础知识（一）</title>
+    <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <content><![CDATA[<p>Spark 基础知识</p>
+<span id="more"></span>
+
+<h4 id="什么是Spark"><a href="#什么是Spark" class="headerlink" title="什么是Spark"></a>什么是Spark</h4><p>Spark 是一个用来实现快速而通用的集群计算的平台。</p>
+<h4 id="Spark的核心"><a href="#Spark的核心" class="headerlink" title="Spark的核心"></a>Spark的核心</h4><p>Spark 的核心是一个对由很多计算任务组成的、运行在多个工作机器或者一个计算集群上的应用  进行调度、分发、监控的计算引擎。</p>
+<h4 id="Spark软件栈设计的优点"><a href="#Spark软件栈设计的优点" class="headerlink" title="Spark软件栈设计的优点"></a>Spark软件栈设计的优点</h4><p>1）软件栈中所有程序库和高级组件都可以从下层的改进中受益。<br>2）运行整个软件栈的代价变小了。<br>3）可以构建出无缝整合处理不同模型的应用。</p>
+<h4 id="Spark-的各个组件"><a href="#Spark-的各个组件" class="headerlink" title="Spark 的各个组件"></a>Spark 的各个组件</h4><p>Spark的各个组件如图所示：<br><img src="https://img-blog.csdnimg.cn/20191216125136843.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>Spark Core：实现了Spark的基本功能，报包含任务调度，内存管理，错误恢复，与存储系统交互等模块，还包含了对RDD的API定义。</p>
+<p>Spark SQL：Spark用来操作结构化数据的程序包。</p>
+<p>SparkStreaming：提供了用来操作数据流的API。</p>
+<p>MLib与GraghX目前不在学习计划内暂时不介绍。</p>
+<h4 id="Spark核心概念简介"><a href="#Spark核心概念简介" class="headerlink" title="Spark核心概念简介"></a>Spark核心概念简介</h4><p>每个Spark应用都由一个驱动器程序发起集群上的各种并行操作。驱动器程序通过SparkContext对象访问Spark，这个对象代表对计算集群的一个连接。驱动器程序还要管理多个执行器节点。<br><img src="https://img-blog.csdnimg.cn/20191216141248477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>下篇文章介绍Spark的RDD编程。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
       </categories>
   </entry>
   <entry>
@@ -1148,66 +1148,13 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#108;&#x65;&#46;&#x63;&#111;&#x6d;">&#x79;&#111;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#108;&#x65;&#46;&#x63;&#111;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#x79;&#111;&#x75;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#x6f;&#x75;&#x40;&#x65;&#x78;&#97;&#x6d;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#109;">&#x79;&#x6f;&#x75;&#x40;&#x65;&#x78;&#97;&#x6d;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#x6f;&#x6d;">&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
         <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>基于Geohash实现根据经纬度的快速定位</title>
-    <url>/2021/06/08/%E5%9F%BA%E4%BA%8EGeohash%E5%AE%9E%E7%8E%B0%E6%A0%B9%E6%8D%AE%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%9A%84%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D/</url>
-    <content><![CDATA[<p>摘要：GeoHash原理及应用</p>
-<span id="more"></span>
-
-<h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>在项目中，SDK会上报包含用户经纬度信息的一系列数据，我们需要根据经纬度信息定位出此条数据上报时用户所在的位置（包括国家、省、市、区），并和其他信息写入宽表中。</p>
-<h4 id="旧方案"><a href="#旧方案" class="headerlink" title="旧方案"></a>旧方案</h4><p>旧方案中，主要使用GeoSpark对数据进行定位，考虑到同一个经纬度下会有多条数据，所以我们先对数据做分组，同一个用户同一个会话下相同经纬度的数据分为一组，从每组数据中抽取第一条生成一张临时表，再在临时表上调用GeoSpark算出district_id，city_id，province_id，country_id，之后将临时表与原表关联，用临时表的四个ID填充相同经纬度的其他数据的ID。<br>在测试过程中，我们发现有很小一部分数据只有district_id或city_id等细粒度数据，却没有与之相对的province_id、country_id等数据，这是老大所不能接受的（在哪个城市都知道了，国家你给我个null？？？ =。=），所以在计算四个ID之后，会有一个反推的步骤，即：判断是否有下层ID不为空上层ID却为空的情况，如果有，通过下层ID进行反推，得到上层ID，并填充。</p>
-<p>中间还有一些其他的过滤排序逻辑不做具体介绍，最后当整个定位逻辑完成后，需要做6~7次的shuffle，我们发现其性能远低于预期，在我们每天将近40亿的数据量下，较大的拖慢了整个流程的运行速度，影响了数据产出，因此需要对这一部分进行优化。经过调研后，本菜鸡决定采用GeoHash的方式进行优化。</p>
-<h2 id="什么是Geohash"><a href="#什么是Geohash" class="headerlink" title="什么是Geohash"></a>什么是Geohash</h2><p>简单介绍下GeoHash，我们可以用一个经纬度的点（例如点A： 37.788422,-122.391907 ）计算出一个GeoHash字符串（9q8yyzh），这个字符串代表一个矩形面，点A以及点A附近的点B（37.787933,-122.392887）虽然经纬度不同，但通过经纬度计算出的GeoHash字符串相同，也就是说AB两个点都在（9q8yyzh）这个面内。这样就将二维的经纬度坐标转换成了一维的字符串表示。</p>
-<p>但A附近的多少点会跟A共享相同的字符串呢？也就是这个面的大小是怎么确定的呢？这就取决于GeoHash字符串的长度了，GeoHash的字符串长度越长，意味着这个面也就越小，会有更少的点跟A共享同样的GeoHash值。</p>
-<p>具体GeoHash的计算方式，以及字符串长度对应的面大小。请参考如下这篇文章：<br><a href="https://zhuanlan.zhihu.com/p/35940647">GeoHash算法学习讲解、解析及原理分析</a></p>
-<p>以上就是我们实现基于GeoHash进行定位的基础。</p>
-<h2 id="如何用Geohash实现快速定位"><a href="#如何用Geohash实现快速定位" class="headerlink" title="如何用Geohash实现快速定位"></a>如何用Geohash实现快速定位</h2><p>既然可以用经纬度代表的一个点得到一个面，那如果我们的历史数据足够多，映射出足够多的的面，这些面就会像拼图一样，慢慢把我们的世界拼出来。</p>
-<p>例如我们可以用21个GeoHash字符串将整个北京欢乐谷拼出来：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191206171409523.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="wx4ffc"></p>
-<p>有了这个完整的拼图之后，当欢乐谷范围内有一条新数据上报时，我们只需要根据经纬度算出对应的GeoHash值，再用这个值去和这21个字符串匹配，如果和其中任意一个相同，就说明此条数据的位置信息为中国北京的朝阳区（不具体定位到欢乐谷是因为我们最细粒度只划分到行政区)。</p>
-<p>采用这个思路，最后我们将世界地图构建好之后，当有新数据需要定位时，我们只需要做一次GeoHash字符串计算，再到数据库中进行匹配即可。速度大大提高。</p>
-<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><h4 id="Geohash字符串的计算："><a href="#Geohash字符串的计算：" class="headerlink" title="Geohash字符串的计算："></a>Geohash字符串的计算：</h4><p>此处采用的方法是写一个UDF，UDF的功能是输入经纬度及想要的GeoHash字符串长度，输出对应的GeoHash字符串。再将其打成jar包，上传之后在hive中创建临时函数，再进行调用。</p>
-<h5 id="首先导入依赖"><a href="#首先导入依赖" class="headerlink" title="首先导入依赖"></a>首先导入依赖</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;ch.hsr&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;geohash&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;1.3.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-
-<h5 id="继承UDF并重写evaluate方法"><a href="#继承UDF并重写evaluate方法" class="headerlink" title="继承UDF并重写evaluate方法"></a>继承UDF并重写evaluate方法</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class getGeoHashString extends UDF &#123;</span><br><span class="line"></span><br><span class="line">    private static int precision = 7;</span><br><span class="line"></span><br><span class="line">    public String evaluate(double latitude, double longtitude, int precisionParam) &#123;</span><br><span class="line"></span><br><span class="line">        GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longtitude, precisionParam);</span><br><span class="line">        return geoHash.toBase32();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String evaluate(double latitude, double longtitude) &#123;</span><br><span class="line"></span><br><span class="line">        GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longtitude, precision);</span><br><span class="line">        return geoHash.toBase32();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>默认采用7位长度，当然也支持传入参数自定义</p>
-<h5 id="Maven打包并上传"><a href="#Maven打包并上传" class="headerlink" title="Maven打包并上传"></a>Maven打包并上传</h5><p>略。。</p>
-<h5 id="使用UDF"><a href="#使用UDF" class="headerlink" title="使用UDF"></a>使用UDF</h5><p>目前是在hive命令行中运行的，具体方法如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">add jar /data/home/geoHashUDF-1.0-SNAPSHOT-jar-with-dependencies.jar;</span><br></pre></td></tr></table></figure>
-<p>先把jar包添加进来，在创建临时函数：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TEMPORARY FUNCTION get_geohash_string as &#x27;getGeoHashString&#x27;;</span><br></pre></td></tr></table></figure>
-<p>其中get_geohash_string为函数名，getGeoHashString为你的主类。</p>
-<h5 id="接下来写SQL就可以了"><a href="#接下来写SQL就可以了" class="headerlink" title="接下来写SQL就可以了"></a>接下来写SQL就可以了</h5><p>将每一天的新数据计算后写入分区</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE geohash_a_d</span><br><span class="line">PARTITION(dt)</span><br><span class="line">SELECT</span><br><span class="line">get_geohash_string(latitude,longitude),</span><br><span class="line"></span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line"></span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line"></span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line"></span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh,</span><br><span class="line">dt</span><br><span class="line">from </span><br><span class="line">report_i_h</span><br><span class="line">WHERE </span><br><span class="line">dt BETWEEN &#x27;2019-11-01&#x27; AND &#x27;2019-11-30&#x27;</span><br></pre></td></tr></table></figure>
-<p>对每一天的数据进行去重合并</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE geohash_summary</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from geohash_a_d</span><br><span class="line">WHERE dt=&#x27;2019-11-01&#x27;</span><br><span class="line">UNION DISTINCT</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from geohash_a_d</span><br><span class="line">WHERE dt BETWEEN &#x27;2019-11-02&#x27; AND &#x27;2019-11-30&#x27;</span><br></pre></td></tr></table></figure>
-<p>对hash值进行去重，确保一个hash值只对应一条记录（<strong>此处有大坑，之后讲</strong>）</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">with tmp as (</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh,</span><br><span class="line">row_number() OVER(PARTITION BY geohash ORDER BY </span><br><span class="line">geo_country_id,geo_province_id,geo_city_id,geo_district_id</span><br><span class="line">desc) as rank</span><br><span class="line">from geohash_summary</span><br><span class="line">where geo_country_id is not null</span><br><span class="line">)</span><br><span class="line">insert overwrite table geohash_distinct</span><br><span class="line">select</span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from tmp</span><br><span class="line">where rank=1</span><br></pre></td></tr></table></figure>
-<p>这几个SQL跑完后，我们的GeoHash维度表就初步构建完成了。</p>
-<h2 id="效果测试"><a href="#效果测试" class="headerlink" title="效果测试"></a>效果测试</h2><p>构建完成后，便可以进行定位的效果测试了，我们采用的测试方案是：<br>取不在回溯日期内的几天的数据，通过GeoHash的方式获取其位置信息，在和用geoSpark获取的位置信息作对比，校验其准确性。</p>
-<p>结果：99.5%的数据可以成功获取定位信息，但是其中千分之七的数据存在distinct级的误差，千分之一的数据存在city级的误差。此外，还意外的实现了千分之一的数据优化。</p>
-<p>数据优化：有一些数据可能geoSpark定位不到，或定位的信息不全，通过geoHash可以获取到定位或将定位信息补全。随便举个例子：<br>geoSpark:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">latitude:45.12345</span><br><span class="line">longtitude:110.12345</span><br><span class="line">dim_geohash_distinct.geo_district_id	null</span><br><span class="line">dim_geohash_distinct.geo_city_id	null</span><br><span class="line">dim_geohash_distinct.geo_province_id	3117</span><br><span class="line">dim_geohash_distinct.geo_country_id	3142</span><br></pre></td></tr></table></figure>
-<p>geoHash:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">latitude:45.12345</span><br><span class="line">longtitude:110.12345</span><br><span class="line">dim_geohash_distinct.geo_district_id	132</span><br><span class="line">dim_geohash_distinct.geo_city_id	3022</span><br><span class="line">dim_geohash_distinct.geo_province_id	3117</span><br><span class="line">dim_geohash_distinct.geo_country_id	3142</span><br></pre></td></tr></table></figure>
-<p>通过GeoHash，可以将缺失的district_id及city_id补全。</p>
-<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><p>采用GeoHash实现定位的前提是有足够的数据量支持，为了达到本文实现的效果，我们回溯了三个月的数据，每天的数据量在35亿左右。最后生成的维度表结构如下所示：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191209104852237.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>其中district代表行政区（如东城区、朝阳区），geohash为生成的GeoHash字符串。<br>随便抽取其中一条记录如下：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191209105347452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>（话说以前一直以为西藏的英文是Xizang。。orz)</p>
-<p>GeoHash这种方式虽然较快的实现了定位，但仍有一些问题丞待解决，下一篇文章将讨论这些坑以及可能的解决方案。</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
       </categories>
   </entry>
   <entry>
@@ -1274,6 +1221,59 @@
 <h3 id="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"><a href="#由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档" class="headerlink" title="由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考官方文档"></a>由于文档部署在内网，暂时还没有公网的部署经验可以分享，可以参考<a href="https://vuepress.vuejs.org/zh/guide/deploy.html">官方文档</a></h3>]]></content>
       <categories>
         <category>其他</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>基于Geohash实现根据经纬度的快速定位</title>
+    <url>/2021/06/08/%E5%9F%BA%E4%BA%8EGeohash%E5%AE%9E%E7%8E%B0%E6%A0%B9%E6%8D%AE%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%9A%84%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D/</url>
+    <content><![CDATA[<p>摘要：GeoHash原理及应用</p>
+<span id="more"></span>
+
+<h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>在项目中，SDK会上报包含用户经纬度信息的一系列数据，我们需要根据经纬度信息定位出此条数据上报时用户所在的位置（包括国家、省、市、区），并和其他信息写入宽表中。</p>
+<h4 id="旧方案"><a href="#旧方案" class="headerlink" title="旧方案"></a>旧方案</h4><p>旧方案中，主要使用GeoSpark对数据进行定位，考虑到同一个经纬度下会有多条数据，所以我们先对数据做分组，同一个用户同一个会话下相同经纬度的数据分为一组，从每组数据中抽取第一条生成一张临时表，再在临时表上调用GeoSpark算出district_id，city_id，province_id，country_id，之后将临时表与原表关联，用临时表的四个ID填充相同经纬度的其他数据的ID。<br>在测试过程中，我们发现有很小一部分数据只有district_id或city_id等细粒度数据，却没有与之相对的province_id、country_id等数据，这是老大所不能接受的（在哪个城市都知道了，国家你给我个null？？？ =。=），所以在计算四个ID之后，会有一个反推的步骤，即：判断是否有下层ID不为空上层ID却为空的情况，如果有，通过下层ID进行反推，得到上层ID，并填充。</p>
+<p>中间还有一些其他的过滤排序逻辑不做具体介绍，最后当整个定位逻辑完成后，需要做6~7次的shuffle，我们发现其性能远低于预期，在我们每天将近40亿的数据量下，较大的拖慢了整个流程的运行速度，影响了数据产出，因此需要对这一部分进行优化。经过调研后，本菜鸡决定采用GeoHash的方式进行优化。</p>
+<h2 id="什么是Geohash"><a href="#什么是Geohash" class="headerlink" title="什么是Geohash"></a>什么是Geohash</h2><p>简单介绍下GeoHash，我们可以用一个经纬度的点（例如点A： 37.788422,-122.391907 ）计算出一个GeoHash字符串（9q8yyzh），这个字符串代表一个矩形面，点A以及点A附近的点B（37.787933,-122.392887）虽然经纬度不同，但通过经纬度计算出的GeoHash字符串相同，也就是说AB两个点都在（9q8yyzh）这个面内。这样就将二维的经纬度坐标转换成了一维的字符串表示。</p>
+<p>但A附近的多少点会跟A共享相同的字符串呢？也就是这个面的大小是怎么确定的呢？这就取决于GeoHash字符串的长度了，GeoHash的字符串长度越长，意味着这个面也就越小，会有更少的点跟A共享同样的GeoHash值。</p>
+<p>具体GeoHash的计算方式，以及字符串长度对应的面大小。请参考如下这篇文章：<br><a href="https://zhuanlan.zhihu.com/p/35940647">GeoHash算法学习讲解、解析及原理分析</a></p>
+<p>以上就是我们实现基于GeoHash进行定位的基础。</p>
+<h2 id="如何用Geohash实现快速定位"><a href="#如何用Geohash实现快速定位" class="headerlink" title="如何用Geohash实现快速定位"></a>如何用Geohash实现快速定位</h2><p>既然可以用经纬度代表的一个点得到一个面，那如果我们的历史数据足够多，映射出足够多的的面，这些面就会像拼图一样，慢慢把我们的世界拼出来。</p>
+<p>例如我们可以用21个GeoHash字符串将整个北京欢乐谷拼出来：</p>
+<p><img src="https://img-blog.csdnimg.cn/20191206171409523.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="wx4ffc"></p>
+<p>有了这个完整的拼图之后，当欢乐谷范围内有一条新数据上报时，我们只需要根据经纬度算出对应的GeoHash值，再用这个值去和这21个字符串匹配，如果和其中任意一个相同，就说明此条数据的位置信息为中国北京的朝阳区（不具体定位到欢乐谷是因为我们最细粒度只划分到行政区)。</p>
+<p>采用这个思路，最后我们将世界地图构建好之后，当有新数据需要定位时，我们只需要做一次GeoHash字符串计算，再到数据库中进行匹配即可。速度大大提高。</p>
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><h4 id="Geohash字符串的计算："><a href="#Geohash字符串的计算：" class="headerlink" title="Geohash字符串的计算："></a>Geohash字符串的计算：</h4><p>此处采用的方法是写一个UDF，UDF的功能是输入经纬度及想要的GeoHash字符串长度，输出对应的GeoHash字符串。再将其打成jar包，上传之后在hive中创建临时函数，再进行调用。</p>
+<h5 id="首先导入依赖"><a href="#首先导入依赖" class="headerlink" title="首先导入依赖"></a>首先导入依赖</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;ch.hsr&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;geohash&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;1.3.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<h5 id="继承UDF并重写evaluate方法"><a href="#继承UDF并重写evaluate方法" class="headerlink" title="继承UDF并重写evaluate方法"></a>继承UDF并重写evaluate方法</h5><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">public class getGeoHashString extends UDF &#123;</span><br><span class="line"></span><br><span class="line">    private static int precision = 7;</span><br><span class="line"></span><br><span class="line">    public String evaluate(double latitude, double longtitude, int precisionParam) &#123;</span><br><span class="line"></span><br><span class="line">        GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longtitude, precisionParam);</span><br><span class="line">        return geoHash.toBase32();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String evaluate(double latitude, double longtitude) &#123;</span><br><span class="line"></span><br><span class="line">        GeoHash geoHash = GeoHash.withCharacterPrecision(latitude, longtitude, precision);</span><br><span class="line">        return geoHash.toBase32();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>默认采用7位长度，当然也支持传入参数自定义</p>
+<h5 id="Maven打包并上传"><a href="#Maven打包并上传" class="headerlink" title="Maven打包并上传"></a>Maven打包并上传</h5><p>略。。</p>
+<h5 id="使用UDF"><a href="#使用UDF" class="headerlink" title="使用UDF"></a>使用UDF</h5><p>目前是在hive命令行中运行的，具体方法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">add jar /data/home/geoHashUDF-1.0-SNAPSHOT-jar-with-dependencies.jar;</span><br></pre></td></tr></table></figure>
+<p>先把jar包添加进来，在创建临时函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TEMPORARY FUNCTION get_geohash_string as &#x27;getGeoHashString&#x27;;</span><br></pre></td></tr></table></figure>
+<p>其中get_geohash_string为函数名，getGeoHashString为你的主类。</p>
+<h5 id="接下来写SQL就可以了"><a href="#接下来写SQL就可以了" class="headerlink" title="接下来写SQL就可以了"></a>接下来写SQL就可以了</h5><p>将每一天的新数据计算后写入分区</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE geohash_a_d</span><br><span class="line">PARTITION(dt)</span><br><span class="line">SELECT</span><br><span class="line">get_geohash_string(latitude,longitude),</span><br><span class="line"></span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line"></span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line"></span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line"></span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh,</span><br><span class="line">dt</span><br><span class="line">from </span><br><span class="line">report_i_h</span><br><span class="line">WHERE </span><br><span class="line">dt BETWEEN &#x27;2019-11-01&#x27; AND &#x27;2019-11-30&#x27;</span><br></pre></td></tr></table></figure>
+<p>对每一天的数据进行去重合并</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE geohash_summary</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from geohash_a_d</span><br><span class="line">WHERE dt=&#x27;2019-11-01&#x27;</span><br><span class="line">UNION DISTINCT</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from geohash_a_d</span><br><span class="line">WHERE dt BETWEEN &#x27;2019-11-02&#x27; AND &#x27;2019-11-30&#x27;</span><br></pre></td></tr></table></figure>
+<p>对hash值进行去重，确保一个hash值只对应一条记录（<strong>此处有大坑，之后讲</strong>）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">with tmp as (</span><br><span class="line">SELECT </span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh,</span><br><span class="line">row_number() OVER(PARTITION BY geohash ORDER BY </span><br><span class="line">geo_country_id,geo_province_id,geo_city_id,geo_district_id</span><br><span class="line">desc) as rank</span><br><span class="line">from geohash_summary</span><br><span class="line">where geo_country_id is not null</span><br><span class="line">)</span><br><span class="line">insert overwrite table geohash_distinct</span><br><span class="line">select</span><br><span class="line">geohash,</span><br><span class="line">geo_district_id,</span><br><span class="line">geo_district_name_en,</span><br><span class="line">geo_district_name_zh,</span><br><span class="line">geo_city_id,</span><br><span class="line">geo_city_name_en,</span><br><span class="line">geo_city_name_zh,</span><br><span class="line">geo_province_id,</span><br><span class="line">geo_province_name_en,</span><br><span class="line">geo_province_name_zh,</span><br><span class="line">geo_country_id,</span><br><span class="line">geo_country_name_en,</span><br><span class="line">geo_country_name_zh</span><br><span class="line">from tmp</span><br><span class="line">where rank=1</span><br></pre></td></tr></table></figure>
+<p>这几个SQL跑完后，我们的GeoHash维度表就初步构建完成了。</p>
+<h2 id="效果测试"><a href="#效果测试" class="headerlink" title="效果测试"></a>效果测试</h2><p>构建完成后，便可以进行定位的效果测试了，我们采用的测试方案是：<br>取不在回溯日期内的几天的数据，通过GeoHash的方式获取其位置信息，在和用geoSpark获取的位置信息作对比，校验其准确性。</p>
+<p>结果：99.5%的数据可以成功获取定位信息，但是其中千分之七的数据存在distinct级的误差，千分之一的数据存在city级的误差。此外，还意外的实现了千分之一的数据优化。</p>
+<p>数据优化：有一些数据可能geoSpark定位不到，或定位的信息不全，通过geoHash可以获取到定位或将定位信息补全。随便举个例子：<br>geoSpark:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">latitude:45.12345</span><br><span class="line">longtitude:110.12345</span><br><span class="line">dim_geohash_distinct.geo_district_id	null</span><br><span class="line">dim_geohash_distinct.geo_city_id	null</span><br><span class="line">dim_geohash_distinct.geo_province_id	3117</span><br><span class="line">dim_geohash_distinct.geo_country_id	3142</span><br></pre></td></tr></table></figure>
+<p>geoHash:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">latitude:45.12345</span><br><span class="line">longtitude:110.12345</span><br><span class="line">dim_geohash_distinct.geo_district_id	132</span><br><span class="line">dim_geohash_distinct.geo_city_id	3022</span><br><span class="line">dim_geohash_distinct.geo_province_id	3117</span><br><span class="line">dim_geohash_distinct.geo_country_id	3142</span><br></pre></td></tr></table></figure>
+<p>通过GeoHash，可以将缺失的district_id及city_id补全。</p>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><p>采用GeoHash实现定位的前提是有足够的数据量支持，为了达到本文实现的效果，我们回溯了三个月的数据，每天的数据量在35亿左右。最后生成的维度表结构如下所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/20191209104852237.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>其中district代表行政区（如东城区、朝阳区），geohash为生成的GeoHash字符串。<br>随便抽取其中一条记录如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/20191209105347452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>（话说以前一直以为西藏的英文是Xizang。。orz)</p>
+<p>GeoHash这种方式虽然较快的实现了定位，但仍有一些问题丞待解决，下一篇文章将讨论这些坑以及可能的解决方案。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
       </categories>
   </entry>
   <entry>
@@ -1498,6 +1498,39 @@
       </categories>
   </entry>
   <entry>
+    <title>数据开发中需要注意的一些规则</title>
+    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
+    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
+<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
+<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
+<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
+<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
+<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
+<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
+<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
+<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
+<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
+<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
+<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
+<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
+<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
+<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
+<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>任务检索规则：近 n 天分区无数据</p>
+<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
+<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>数据仓库工具箱笔记 - 第二章</title>
     <url>/2021/06/28/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B002/</url>
     <content><![CDATA[<p>《数据仓库工具箱》第二章读书笔记</p>
@@ -1568,39 +1601,6 @@
       <tags>
         <tag>数据治理</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>数据开发中需要注意的一些规则</title>
-    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
-    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
-<span id="more"></span>
-
-
-
-<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
-<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
-<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
-<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
-<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
-<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
-<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
-<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
-<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
-<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
-<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
-<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
-<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
-<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
-<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
-<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>任务检索规则：近 n 天分区无数据</p>
-<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
-<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
-      </categories>
   </entry>
   <entry>
     <title>详解TCP/IP协议栈</title>
