@@ -146,43 +146,36 @@
       </categories>
   </entry>
   <entry>
-    <title>Hadoop archive归档命令的使用</title>
-    <url>/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<p>摘要：Hadoop archive 简介</p>
+    <title>Hive中like与rlike的区别</title>
+    <url>/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p>
 <span id="more"></span>
 
-<h2 id="archive-命令有什么用"><a href="#archive-命令有什么用" class="headerlink" title="archive 命令有什么用"></a>archive 命令有什么用</h2><p>archive 可以用来解决 Hadoop 中的<em><strong>小文件</strong></em>问题，当存在大量小文件时，会产生如下影响：</p>
-<ol>
-<li>HDFS 中，小文件过多会占用大量内存，NameNode 内存容量最终会成为限制集群扩展的瓶颈。</li>
-<li>HDFS 读写小文件更加耗时，因为每次都需要从 NameNode 获取元信息，并与对应的 DataNode 建立连接。</li>
-<li>小文件过多会开很多 map，一个 map 启动一个 JVM 去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。</li>
-</ol>
-<h2 id="如何使用-archive-进行归档"><a href="#如何使用-archive-进行归档" class="headerlink" title="如何使用 archive 进行归档"></a>如何使用 archive 进行归档</h2><p><img src="https://img-blog.csdnimg.cn/20200428164050783.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>其实已经用法已经很明白了，name指定名字，将路径上的内容创建到 archive 文件中。</p>
-<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>首先我们创建一个小文件 text.txt ，上传四份到 HDFS 上</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428164901114.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>用官方自带的 wordcount 跑一下：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428165351971.png" alt="在这里插入图片描述"></p>
-<p>很明显，4个输入，接下来执行归档命令，将 small 路径下的所有文件归档到 archiveResult 中，可以看到 archive 启动了一个 MapReduce：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428165806873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<p>得到：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170355564.png" alt="在这里插入图片描述"></p>
-<p>但是进去之后会发现里面并不是我们之前的几个 text.txt 文件：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170538921.png" alt="在这里插入图片描述"></p>
-<p>使用带 har 的命令即可解决：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428170942383.png" alt="在这里插入图片描述"></p>
-<p>使用归档之后的文件进行 wordcount：</p>
-<p><img src="https://img-blog.csdnimg.cn/20200428171245198.png" alt="在这里插入图片描述"></p>
-<p>最后仍然可以得到正确的结果，但是需要注意的是：<br><strong>使用 archive 归档后，减轻的是 HDFS 的压力，对于 MapReduce 来说，输入还是四个文件。</strong></p>
-<p>如果想要控制 map 数，Hive 可以通过几个参数来实现：</p>
-<ol>
-<li>set mapred.max.split.size = **;（决定每个map处理的最大的文件大小）</li>
-<li>set mapred.min.split.size.per.node = **;（一个节点上 split 的至少的大小，这个值决定了多个DataNode 上的文件是否需要合并）</li>
-<li>set mapred.min.split.size.per.rack = **;（一个交换机下 split 的至少的大小，这个值决定了多个交换机上的文件是否需要合并）</li>
-</ol>
+<h1 id="like"><a href="#like" class="headerlink" title="like"></a>like</h1><p>% 代替 0 或多个字符</p>
+<p>_ 代替一个字符</p>
+<p><strong>举个例子：</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;%a%&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;_a_&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="rlike"><a href="#rlike" class="headerlink" title="rlike"></a>rlike</h1><p>rlike 采用正则表达式，以下总结几个常用的</p>
+<p>\： 转义用，序列 \ 匹配 \</p>
+<p>^： 匹配输入字符串开始的位置</p>
+<p>$： 匹配输入字符串结尾的位置</p>
+<p>*： 零次或多次匹配前面的字符或子表达式</p>
+<p>?： 零次或一次匹配前面的字符或子表达式</p>
+<p>x|y： 匹配 x 或 y</p>
+<p>[xyz]： 字符集。匹配包含的任一字符</p>
+<p>\w： 匹配任何字类字符，包括下划线</p>
+<p>.： 匹配所有单个字符</p>
+<p>此外，还可以用 regexp 替换 rlike，用 not regexp 替换 not rlike ，效果一样。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^he&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 FALSE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^e&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;llo$&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;hello|world&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;h[\\w]llo&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> rlike <span class="string">&#x27;h.llo&#x27;</span> </span><br></pre></td></tr></table></figure>
+
 ]]></content>
       <categories>
-        <category>Hadoop</category>
+        <category>Hive</category>
       </categories>
   </entry>
   <entry>
@@ -280,33 +273,57 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中like与rlike的区别</title>
-    <url>/2021/10/11/Hive%E4%B8%ADlike%E4%B8%8Erlike%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>Hive 中可以用 like 和 rlike 进行模糊匹配，like 采用的是 SQL 通配符，而 rlike 采用的是正则匹配。</p>
+    <title>Hadoop archive归档命令的使用</title>
+    <url>/2021/06/08/Hadoop-archive%E5%BD%92%E6%A1%A3%E5%91%BD%E4%BB%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>摘要：Hadoop archive 简介</p>
 <span id="more"></span>
 
-<h1 id="like"><a href="#like" class="headerlink" title="like"></a>like</h1><p>% 代替 0 或多个字符</p>
-<p>_ 代替一个字符</p>
-<p><strong>举个例子：</strong></p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;%a%&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2 id="archive-命令有什么用"><a href="#archive-命令有什么用" class="headerlink" title="archive 命令有什么用"></a>archive 命令有什么用</h2><p>archive 可以用来解决 Hadoop 中的<em><strong>小文件</strong></em>问题，当存在大量小文件时，会产生如下影响：</p>
+<ol>
+<li>HDFS 中，小文件过多会占用大量内存，NameNode 内存容量最终会成为限制集群扩展的瓶颈。</li>
+<li>HDFS 读写小文件更加耗时，因为每次都需要从 NameNode 获取元信息，并与对应的 DataNode 建立连接。</li>
+<li>小文件过多会开很多 map，一个 map 启动一个 JVM 去执行，所以这些任务的初始化，启动，执行会浪费大量的资源，严重影响性能。</li>
+</ol>
+<h2 id="如何使用-archive-进行归档"><a href="#如何使用-archive-进行归档" class="headerlink" title="如何使用 archive 进行归档"></a>如何使用 archive 进行归档</h2><p><img src="https://img-blog.csdnimg.cn/20200428164050783.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>其实已经用法已经很明白了，name指定名字，将路径上的内容创建到 archive 文件中。</p>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>首先我们创建一个小文件 text.txt ，上传四份到 HDFS 上</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428164901114.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>用官方自带的 wordcount 跑一下：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428165351971.png" alt="在这里插入图片描述"></p>
+<p>很明显，4个输入，接下来执行归档命令，将 small 路径下的所有文件归档到 archiveResult 中，可以看到 archive 启动了一个 MapReduce：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428165806873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>得到：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170355564.png" alt="在这里插入图片描述"></p>
+<p>但是进去之后会发现里面并不是我们之前的几个 text.txt 文件：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170538921.png" alt="在这里插入图片描述"></p>
+<p>使用带 har 的命令即可解决：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428170942383.png" alt="在这里插入图片描述"></p>
+<p>使用归档之后的文件进行 wordcount：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200428171245198.png" alt="在这里插入图片描述"></p>
+<p>最后仍然可以得到正确的结果，但是需要注意的是：<br><strong>使用 archive 归档后，减轻的是 HDFS 的压力，对于 MapReduce 来说，输入还是四个文件。</strong></p>
+<p>如果想要控制 map 数，Hive 可以通过几个参数来实现：</p>
+<ol>
+<li>set mapred.max.split.size = **;（决定每个map处理的最大的文件大小）</li>
+<li>set mapred.min.split.size.per.node = **;（一个节点上 split 的至少的大小，这个值决定了多个DataNode 上的文件是否需要合并）</li>
+<li>set mapred.min.split.size.per.rack = **;（一个交换机下 split 的至少的大小，这个值决定了多个交换机上的文件是否需要合并）</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Hadoop</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+<span id="more"></span>
 
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;aaa&#x27;</span> <span class="keyword">like</span> <span class="string">&#x27;_a_&#x27;</span></span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="rlike"><a href="#rlike" class="headerlink" title="rlike"></a>rlike</h1><p>rlike 采用正则表达式，以下总结几个常用的</p>
-<p>\： 转义用，序列 \ 匹配 \</p>
-<p>^： 匹配输入字符串开始的位置</p>
-<p>$： 匹配输入字符串结尾的位置</p>
-<p>*： 零次或多次匹配前面的字符或子表达式</p>
-<p>?： 零次或一次匹配前面的字符或子表达式</p>
-<p>x|y： 匹配 x 或 y</p>
-<p>[xyz]： 字符集。匹配包含的任一字符</p>
-<p>\w： 匹配任何字类字符，包括下划线</p>
-<p>.： 匹配所有单个字符</p>
-<p>此外，还可以用 regexp 替换 rlike，用 not regexp 替换 not rlike ，效果一样。</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^he&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 FALSE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;^e&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;llo$&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;hello|world&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> regexp <span class="string">&#x27;h[\\w]llo&#x27;</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">-- 返回值为 TRUE</span></span><br><span class="line"><span class="keyword">select</span> <span class="string">&#x27;hello&#x27;</span> rlike <span class="string">&#x27;h.llo&#x27;</span> </span><br></pre></td></tr></table></figure>
-
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -410,23 +427,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<span id="more"></span>
-
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive中的Sort Merge Bucket Join</title>
     <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
     <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
@@ -475,51 +475,6 @@
 <h2 id="Hive防止表被删除或查询"><a href="#Hive防止表被删除或查询" class="headerlink" title="Hive防止表被删除或查询"></a>Hive防止表被删除或查询</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ALTER TABLE test ENABLE NO_DROP  // 防止被删除</span><br><span class="line">ALTER TABLE test ENABLE OFFLINE  // 防止被查询</span><br></pre></td></tr></table></figure>
 <p>若要允许被删除或查询，只需把 enable 改为 disable </p>
 <h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><p>Hive没有关系型数据库中键的概念，只有有限的索引功能。一张表的索引数据存放在另一张表中。<br>建立索引可以帮助剪裁掉一张表的一些数据块，减少MR任务的数据输入量。<br>通过explain+SQL语句可以查看是否使用了索引。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么要对数据进行分区"><a href="#为什么要对数据进行分区" class="headerlink" title="为什么要对数据进行分区"></a>为什么要对数据进行分区</h2><p>在实际生产中，每天的数据量都是以亿为单位的，如果我们不对数据进行分区，直接对全部数据进行统计，则会大大增加时间开销，浪费大量资源。当我们做了合理分区后，例如按天进行分区，当查找某一天的数据时，Hive不会读取全部文件，只会读取HDFS中该天对应的目录，大大提高了执行效率。</p>
-<h2 id="分区是不是越多越好"><a href="#分区是不是越多越好" class="headerlink" title="分区是不是越多越好"></a>分区是不是越多越好</h2><p>多数情况下，对数据可以按天进行分区，如果数据量还是太大，可以考虑再按小时进行分区，或者取另一个维度作为分区条件，在此基础上，还可以按分钟，秒进行分区，但是进行过多的分区并不一定会加快查询执<br>行效率。</p>
-<p>使用过多的分区可能导致创建了很多非必须的Hadoop文件和文件夹，一个分区对应着一个包含了多个文件的文件夹。如果对表进行过多分区，又存储了跨度很久的数据，最后就会超出NameNode对系统的管理能力，因为NameNode必须保存文件系统的元数据信息，当小文件过多时，会限制HDFS所能管理的文件总数上限。</p>
-<p>另外，MR会将一个job转化为多个task，默认情况下，每个task都是一个新的JVM实例，而JVM的开启和销毁都是需要时间开销的，对于每个小文件产生的task，JVM创建和销毁的开销可能会大于对文件内容本身进行处理的开销。</p>
-<p>此外，默认情况下，Hive还会限制动态分区可以创建的最大分区数。</p>
-<h4 id="对数据进行分桶"><a href="#对数据进行分桶" class="headerlink" title="对数据进行分桶"></a>对数据进行分桶</h4><p>分桶是将数据集分解为更容易管理的若干部分的另一种方法。</p>
-<p>以下将创建一个按时间分区，使用user_id作为分桶字段的测试表，user_id会根据我们指定的值（此处为233，分桶数）进行哈希，分发到桶中。根据哈希算法的特性，同一个user_id的数据会分发到一个桶中，而享有相同哈希值的不同user_id的数据也会分发到一个桶中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS test(</span><br><span class="line">user_id STRING COMMENT &#x27;用户ID&#x27;,</span><br><span class="line">user_age SMALLINT COMMENT &#x27;用户年龄&#x27;,</span><br><span class="line">user_identify STRING COMMENT &#x27;用户身份证号&#x27;,</span><br><span class="line">url STRING COMMENT &#x27;用户访问的URL&#x27;</span><br><span class="line">)</span><br><span class="line">PARTITIONED BY (dt STRING COMMENT &#x27;时间&#x27;)</span><br><span class="line">CLUSTERED BY (user_id) INTO 233 BUCKETS</span><br></pre></td></tr></table></figure>
-
-<p>向分桶表中插入数据也和其他表有些区别，我们要设置一个属性强制为分桶表设置正确的reducer个数，然后执行SQL语句。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.enforce.bucketing = true</span><br></pre></td></tr></table></figure>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE test</span><br><span class="line">PARTITION(dt=&#x27;2019-11-11&#x27;)</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">user_age,</span><br><span class="line">user_identify,</span><br><span class="line">url</span><br><span class="line">FROM your_table</span><br><span class="line">WHERE dt = &#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
-
-<p>使用分桶的优点：桶的数量是固定的，所以分桶没有数据波动，适合于进行抽样。分桶还有利于执行高效的map-side join。</p>
-<h2 id="JVM重用"><a href="#JVM重用" class="headerlink" title="JVM重用"></a>JVM重用</h2><p>Hadoop的默认配置是采用派生JVM来执行map和reduce的，当小文件比较多时JVM的创建和销毁会造成很大的开销。而JVM重用可以使同一个JVM在一个job中重用多次，减小频繁创建销毁JVM的开销。</p>
-<h6 id="JVM重用的缺点："><a href="#JVM重用的缺点：" class="headerlink" title="JVM重用的缺点："></a>JVM重用的缺点：</h6><p>开启JVM重用后，会一直占用使用到的task插槽，以便进行重用，直到任务完成。如果某个reduce过程非常长的话，其他插槽虽然是空着的，但是必须等到该reduce执行完才能释放，无法被其他的job使用，造成资源浪费。</p>
-<h2 id="limit语句的优化"><a href="#limit语句的优化" class="headerlink" title="limit语句的优化"></a>limit语句的优化</h2><p>Hive中，很多情况下虽然使用了limit，但还是要将这个语句执行完，再返回一部分。为了避免这个情况，可以考虑开启limit优化</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.limit.optimize.enable = true // 默认为false</span><br></pre></td></tr></table></figure>
-<p>不过，将这个功能开启后，可能导致输入中有用的数据永远不会被处理到。</p>
-<h2 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h2><p>在我们平时写SQL的过程中，可以将最大的表放在最右边，Hive会自动帮我们进行优化。<br>如果所有表中有一个表足够小可以存入内存中，Hive此时可以执行一个map-side join，减少reduce过程。</p>
-<h2 id="并行执行"><a href="#并行执行" class="headerlink" title="并行执行"></a>并行执行</h2><p>Hive会将一个任务转化成一个或者多个stage，不同阶段有可能不存在依赖关系，这是开启并行执行就会加快整个任务的执行过程。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.parallel = true</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="关于Hive的严格模式"><a href="#关于Hive的严格模式" class="headerlink" title="关于Hive的严格模式"></a>关于Hive的严格模式</h2><p>在Hive的严格模式下，一些类型的查询语句是被禁止执行的，因为这些语句可能会产生一个巨大的MR任务（例如两个十亿级数据量的表做join）。</p>
-<p>在严格模式下，三种类型的操作将被禁止：<br>1）对分区表的查询中，where条件没有对分区字段做限制。<br>2）使用order by子句时，没有用limit做限制。当order by时，会将所有结果分发到一个reducer中进行排序，如果不进行限制，可能会执行很长时间。<br>3）限制笛卡尔积 （join）</p>
-<p>不过在确实需要执行某些语句的情况下，可以关闭严格模式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.mapred.mode = nostrict;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
-<p>中number值的设置调整reducer个数。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -585,28 +540,45 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
 <span id="more"></span>
 
-<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+<h2 id="为什么要对数据进行分区"><a href="#为什么要对数据进行分区" class="headerlink" title="为什么要对数据进行分区"></a>为什么要对数据进行分区</h2><p>在实际生产中，每天的数据量都是以亿为单位的，如果我们不对数据进行分区，直接对全部数据进行统计，则会大大增加时间开销，浪费大量资源。当我们做了合理分区后，例如按天进行分区，当查找某一天的数据时，Hive不会读取全部文件，只会读取HDFS中该天对应的目录，大大提高了执行效率。</p>
+<h2 id="分区是不是越多越好"><a href="#分区是不是越多越好" class="headerlink" title="分区是不是越多越好"></a>分区是不是越多越好</h2><p>多数情况下，对数据可以按天进行分区，如果数据量还是太大，可以考虑再按小时进行分区，或者取另一个维度作为分区条件，在此基础上，还可以按分钟，秒进行分区，但是进行过多的分区并不一定会加快查询执<br>行效率。</p>
+<p>使用过多的分区可能导致创建了很多非必须的Hadoop文件和文件夹，一个分区对应着一个包含了多个文件的文件夹。如果对表进行过多分区，又存储了跨度很久的数据，最后就会超出NameNode对系统的管理能力，因为NameNode必须保存文件系统的元数据信息，当小文件过多时，会限制HDFS所能管理的文件总数上限。</p>
+<p>另外，MR会将一个job转化为多个task，默认情况下，每个task都是一个新的JVM实例，而JVM的开启和销毁都是需要时间开销的，对于每个小文件产生的task，JVM创建和销毁的开销可能会大于对文件内容本身进行处理的开销。</p>
+<p>此外，默认情况下，Hive还会限制动态分区可以创建的最大分区数。</p>
+<h4 id="对数据进行分桶"><a href="#对数据进行分桶" class="headerlink" title="对数据进行分桶"></a>对数据进行分桶</h4><p>分桶是将数据集分解为更容易管理的若干部分的另一种方法。</p>
+<p>以下将创建一个按时间分区，使用user_id作为分桶字段的测试表，user_id会根据我们指定的值（此处为233，分桶数）进行哈希，分发到桶中。根据哈希算法的特性，同一个user_id的数据会分发到一个桶中，而享有相同哈希值的不同user_id的数据也会分发到一个桶中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS test(</span><br><span class="line">user_id STRING COMMENT &#x27;用户ID&#x27;,</span><br><span class="line">user_age SMALLINT COMMENT &#x27;用户年龄&#x27;,</span><br><span class="line">user_identify STRING COMMENT &#x27;用户身份证号&#x27;,</span><br><span class="line">url STRING COMMENT &#x27;用户访问的URL&#x27;</span><br><span class="line">)</span><br><span class="line">PARTITIONED BY (dt STRING COMMENT &#x27;时间&#x27;)</span><br><span class="line">CLUSTERED BY (user_id) INTO 233 BUCKETS</span><br></pre></td></tr></table></figure>
+
+<p>向分桶表中插入数据也和其他表有些区别，我们要设置一个属性强制为分桶表设置正确的reducer个数，然后执行SQL语句。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.enforce.bucketing = true</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE test</span><br><span class="line">PARTITION(dt=&#x27;2019-11-11&#x27;)</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">user_age,</span><br><span class="line">user_identify,</span><br><span class="line">url</span><br><span class="line">FROM your_table</span><br><span class="line">WHERE dt = &#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>使用分桶的优点：桶的数量是固定的，所以分桶没有数据波动，适合于进行抽样。分桶还有利于执行高效的map-side join。</p>
+<h2 id="JVM重用"><a href="#JVM重用" class="headerlink" title="JVM重用"></a>JVM重用</h2><p>Hadoop的默认配置是采用派生JVM来执行map和reduce的，当小文件比较多时JVM的创建和销毁会造成很大的开销。而JVM重用可以使同一个JVM在一个job中重用多次，减小频繁创建销毁JVM的开销。</p>
+<h6 id="JVM重用的缺点："><a href="#JVM重用的缺点：" class="headerlink" title="JVM重用的缺点："></a>JVM重用的缺点：</h6><p>开启JVM重用后，会一直占用使用到的task插槽，以便进行重用，直到任务完成。如果某个reduce过程非常长的话，其他插槽虽然是空着的，但是必须等到该reduce执行完才能释放，无法被其他的job使用，造成资源浪费。</p>
+<h2 id="limit语句的优化"><a href="#limit语句的优化" class="headerlink" title="limit语句的优化"></a>limit语句的优化</h2><p>Hive中，很多情况下虽然使用了limit，但还是要将这个语句执行完，再返回一部分。为了避免这个情况，可以考虑开启limit优化</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.limit.optimize.enable = true // 默认为false</span><br></pre></td></tr></table></figure>
+<p>不过，将这个功能开启后，可能导致输入中有用的数据永远不会被处理到。</p>
+<h2 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h2><p>在我们平时写SQL的过程中，可以将最大的表放在最右边，Hive会自动帮我们进行优化。<br>如果所有表中有一个表足够小可以存入内存中，Hive此时可以执行一个map-side join，减少reduce过程。</p>
+<h2 id="并行执行"><a href="#并行执行" class="headerlink" title="并行执行"></a>并行执行</h2><p>Hive会将一个任务转化成一个或者多个stage，不同阶段有可能不存在依赖关系，这是开启并行执行就会加快整个任务的执行过程。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.parallel = true</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="关于Hive的严格模式"><a href="#关于Hive的严格模式" class="headerlink" title="关于Hive的严格模式"></a>关于Hive的严格模式</h2><p>在Hive的严格模式下，一些类型的查询语句是被禁止执行的，因为这些语句可能会产生一个巨大的MR任务（例如两个十亿级数据量的表做join）。</p>
+<p>在严格模式下，三种类型的操作将被禁止：<br>1）对分区表的查询中，where条件没有对分区字段做限制。<br>2）使用order by子句时，没有用limit做限制。当order by时，会将所有结果分发到一个reducer中进行排序，如果不进行限制，可能会执行很长时间。<br>3）限制笛卡尔积 （join）</p>
+<p>不过在确实需要执行某些语句的情况下，可以关闭严格模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.mapred.mode = nostrict;</span><br></pre></td></tr></table></figure>
 
 
 
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+<h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
+<p>中number值的设置调整reducer个数。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -726,6 +698,34 @@
       <tags>
         <tag>Java</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
+<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
+<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
+<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
+<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
+<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
+<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
+<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
+<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
+
+<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
   </entry>
   <entry>
     <title>Python学习笔记(一)</title>
@@ -1148,9 +1148,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#x6f;&#117;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#x63;&#x6f;&#x6d;">&#121;&#x6f;&#117;&#x40;&#101;&#x78;&#x61;&#109;&#x70;&#x6c;&#x65;&#x2e;&#x63;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#121;&#111;&#x75;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#111;&#117;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#46;&#x63;&#111;&#109;">&#x79;&#111;&#117;&#64;&#101;&#120;&#x61;&#109;&#x70;&#108;&#101;&#46;&#x63;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#x6f;&#117;&#x40;&#x65;&#x78;&#x61;&#x6d;&#112;&#x6c;&#101;&#46;&#99;&#x6f;&#x6d;">&#x79;&#x6f;&#117;&#x40;&#x65;&#x78;&#x61;&#x6d;&#112;&#x6c;&#101;&#46;&#99;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -1347,6 +1347,23 @@
       </categories>
   </entry>
   <entry>
+    <title>数据仓库工具箱笔记 - 第一章</title>
+    <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
+    <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
+<span id="more"></span>
+
+<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><h2 id="为什么使用维度建模不使用ER模型"><a href="#为什么使用维度建模不使用ER模型" class="headerlink" title="为什么使用维度建模不使用ER模型"></a>为什么使用维度建模不使用ER模型</h2><p>规范化的模型主要用于操作型过程中，因为对事物的更新和插入仅触及数据库单一的地方。</p>
+<p>对BI查询来说，规范化的模型太复杂，用户难以理解和检索，复杂查询时将耗尽数据库的优化器性能，严重影响查询的性能，不能高性能检索。</p>
+<h2 id="度建模的核心原则"><a href="#度建模的核心原则" class="headerlink" title="度建模的核心原则"></a>度建模的核心原则</h2><p>1、建立事实表时使用统一的细节级别（粒度），可以避免出现重复计算度量的问题。（事实表中每一行对应一个度量事件）</p>
+<p>2、文本数据应尽量放在维表中，尽量不冗余到事实表。</p>
+<h2 id="总线矩阵存在的意义"><a href="#总线矩阵存在的意义" class="headerlink" title="总线矩阵存在的意义"></a>总线矩阵存在的意义</h2><p>多数情况下，用户获得有限的数据源，并用于解决特定的问题，输出独立的、烟囱式的数据系统，其他人不能复用，也不能与组织的其他分析信息相关联。</p>
+<p>采用总线矩阵可以为敏捷开发提供框架和主生产计划，提供可用的、公共的维度，保障数据一致性。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>数据仓库之如何分层</title>
     <url>/2021/06/08/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B9%8B%E5%A6%82%E4%BD%95%E5%88%86%E5%B1%82/</url>
     <content><![CDATA[<p>经典的数仓分层思想</p>
@@ -1475,23 +1492,6 @@
 <p>1).从业务源系统抽取转化的维表，每日保留全量快照；</p>
 <p>2).根据业务分析需求构建的维表，每日保留全量快照；</p>
 <p>3).仓库技术常用维表，只保留当前信息；</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>数据仓库工具箱笔记 - 第一章</title>
-    <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
-    <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
-<span id="more"></span>
-
-<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><h2 id="为什么使用维度建模不使用ER模型"><a href="#为什么使用维度建模不使用ER模型" class="headerlink" title="为什么使用维度建模不使用ER模型"></a>为什么使用维度建模不使用ER模型</h2><p>规范化的模型主要用于操作型过程中，因为对事物的更新和插入仅触及数据库单一的地方。</p>
-<p>对BI查询来说，规范化的模型太复杂，用户难以理解和检索，复杂查询时将耗尽数据库的优化器性能，严重影响查询的性能，不能高性能检索。</p>
-<h2 id="度建模的核心原则"><a href="#度建模的核心原则" class="headerlink" title="度建模的核心原则"></a>度建模的核心原则</h2><p>1、建立事实表时使用统一的细节级别（粒度），可以避免出现重复计算度量的问题。（事实表中每一行对应一个度量事件）</p>
-<p>2、文本数据应尽量放在维表中，尽量不冗余到事实表。</p>
-<h2 id="总线矩阵存在的意义"><a href="#总线矩阵存在的意义" class="headerlink" title="总线矩阵存在的意义"></a>总线矩阵存在的意义</h2><p>多数情况下，用户获得有限的数据源，并用于解决特定的问题，输出独立的、烟囱式的数据系统，其他人不能复用，也不能与组织的其他分析信息相关联。</p>
-<p>采用总线矩阵可以为敏捷开发提供框架和主生产计划，提供可用的、公共的维度，保障数据一致性。</p>
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
