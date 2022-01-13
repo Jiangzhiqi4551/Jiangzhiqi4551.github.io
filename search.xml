@@ -410,6 +410,23 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive中的Skew Join</title>
+    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
+    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
+<span id="more"></span>
+
+<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
+<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
+<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
+<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
+<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive中的Sort Merge Bucket Join</title>
     <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Sort-Merge-Bucket-Join/</url>
     <content><![CDATA[<p>最近学习时发现 Hive 中还有一种 SMB Join，即 Sort Merge Bucket Join ，赶紧找资料学习了一波。。</p>
@@ -428,23 +445,6 @@
 
 
 <p>之后每个 mapper 从第一个表中读取一个 bucket 的数据，并读取第二个表中相应 bucket 的数据，在此之后就可以进行 SMB join了，大大缩短执行时间。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive中的Skew Join</title>
-    <url>/2021/06/08/Hive%E4%B8%AD%E7%9A%84Skew-Join/</url>
-    <content><![CDATA[<p>看文档的时候突然发现Skew Join，之前只知道有内外连接，半开连接，全外连接，笛卡尔积，于是赶紧学习了下Skew Join，在这里做个总结。</p>
-<span id="more"></span>
-
-<h2 id="首先简单介绍下什么是数据倾斜"><a href="#首先简单介绍下什么是数据倾斜" class="headerlink" title="首先简单介绍下什么是数据倾斜"></a>首先简单介绍下什么是数据倾斜</h2><p>比如我们有10000条数据，有10个reducer来处理数据，在这10000条数据中有9000条的key是相同的，这样经过hash之后，就会出现有一个reducer要自己处理9000条数据，而剩下的9个reducer可能每个只处理100多条数据，当这9个reducer早早跑完之后，第一个reducer可能只完成了百分之几，这9个reducer就要静静等待…直到第一个完成，具体的表现就是任务一直卡在98% 99%，大大减慢了数据的处理速度。</p>
-<h2 id="Skew-Join-是如何处理数据倾斜的"><a href="#Skew-Join-是如何处理数据倾斜的" class="headerlink" title="Skew Join 是如何处理数据倾斜的"></a>Skew Join 是如何处理数据倾斜的</h2><p>当我们开启Skew Join之后：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.optimize.skewjoin = true;</span><br></pre></td></tr></table></figure>
-<p>在运行时，会对数据进行扫描并检测哪个key会出现倾斜，对于会倾斜的key，用map join做处理，不倾斜的key正常处理。</p>
-<h5 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h5><p>表 A 和表 B join，并且在 ID 为12345 时发生了数据倾斜，假设在表 B 中倾斜的数据量比表 A 少，则把 B 中所有的倾斜了的数据拿出来，存到内存中（可以用一个哈希表来存）。<br>对于表 A ，如果是倾斜的数据，则通过 B 存放在内存中的哈希表来 join；如果不是倾斜的 key，则按正常的 reduce 端 join 流程进行。<br>这样就在map端完成了倾斜数据的处理，不会让某一个reducer中数据量爆炸，从而拖累处理速度。</p>
-<p>要查看语句是否用到了 Skew Join，可以 explain 一下你的 SQL，如果在 Join Operator 和 Reduce Operator Tree 下的 handleSkewJoin 为 true，那就是用了Skew Join啦。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -1148,9 +1148,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#x75;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;">&#x79;&#111;&#x75;&#64;&#x65;&#120;&#97;&#109;&#112;&#108;&#101;&#x2e;&#99;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#109;">&#121;&#111;&#117;&#x40;&#x65;&#120;&#x61;&#x6d;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#x6f;&#x6d;">&#121;&#111;&#117;&#64;&#x65;&#x78;&#97;&#x6d;&#x70;&#x6c;&#x65;&#46;&#x63;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#x79;&#x6f;&#x75;&#x40;&#x65;&#x78;&#x61;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#x6d;">&#x79;&#x6f;&#x75;&#x40;&#x65;&#x78;&#x61;&#109;&#112;&#108;&#101;&#x2e;&#99;&#111;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -1298,52 +1298,13 @@
 <p><img src="/img/20211028_img3.png" alt="截屏2021-10-28 下午4.41.59"></p>
 <p>选中所有外部依赖，点击 减号 删除，只保留项目 jar 包</p>
 <p><img src="/img/20211028_img4.png" alt="截屏2021-10-28 下午4.42.35"></p>
+<p>选择左上角 Build -&gt; Build Artifacts -&gt; Build ，即可在 out 文件夹中找到打包好的 jar 包。</p>
 <p>最后在 terminal 中提交 jar 包即可。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  ~ spark-submit \</span><br><span class="line">--master local \</span><br><span class="line">--class &quot;SimpleApp&quot; \</span><br><span class="line">/Users/jiangzhiqi/IdeaProjects/SbtExampleProject/out/artifacts/SbtExampleProject_jar/SbtExampleProject.jar</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd /Users/jiangzhiqi/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line"></span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-submit \                                     </span><br><span class="line">--master local \</span><br><span class="line">--class &quot;SimpleApp&quot; \</span><br><span class="line">/Users/jiangzhiqi/IdeaProjects/SbtExampleProject/out/artifacts/SbtExampleProject_jar/SbtExampleProject.jar</span><br></pre></td></tr></table></figure>
 
 ]]></content>
       <categories>
         <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>将DB数据同步到数据仓库中的两种方法（简介）</title>
-    <url>/2021/10/12/%E5%B0%86DB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E5%88%B0%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%88%E7%AE%80%E4%BB%8B%EF%BC%89/</url>
-    <content><![CDATA[<p>在数据仓库中，ODS 层数据一般来源于客户端的日志和业务数据库中的数据，对于 MYSQL 等关系型数据库，我们需要将库中数据同步到 Hive 中进行查询与分析。这里简单介绍两种同步的方法。</p>
-<span id="more"></span>
-
-
-
-<h2 id="低性能同步法"><a href="#低性能同步法" class="headerlink" title="低性能同步法"></a>低性能同步法</h2><ol>
-<li>直连 MySQL 并 select 表中数据</li>
-<li>将 select 的结果存储到本地作为中间存储</li>
-<li>将中间存储的文件 load 进 Hive 表中</li>
-</ol>
-<p>这种方法实现起来比较简单，但也有较大的缺陷，主要有以下几点：</p>
-<ol>
-<li>随着业务规模不断扩大，每次 select 得到的数据量不断加大，将结果存本地再 load 进 Hive 这种方式会造成性能问题，无法满足下游数仓生产的时效性要求</li>
-<li>从 MySQL 中 select 大量数据，会对 MySQL 造成过大压力，可能会影响线上服务</li>
-<li>Hive 无法有效支持 MySQL 中的 update、delete 操作</li>
-</ol>
-<p>为了解决上述问题，大多数互联网公司都采用了<strong>实时Binlog采集 + 离线处理Binlog还原业务数据</strong>的方案，由于Binlog是流式产生的，因此将数据处理需求由每天同步一次均摊到实时流中，减小了对MySQL的访问压力，减小了对线上性能可能造成的影响。另外，因为Binlog是MySQL的二进制日志，其记录了MySQL中发生的所有数据变更，因此也能够记录数据的 insert、update、delete操作，通过一些语义方面的处理，能做到数据的精准还原。</p>
-<h2 id="利用-MySQL-Binlog-的同步法"><a href="#利用-MySQL-Binlog-的同步法" class="headerlink" title="利用 MySQL Binlog 的同步法"></a>利用 MySQL Binlog 的同步法</h2><p>这一部分仅介绍大致思路</p>
-<h4 id="Binlog实时采集"><a href="#Binlog实时采集" class="headerlink" title="Binlog实时采集"></a>Binlog实时采集</h4><p>采用开源项目Canal，从MySQL实时拉取Binlog，并进行适当解析，将采集到的数据暂存到kafka上供下游消费</p>
-<h4 id="还原MySQL数据"><a href="#还原MySQL数据" class="headerlink" title="还原MySQL数据"></a>还原MySQL数据</h4><p>采用开源项目Camus，将kafka上的Binlog数据拉取到hive上。</p>
-<p>对每张ODS表，先采取直接select的方式从MySQL获取一份存量数据，再基于存量数据和每天的增量产生的Binlog日志做合并，从而还原出业务数据。</p>
-<h4 id="merge-流程举例"><a href="#merge-流程举例" class="headerlink" title="merge 流程举例"></a>merge 流程举例</h4><p>整个流程分为以下两个步骤：</p>
-<ol>
-<li>将Binlog中的数据存储到delta表中</li>
-<li>将delta表中的数据和存量数据做基于主键的merge</li>
-</ol>
-<p>当一条数据一天发生多次变更时，delta表只保存最新的更新状态。</p>
-<p>在merge的过程中，通过主键关联后，如果一条数据既存在于delta表中，又存在于存量表中，说明数据发生了更新，需要取delta表中的数据作为最终结果，如果只存在于存量表中，不在delta表中，则说明该数据没有被更新过，取存量表中的数据作为最终结果。</p>
-<p><strong>示例1</strong>：</p>
-<p><img src="https://img-blog.csdnimg.cn/0afd82f415544bb883f219ad5dadf300.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
-<p><strong>示例2</strong>：</p>
-<p><img src="https://img-blog.csdnimg.cn/2897bd4aec3b4b66b6247ad7025c20bb.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
       </categories>
   </entry>
   <entry>
@@ -1481,6 +1442,46 @@
       </categories>
   </entry>
   <entry>
+    <title>将DB数据同步到数据仓库中的两种方法（简介）</title>
+    <url>/2021/10/12/%E5%B0%86DB%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E5%88%B0%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B8%AD%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95%EF%BC%88%E7%AE%80%E4%BB%8B%EF%BC%89/</url>
+    <content><![CDATA[<p>在数据仓库中，ODS 层数据一般来源于客户端的日志和业务数据库中的数据，对于 MYSQL 等关系型数据库，我们需要将库中数据同步到 Hive 中进行查询与分析。这里简单介绍两种同步的方法。</p>
+<span id="more"></span>
+
+
+
+<h2 id="低性能同步法"><a href="#低性能同步法" class="headerlink" title="低性能同步法"></a>低性能同步法</h2><ol>
+<li>直连 MySQL 并 select 表中数据</li>
+<li>将 select 的结果存储到本地作为中间存储</li>
+<li>将中间存储的文件 load 进 Hive 表中</li>
+</ol>
+<p>这种方法实现起来比较简单，但也有较大的缺陷，主要有以下几点：</p>
+<ol>
+<li>随着业务规模不断扩大，每次 select 得到的数据量不断加大，将结果存本地再 load 进 Hive 这种方式会造成性能问题，无法满足下游数仓生产的时效性要求</li>
+<li>从 MySQL 中 select 大量数据，会对 MySQL 造成过大压力，可能会影响线上服务</li>
+<li>Hive 无法有效支持 MySQL 中的 update、delete 操作</li>
+</ol>
+<p>为了解决上述问题，大多数互联网公司都采用了<strong>实时Binlog采集 + 离线处理Binlog还原业务数据</strong>的方案，由于Binlog是流式产生的，因此将数据处理需求由每天同步一次均摊到实时流中，减小了对MySQL的访问压力，减小了对线上性能可能造成的影响。另外，因为Binlog是MySQL的二进制日志，其记录了MySQL中发生的所有数据变更，因此也能够记录数据的 insert、update、delete操作，通过一些语义方面的处理，能做到数据的精准还原。</p>
+<h2 id="利用-MySQL-Binlog-的同步法"><a href="#利用-MySQL-Binlog-的同步法" class="headerlink" title="利用 MySQL Binlog 的同步法"></a>利用 MySQL Binlog 的同步法</h2><p>这一部分仅介绍大致思路</p>
+<h4 id="Binlog实时采集"><a href="#Binlog实时采集" class="headerlink" title="Binlog实时采集"></a>Binlog实时采集</h4><p>采用开源项目Canal，从MySQL实时拉取Binlog，并进行适当解析，将采集到的数据暂存到kafka上供下游消费</p>
+<h4 id="还原MySQL数据"><a href="#还原MySQL数据" class="headerlink" title="还原MySQL数据"></a>还原MySQL数据</h4><p>采用开源项目Camus，将kafka上的Binlog数据拉取到hive上。</p>
+<p>对每张ODS表，先采取直接select的方式从MySQL获取一份存量数据，再基于存量数据和每天的增量产生的Binlog日志做合并，从而还原出业务数据。</p>
+<h4 id="merge-流程举例"><a href="#merge-流程举例" class="headerlink" title="merge 流程举例"></a>merge 流程举例</h4><p>整个流程分为以下两个步骤：</p>
+<ol>
+<li>将Binlog中的数据存储到delta表中</li>
+<li>将delta表中的数据和存量数据做基于主键的merge</li>
+</ol>
+<p>当一条数据一天发生多次变更时，delta表只保存最新的更新状态。</p>
+<p>在merge的过程中，通过主键关联后，如果一条数据既存在于delta表中，又存在于存量表中，说明数据发生了更新，需要取delta表中的数据作为最终结果，如果只存在于存量表中，不在delta表中，则说明该数据没有被更新过，取存量表中的数据作为最终结果。</p>
+<p><strong>示例1</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/0afd82f415544bb883f219ad5dadf300.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+<p><strong>示例2</strong>：</p>
+<p><img src="https://img-blog.csdnimg.cn/2897bd4aec3b4b66b6247ad7025c20bb.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70#pic_center"></p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>数据仓库工具箱笔记 - 第一章</title>
     <url>/2021/06/09/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E5%B7%A5%E5%85%B7%E7%AE%B1%E7%AC%94%E8%AE%B001/</url>
     <content><![CDATA[<p>《数据仓库工具箱》第一章读书笔记</p>
@@ -1492,39 +1493,6 @@
 <p>2、文本数据应尽量放在维表中，尽量不冗余到事实表。</p>
 <h2 id="总线矩阵存在的意义"><a href="#总线矩阵存在的意义" class="headerlink" title="总线矩阵存在的意义"></a>总线矩阵存在的意义</h2><p>多数情况下，用户获得有限的数据源，并用于解决特定的问题，输出独立的、烟囱式的数据系统，其他人不能复用，也不能与组织的其他分析信息相关联。</p>
 <p>采用总线矩阵可以为敏捷开发提供框架和主生产计划，提供可用的、公共的维度，保障数据一致性。</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>数据开发中需要注意的一些规则</title>
-    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
-    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
-<span id="more"></span>
-
-
-
-<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
-<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
-<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
-<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
-<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
-<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
-<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
-<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
-<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
-<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
-<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
-<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
-<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
-<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
-<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
-<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>任务检索规则：近 n 天分区无数据</p>
-<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
-<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
@@ -1562,6 +1530,39 @@
 <h4 id="一致性维度"><a href="#一致性维度" class="headerlink" title="一致性维度"></a>一致性维度</h4><p>​        不同维度表的属性具有相同的列名和领域内容时，称维度表具有一致性，利用一致性维度关联各个事实表，可以将来自不同事实表的信息合并到一张报表中。</p>
 <h4 id="缩减维度"><a href="#缩减维度" class="headerlink" title="缩减维度"></a>缩减维度</h4><p>​        缩减维度也是一种一致性维度，由基本维度的列、行的子集构成。</p>
 <h4 id="总线矩阵"><a href="#总线矩阵" class="headerlink" title="总线矩阵"></a>总线矩阵</h4><p>​        矩阵的行表示业务过程，列表示维度。矩阵中的点表示给定的维度和业务过程是否有联系。</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>数据开发中需要注意的一些规则</title>
+    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
+    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
+<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
+<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
+<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
+<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
+<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
+<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
+<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
+<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
+<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
+<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
+<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
+<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
+<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
+<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
+<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>任务检索规则：近 n 天分区无数据</p>
+<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
+<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
 ]]></content>
       <categories>
         <category>大数据技术&amp;数据仓库</category>
