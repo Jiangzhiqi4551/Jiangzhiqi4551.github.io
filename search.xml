@@ -585,6 +585,34 @@
       </categories>
   </entry>
   <entry>
+    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
+<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
+<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
+<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
+<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
+<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
+<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
+<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
+<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
+
+<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Hive宏(Macro)简介</title>
     <url>/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
@@ -623,34 +651,6 @@
 <li>Macro 的开发过程比 UDF 更简单</li>
 <li>与 UDF 相比，因为 UDF 是用 Java 代码开发的，堆变量的内存回收不受开发者控制，由虚拟机决定，并且实际生产中需要将 UDF 嵌套到 HQL 中，因此如果表的数据量比较大，存在发生 OOM 的风险。</li>
 </ol>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Hive入门之基础知识（四）之文件格式和压缩方法</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%92%8C%E5%8E%8B%E7%BC%A9%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么使用压缩"><a href="#为什么使用压缩" class="headerlink" title="为什么使用压缩"></a>为什么使用压缩</h2><p>使用压缩可以减小所需的磁盘空间，减小磁盘和网络的IO操作，减小了载入内存的数据量提高了IO吞吐量，提升了网络性能（因为MapReduce大多是文件读写操作，属于IO密集型）。</p>
-<h2 id="几种不同的压缩方案"><a href="#几种不同的压缩方案" class="headerlink" title="几种不同的压缩方案"></a>几种不同的压缩方案</h2><p>如果磁盘利用率和IO开销都需要考虑的话，可以选择以下两种</p>
-<h6 id="BZip2"><a href="#BZip2" class="headerlink" title="BZip2"></a>BZip2</h6><p>压缩率最高，同时需要消耗最多的CPU开销。</p>
-<h6 id="GZip"><a href="#GZip" class="headerlink" title="GZip"></a>GZip</h6><p>压缩率 / 压缩、解压速度的最佳选择</p>
-<h6 id="LZO-和-Snappy"><a href="#LZO-和-Snappy" class="headerlink" title="LZO 和 Snappy"></a>LZO 和 Snappy</h6><p>压缩率不及上面的两种，但是压缩和解压的速度更快，特别是在解压过程。<br>如果需要频繁读取数据进行解压缩，可以使用LZO或者Snappy。</p>
-<p>此外，需要注意的一点是GZip和Snappy的压缩文件不可划分。即MapReduce无法将输入的文件划分为多个部分，如果文件特别大，就需要一个单独task来进行处理。</p>
-<h2 id="中间压缩"><a href="#中间压缩" class="headerlink" title="中间压缩"></a>中间压缩</h2><p>开启中间压缩可以减少map和reduce之间的数据传输量。<br>对于中间压缩，低CPU开销比最终的压缩效率更为重要。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.compress.intermediate = true // 开启中间压缩，默认为false</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="sequence-file存储格式"><a href="#sequence-file存储格式" class="headerlink" title="sequence file存储格式"></a>sequence file存储格式</h2><p>sequence file是含有键值对的二进制文件。</p>
-<p>对于不可分割的压缩文件，最严重的的缺点就是只能从头读到尾，无法由多个mapper并行执行。</p>
-<p>而sequence file存储格式可以将一个文件分为多块，然后采取可分割的方式对块进行压缩。<br>创建表时可以直接指定sequence file格式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE tmp</span><br><span class="line">(</span><br><span class="line">user_id STRING</span><br><span class="line">)</span><br><span class="line">STORED AS SEQUENCEFILE</span><br></pre></td></tr></table></figure>
-
-<p>sequence file提供了三种压缩方式：NONE， RECORD， BLOCK 。<br>默认为RECORD级，不过通常来说BLOCK级压缩性能最好。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -958,6 +958,87 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark算子之foldByKey</title>
+    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
+    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
+<span id="more"></span>
+
+<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
+<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
+<p>我们先初始化一个RDD</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>查看这个RDD的分区及分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
+<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
+<p>这时候我们用foldByKey算子，zeroValue设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>再查看下每个分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
+
+
+<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
+<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
+<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
+    <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
+<span id="more"></span>
+
+<p>bin 目录下启动失败</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  bin pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2/bin</span><br><span class="line">➜  bin spark-shell</span><br><span class="line">zsh: command not found: spark-shell</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在 spark 主目录下执行成功</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-shell</span><br><span class="line">WARNING: An illegal reflective access operation has occurred # 启动成功</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p><a href="https://stackoverflow.com/questions/35620687/unable-to-run-spark-shell-from-bin">Stack Overflow原文链接</a></p>
+<p>简单来说，终端会到 <strong>$PATH</strong> 中寻找可执行文件，如果你要执行的程序不在 <strong>$PATH</strong> 中，就需要指明这个可执行文件在文件系统中的绝对路径。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如果不希望每次都 cd 到 spark 目录下再执行命令启动 spark，我们就需要把 SPARK_HOME 添加到 $PATH 中。</p>
+<p>首先先在 spark 目录下执行 pwd 记下这个路径</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来到根目录下修改 <strong>.bash_profile</strong> 文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd ~</span><br><span class="line"># 如果还没有 .bash_profile ，则需要先创建文件</span><br><span class="line"># touch .bash_profile</span><br><span class="line">vim .bash_profile </span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来复制粘贴如下内容，把第一条中的路径换成自己的</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后执行 source 命令使修改生效</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure>
+
+
+
+<p>再次执行 spark-shell 就会发现 spark 已经成功启动了~</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark入门之基础知识（二）RDD编程</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
     <content><![CDATA[<p>摘要：RDD基础知识总结</p>
@@ -1021,87 +1102,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
-    <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
-    <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
-<span id="more"></span>
-
-<p>bin 目录下启动失败</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  bin pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2/bin</span><br><span class="line">➜  bin spark-shell</span><br><span class="line">zsh: command not found: spark-shell</span><br></pre></td></tr></table></figure>
-
-
-
-<p>在 spark 主目录下执行成功</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-shell</span><br><span class="line">WARNING: An illegal reflective access operation has occurred # 启动成功</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p><a href="https://stackoverflow.com/questions/35620687/unable-to-run-spark-shell-from-bin">Stack Overflow原文链接</a></p>
-<p>简单来说，终端会到 <strong>$PATH</strong> 中寻找可执行文件，如果你要执行的程序不在 <strong>$PATH</strong> 中，就需要指明这个可执行文件在文件系统中的绝对路径。</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如果不希望每次都 cd 到 spark 目录下再执行命令启动 spark，我们就需要把 SPARK_HOME 添加到 $PATH 中。</p>
-<p>首先先在 spark 目录下执行 pwd 记下这个路径</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br></pre></td></tr></table></figure>
-
-
-
-<p>接下来到根目录下修改 <strong>.bash_profile</strong> 文件</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd ~</span><br><span class="line"># 如果还没有 .bash_profile ，则需要先创建文件</span><br><span class="line"># touch .bash_profile</span><br><span class="line">vim .bash_profile </span><br></pre></td></tr></table></figure>
-
-
-
-<p>接下来复制粘贴如下内容，把第一条中的路径换成自己的</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
-
-
-
-<p>最后执行 source 命令使修改生效</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure>
-
-
-
-<p>再次执行 spark-shell 就会发现 spark 已经成功启动了~</p>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Spark算子之foldByKey</title>
-    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
-    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
-<span id="more"></span>
-
-<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
-<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
-<p>我们先初始化一个RDD</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>查看这个RDD的分区及分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
-<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
-<p>这时候我们用foldByKey算子，zeroValue设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
-<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>再查看下每个分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
-
-
-<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
-<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
-<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
     <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
@@ -1142,6 +1142,22 @@
       </categories>
   </entry>
   <entry>
+    <title>git commit 时提示please tell me who you are解决方法</title>
+    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<p>先是按照git的提示</p>
+<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#117;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#99;&#111;&#109;">&#x79;&#111;&#117;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#x63;&#x6f;&#109;">&#121;&#x6f;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#x63;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>按如上步骤操作，最后成功commit</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
     <title>mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法</title>
     <url>/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
@@ -1161,22 +1177,6 @@
 
 <h3 id="5、查看-brew-版本信息"><a href="#5、查看-brew-版本信息" class="headerlink" title="5、查看 brew 版本信息"></a>5、查看 brew 版本信息</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">xxx@localhost ~ % brew -v</span><br><span class="line">Homebrew 3.1.3-67-gafbe0e8</span><br><span class="line">Homebrew/homebrew-core (git revision e997d9f5a0; last commit 2021-04-23)</span><br></pre></td></tr></table></figure>
 
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>git commit 时提示please tell me who you are解决方法</title>
-    <url>/2021/06/08/git-commit-%E6%97%B6%E6%8F%90%E7%A4%BAplease-tell-me-who-you-are%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#101;&#x78;&#x61;&#x6d;&#112;&#108;&#101;&#46;&#x63;&#111;&#109;">&#121;&#111;&#x75;&#64;&#101;&#x78;&#x61;&#x6d;&#112;&#108;&#101;&#46;&#x63;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
-<p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#64;&#x65;&#x78;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#109;">&#121;&#111;&#x75;&#64;&#x65;&#x78;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#99;&#111;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
-<p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
         <category>排坑记录</category>
@@ -1536,39 +1536,6 @@
       </categories>
   </entry>
   <entry>
-    <title>数据开发中需要注意的一些规则</title>
-    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
-    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
-<span id="more"></span>
-
-
-
-<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
-<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
-<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
-<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
-<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
-<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
-<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
-<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
-<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
-<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
-<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
-<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
-<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
-<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
-<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
-<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
-<p>任务检索规则：近 n 天分区无数据</p>
-<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
-<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
-]]></content>
-      <categories>
-        <category>大数据技术&amp;数据仓库</category>
-      </categories>
-  </entry>
-  <entry>
     <title>详解TCP/IP协议栈</title>
     <url>/2021/06/08/%E8%AF%A6%E8%A7%A3TCP-IP%E5%8D%8F%E8%AE%AE%E6%A0%88/</url>
     <content><![CDATA[<p>之前对网络各层作用的了解一直都比较模糊，对各个协议的作用也不甚清楚，最近看到了一篇对TCP/IP协议栈讲解比较清晰的博文，特地转载过来。</p>
@@ -1626,6 +1593,41 @@
 ]]></content>
       <categories>
         <category>计算机基础知识</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>数据开发中需要注意的一些规则</title>
+    <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
+    <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
+<span id="more"></span>
+
+
+
+<h4 id="1、任务代码中不能包含DDL语句"><a href="#1、任务代码中不能包含DDL语句" class="headerlink" title="1、任务代码中不能包含DDL语句"></a>1、任务代码中不能包含DDL语句</h4><p>原因：DDL规范管理减少生产风险，且使用工具管理使得元数据可管控提升数据管理能力。</p>
+<h4 id="2、任务代码中不能包含”select-”"><a href="#2、任务代码中不能包含”select-”" class="headerlink" title="2、任务代码中不能包含”select *”"></a>2、任务代码中不能包含”select *”</h4><p>原因：减少资源消耗、提升计算性能，避免源表字段变更导致和目标表字段不一致从而造成任务运行失败</p>
+<h4 id="3、任务代码不能使用不带种子的rand"><a href="#3、任务代码不能使用不带种子的rand" class="headerlink" title="3、任务代码不能使用不带种子的rand()"></a>3、任务代码不能使用不带种子的rand()</h4><p>原因：避免部分task失败重试分配的随机数差异造成结果不一致，导致任务失败或者数据错误</p>
+<h4 id="4、任务代码日期分区范围限制不合理"><a href="#4、任务代码日期分区范围限制不合理" class="headerlink" title="4、任务代码日期分区范围限制不合理"></a>4、任务代码日期分区范围限制不合理</h4><p>原因：避免大范围数据扫描，造成资源过度消耗</p>
+<h4 id="5、任务命名、模型命名不规范"><a href="#5、任务命名、模型命名不规范" class="headerlink" title="5、任务命名、模型命名不规范"></a>5、任务命名、模型命名不规范</h4><p>原因：规范管理，降低使用和维护成本</p>
+<h4 id="6、不允许依赖topic模型"><a href="#6、不允许依赖topic模型" class="headerlink" title="6、不允许依赖topic模型"></a>6、不允许依赖topic模型</h4><p>原因：topic模型不保证产出时效，应尽量使用dwd、dws层模型，避免数据产出延迟</p>
+<h4 id="7、不允许过度（跨层）依赖ods模型"><a href="#7、不允许过度（跨层）依赖ods模型" class="headerlink" title="7、不允许过度（跨层）依赖ods模型"></a>7、不允许过度（跨层）依赖ods模型</h4><p>原因：避免过度使用ods表，从而引起资源浪费、减小上层指标不一致风险</p>
+<h4 id="8、低层模型不允许依赖高层模型"><a href="#8、低层模型不允许依赖高层模型" class="headerlink" title="8、低层模型不允许依赖高层模型"></a>8、低层模型不允许依赖高层模型</h4><p>原因：数据从低到高依次为：ods-&gt;dwd-&gt;dws-&gt;app|topic，避免反向依赖可以减小数据产出延迟的风险</p>
+<h4 id="9、配置完善的数据质量监控"><a href="#9、配置完善的数据质量监控" class="headerlink" title="9、配置完善的数据质量监控"></a>9、配置完善的数据质量监控</h4><p>原因：可以配置表行数波动、主键唯一、主键为空等监控，并根据实际场景配置阻断，及时发现质量问题</p>
+<h4 id="10、避免出现过多的质检报警"><a href="#10、避免出现过多的质检报警" class="headerlink" title="10、避免出现过多的质检报警"></a>10、避免出现过多的质检报警</h4><p>原因：确保DQC问题都能被及时发现并解决，避免发生出现问题但无人处理的状况</p>
+<h4 id="11、避免重要基线破线"><a href="#11、避免重要基线破线" class="headerlink" title="11、避免重要基线破线"></a>11、避免重要基线破线</h4><p>原因：核心数据链路需要高优保障</p>
+<h4 id="12、减少产生大量小文件的任务数"><a href="#12、减少产生大量小文件的任务数" class="headerlink" title="12、减少产生大量小文件的任务数"></a>12、减少产生大量小文件的任务数</h4><p>原因：减少资源浪费</p>
+<h4 id="13、减少频繁报错的任务数"><a href="#13、减少频繁报错的任务数" class="headerlink" title="13、减少频繁报错的任务数"></a>13、减少频繁报错的任务数</h4><p>原因：减少计算资源的浪费</p>
+<h4 id="14、减少执行时间超长的任务数"><a href="#14、减少执行时间超长的任务数" class="headerlink" title="14、减少执行时间超长的任务数"></a>14、减少执行时间超长的任务数</h4><p>原因：避免基线破线，减少计算资源的浪费</p>
+<h4 id="15、减少产出0热度表的任务数"><a href="#15、减少产出0热度表的任务数" class="headerlink" title="15、减少产出0热度表的任务数"></a>15、减少产出0热度表的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>0热度表判断规则：近 n 天通过调度任务访问的次数为 0，且通过 adhoc 查询的次数为 0</p>
+<h4 id="16、减少产出数据量为0的任务数"><a href="#16、减少产出数据量为0的任务数" class="headerlink" title="16、减少产出数据量为0的任务数"></a>16、减少产出数据量为0的任务数</h4><p>原因：减少计算资源的浪费</p>
+<p>任务检索规则：近 n 天分区无数据</p>
+<h4 id="17、各层表需要设置合理的生命周期"><a href="#17、各层表需要设置合理的生命周期" class="headerlink" title="17、各层表需要设置合理的生命周期"></a>17、各层表需要设置合理的生命周期</h4><p>原因：减少存储资源浪费</p>
+<h4 id="18、模型和模型字段必须添加中文注释"><a href="#18、模型和模型字段必须添加中文注释" class="headerlink" title="18、模型和模型字段必须添加中文注释"></a>18、模型和模型字段必须添加中文注释</h4><p>原因：方便数据查找</p>
+<h4 id="19、避免0热度HDFS目录的存储"><a href="#19、避免0热度HDFS目录的存储" class="headerlink" title="19、避免0热度HDFS目录的存储"></a>19、避免0热度HDFS目录的存储</h4><p>原因：减少存储浪费</p>
+<h4 id="20、核心指标需要配置监控"><a href="#20、核心指标需要配置监控" class="headerlink" title="20、核心指标需要配置监控"></a>20、核心指标需要配置监控</h4><p>原因：重要指标需要配置求和值大于0监控以及波动监控</p>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
       </categories>
   </entry>
   <entry>
