@@ -481,51 +481,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
-    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
-    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
-<span id="more"></span>
-
-<h2 id="为什么要对数据进行分区"><a href="#为什么要对数据进行分区" class="headerlink" title="为什么要对数据进行分区"></a>为什么要对数据进行分区</h2><p>在实际生产中，每天的数据量都是以亿为单位的，如果我们不对数据进行分区，直接对全部数据进行统计，则会大大增加时间开销，浪费大量资源。当我们做了合理分区后，例如按天进行分区，当查找某一天的数据时，Hive不会读取全部文件，只会读取HDFS中该天对应的目录，大大提高了执行效率。</p>
-<h2 id="分区是不是越多越好"><a href="#分区是不是越多越好" class="headerlink" title="分区是不是越多越好"></a>分区是不是越多越好</h2><p>多数情况下，对数据可以按天进行分区，如果数据量还是太大，可以考虑再按小时进行分区，或者取另一个维度作为分区条件，在此基础上，还可以按分钟，秒进行分区，但是进行过多的分区并不一定会加快查询执<br>行效率。</p>
-<p>使用过多的分区可能导致创建了很多非必须的Hadoop文件和文件夹，一个分区对应着一个包含了多个文件的文件夹。如果对表进行过多分区，又存储了跨度很久的数据，最后就会超出NameNode对系统的管理能力，因为NameNode必须保存文件系统的元数据信息，当小文件过多时，会限制HDFS所能管理的文件总数上限。</p>
-<p>另外，MR会将一个job转化为多个task，默认情况下，每个task都是一个新的JVM实例，而JVM的开启和销毁都是需要时间开销的，对于每个小文件产生的task，JVM创建和销毁的开销可能会大于对文件内容本身进行处理的开销。</p>
-<p>此外，默认情况下，Hive还会限制动态分区可以创建的最大分区数。</p>
-<h4 id="对数据进行分桶"><a href="#对数据进行分桶" class="headerlink" title="对数据进行分桶"></a>对数据进行分桶</h4><p>分桶是将数据集分解为更容易管理的若干部分的另一种方法。</p>
-<p>以下将创建一个按时间分区，使用user_id作为分桶字段的测试表，user_id会根据我们指定的值（此处为233，分桶数）进行哈希，分发到桶中。根据哈希算法的特性，同一个user_id的数据会分发到一个桶中，而享有相同哈希值的不同user_id的数据也会分发到一个桶中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS test(</span><br><span class="line">user_id STRING COMMENT &#x27;用户ID&#x27;,</span><br><span class="line">user_age SMALLINT COMMENT &#x27;用户年龄&#x27;,</span><br><span class="line">user_identify STRING COMMENT &#x27;用户身份证号&#x27;,</span><br><span class="line">url STRING COMMENT &#x27;用户访问的URL&#x27;</span><br><span class="line">)</span><br><span class="line">PARTITIONED BY (dt STRING COMMENT &#x27;时间&#x27;)</span><br><span class="line">CLUSTERED BY (user_id) INTO 233 BUCKETS</span><br></pre></td></tr></table></figure>
-
-<p>向分桶表中插入数据也和其他表有些区别，我们要设置一个属性强制为分桶表设置正确的reducer个数，然后执行SQL语句。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.enforce.bucketing = true</span><br></pre></td></tr></table></figure>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE test</span><br><span class="line">PARTITION(dt=&#x27;2019-11-11&#x27;)</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">user_age,</span><br><span class="line">user_identify,</span><br><span class="line">url</span><br><span class="line">FROM your_table</span><br><span class="line">WHERE dt = &#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
-
-<p>使用分桶的优点：桶的数量是固定的，所以分桶没有数据波动，适合于进行抽样。分桶还有利于执行高效的map-side join。</p>
-<h2 id="JVM重用"><a href="#JVM重用" class="headerlink" title="JVM重用"></a>JVM重用</h2><p>Hadoop的默认配置是采用派生JVM来执行map和reduce的，当小文件比较多时JVM的创建和销毁会造成很大的开销。而JVM重用可以使同一个JVM在一个job中重用多次，减小频繁创建销毁JVM的开销。</p>
-<h6 id="JVM重用的缺点："><a href="#JVM重用的缺点：" class="headerlink" title="JVM重用的缺点："></a>JVM重用的缺点：</h6><p>开启JVM重用后，会一直占用使用到的task插槽，以便进行重用，直到任务完成。如果某个reduce过程非常长的话，其他插槽虽然是空着的，但是必须等到该reduce执行完才能释放，无法被其他的job使用，造成资源浪费。</p>
-<h2 id="limit语句的优化"><a href="#limit语句的优化" class="headerlink" title="limit语句的优化"></a>limit语句的优化</h2><p>Hive中，很多情况下虽然使用了limit，但还是要将这个语句执行完，再返回一部分。为了避免这个情况，可以考虑开启limit优化</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.limit.optimize.enable = true // 默认为false</span><br></pre></td></tr></table></figure>
-<p>不过，将这个功能开启后，可能导致输入中有用的数据永远不会被处理到。</p>
-<h2 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h2><p>在我们平时写SQL的过程中，可以将最大的表放在最右边，Hive会自动帮我们进行优化。<br>如果所有表中有一个表足够小可以存入内存中，Hive此时可以执行一个map-side join，减少reduce过程。</p>
-<h2 id="并行执行"><a href="#并行执行" class="headerlink" title="并行执行"></a>并行执行</h2><p>Hive会将一个任务转化成一个或者多个stage，不同阶段有可能不存在依赖关系，这是开启并行执行就会加快整个任务的执行过程。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.parallel = true</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="关于Hive的严格模式"><a href="#关于Hive的严格模式" class="headerlink" title="关于Hive的严格模式"></a>关于Hive的严格模式</h2><p>在Hive的严格模式下，一些类型的查询语句是被禁止执行的，因为这些语句可能会产生一个巨大的MR任务（例如两个十亿级数据量的表做join）。</p>
-<p>在严格模式下，三种类型的操作将被禁止：<br>1）对分区表的查询中，where条件没有对分区字段做限制。<br>2）使用order by子句时，没有用limit做限制。当order by时，会将所有结果分发到一个reducer中进行排序，如果不进行限制，可能会执行很长时间。<br>3）限制笛卡尔积 （join）</p>
-<p>不过在确实需要执行某些语句的情况下，可以关闭严格模式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.mapred.mode = nostrict;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
-<p>中number值的设置调整reducer个数。</p>
-]]></content>
-      <categories>
-        <category>Hive</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Hive入门之基础知识（二）之数据操作与查询</title>
     <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%9F%A5%E8%AF%A2/</url>
     <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
@@ -579,6 +534,51 @@
 <h2 id="distribute-by语句的使用"><a href="#distribute-by语句的使用" class="headerlink" title="distribute by语句的使用"></a>distribute by语句的使用</h2><p>distribute by控制map的输出在reduce中是如何划分的，可以指定distribute by的值，将相同值得数据分发到一个reducer中去，类似于group by。在分发后的数据中可以调用sort by 进行reducer内部的排序。<br>按用户ID做distribute，再按客户端时间做排序</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SELECT</span><br><span class="line">* </span><br><span class="line">from your_table</span><br><span class="line">DISTRIBUTE BY user_id</span><br><span class="line">SORT BY client_event_time</span><br></pre></td></tr></table></figure>
 <p>当distribute by和sort by中的字段相同时，可以使用<strong>cluster by</strong>做替代，达成相同的效果，但是使用cluster by会剥夺sort by的并行性，而且cluster by也不能指定ASC或者desc，只能按降序排列，但是可以实现数据的全局有序。</p>
+]]></content>
+      <categories>
+        <category>Hive</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Hive入门之基础知识（三）之分区与优化的简单介绍</title>
+    <url>/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/</url>
+    <content><![CDATA[<p>随笔总结一些关于Hive的杂七杂八的知识点</p>
+<span id="more"></span>
+
+<h2 id="为什么要对数据进行分区"><a href="#为什么要对数据进行分区" class="headerlink" title="为什么要对数据进行分区"></a>为什么要对数据进行分区</h2><p>在实际生产中，每天的数据量都是以亿为单位的，如果我们不对数据进行分区，直接对全部数据进行统计，则会大大增加时间开销，浪费大量资源。当我们做了合理分区后，例如按天进行分区，当查找某一天的数据时，Hive不会读取全部文件，只会读取HDFS中该天对应的目录，大大提高了执行效率。</p>
+<h2 id="分区是不是越多越好"><a href="#分区是不是越多越好" class="headerlink" title="分区是不是越多越好"></a>分区是不是越多越好</h2><p>多数情况下，对数据可以按天进行分区，如果数据量还是太大，可以考虑再按小时进行分区，或者取另一个维度作为分区条件，在此基础上，还可以按分钟，秒进行分区，但是进行过多的分区并不一定会加快查询执<br>行效率。</p>
+<p>使用过多的分区可能导致创建了很多非必须的Hadoop文件和文件夹，一个分区对应着一个包含了多个文件的文件夹。如果对表进行过多分区，又存储了跨度很久的数据，最后就会超出NameNode对系统的管理能力，因为NameNode必须保存文件系统的元数据信息，当小文件过多时，会限制HDFS所能管理的文件总数上限。</p>
+<p>另外，MR会将一个job转化为多个task，默认情况下，每个task都是一个新的JVM实例，而JVM的开启和销毁都是需要时间开销的，对于每个小文件产生的task，JVM创建和销毁的开销可能会大于对文件内容本身进行处理的开销。</p>
+<p>此外，默认情况下，Hive还会限制动态分区可以创建的最大分区数。</p>
+<h4 id="对数据进行分桶"><a href="#对数据进行分桶" class="headerlink" title="对数据进行分桶"></a>对数据进行分桶</h4><p>分桶是将数据集分解为更容易管理的若干部分的另一种方法。</p>
+<p>以下将创建一个按时间分区，使用user_id作为分桶字段的测试表，user_id会根据我们指定的值（此处为233，分桶数）进行哈希，分发到桶中。根据哈希算法的特性，同一个user_id的数据会分发到一个桶中，而享有相同哈希值的不同user_id的数据也会分发到一个桶中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">CREATE TABLE IF NOT EXISTS test(</span><br><span class="line">user_id STRING COMMENT &#x27;用户ID&#x27;,</span><br><span class="line">user_age SMALLINT COMMENT &#x27;用户年龄&#x27;,</span><br><span class="line">user_identify STRING COMMENT &#x27;用户身份证号&#x27;,</span><br><span class="line">url STRING COMMENT &#x27;用户访问的URL&#x27;</span><br><span class="line">)</span><br><span class="line">PARTITIONED BY (dt STRING COMMENT &#x27;时间&#x27;)</span><br><span class="line">CLUSTERED BY (user_id) INTO 233 BUCKETS</span><br></pre></td></tr></table></figure>
+
+<p>向分桶表中插入数据也和其他表有些区别，我们要设置一个属性强制为分桶表设置正确的reducer个数，然后执行SQL语句。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.enforce.bucketing = true</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">INSERT OVERWRITE TABLE test</span><br><span class="line">PARTITION(dt=&#x27;2019-11-11&#x27;)</span><br><span class="line">SELECT</span><br><span class="line">user_id,</span><br><span class="line">user_age,</span><br><span class="line">user_identify,</span><br><span class="line">url</span><br><span class="line">FROM your_table</span><br><span class="line">WHERE dt = &#x27;2019-11-11&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>使用分桶的优点：桶的数量是固定的，所以分桶没有数据波动，适合于进行抽样。分桶还有利于执行高效的map-side join。</p>
+<h2 id="JVM重用"><a href="#JVM重用" class="headerlink" title="JVM重用"></a>JVM重用</h2><p>Hadoop的默认配置是采用派生JVM来执行map和reduce的，当小文件比较多时JVM的创建和销毁会造成很大的开销。而JVM重用可以使同一个JVM在一个job中重用多次，减小频繁创建销毁JVM的开销。</p>
+<h6 id="JVM重用的缺点："><a href="#JVM重用的缺点：" class="headerlink" title="JVM重用的缺点："></a>JVM重用的缺点：</h6><p>开启JVM重用后，会一直占用使用到的task插槽，以便进行重用，直到任务完成。如果某个reduce过程非常长的话，其他插槽虽然是空着的，但是必须等到该reduce执行完才能释放，无法被其他的job使用，造成资源浪费。</p>
+<h2 id="limit语句的优化"><a href="#limit语句的优化" class="headerlink" title="limit语句的优化"></a>limit语句的优化</h2><p>Hive中，很多情况下虽然使用了limit，但还是要将这个语句执行完，再返回一部分。为了避免这个情况，可以考虑开启limit优化</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.limit.optimize.enable = true // 默认为false</span><br></pre></td></tr></table></figure>
+<p>不过，将这个功能开启后，可能导致输入中有用的数据永远不会被处理到。</p>
+<h2 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h2><p>在我们平时写SQL的过程中，可以将最大的表放在最右边，Hive会自动帮我们进行优化。<br>如果所有表中有一个表足够小可以存入内存中，Hive此时可以执行一个map-side join，减少reduce过程。</p>
+<h2 id="并行执行"><a href="#并行执行" class="headerlink" title="并行执行"></a>并行执行</h2><p>Hive会将一个任务转化成一个或者多个stage，不同阶段有可能不存在依赖关系，这是开启并行执行就会加快整个任务的执行过程。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.exec.parallel = true</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="关于Hive的严格模式"><a href="#关于Hive的严格模式" class="headerlink" title="关于Hive的严格模式"></a>关于Hive的严格模式</h2><p>在Hive的严格模式下，一些类型的查询语句是被禁止执行的，因为这些语句可能会产生一个巨大的MR任务（例如两个十亿级数据量的表做join）。</p>
+<p>在严格模式下，三种类型的操作将被禁止：<br>1）对分区表的查询中，where条件没有对分区字段做限制。<br>2）使用order by子句时，没有用limit做限制。当order by时，会将所有结果分发到一个reducer中进行排序，如果不进行限制，可能会执行很长时间。<br>3）限制笛卡尔积 （join）</p>
+<p>不过在确实需要执行某些语句的情况下，可以关闭严格模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set hive.mapred.mode = nostrict;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="reducer个数的调整"><a href="#reducer个数的调整" class="headerlink" title="reducer个数的调整"></a>reducer个数的调整</h2><p>reducer设置的过多会导致job在运行过程中产生过多开销，还可能会消耗集群中过多的插槽，降低其他任务的运行效率，设置的过少会降低并行性。<br>HIve默认的reducer个数为3，可以通过</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set mapred.reduce.tasks = number</span><br></pre></td></tr></table></figure>
+<p>中number值的设置调整reducer个数。</p>
 ]]></content>
       <categories>
         <category>Hive</category>
@@ -1021,6 +1021,40 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark算子之foldByKey</title>
+    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
+    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
+<span id="more"></span>
+
+<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
+<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
+<p>我们先初始化一个RDD</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>查看这个RDD的分区及分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
+<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
+<p>这时候我们用foldByKey算子，zeroValue设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>再查看下每个分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
+
+
+<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
+<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
+<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
     <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
     <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
@@ -1068,40 +1102,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark算子之foldByKey</title>
-    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
-    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
-<span id="more"></span>
-
-<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
-<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
-<p>我们先初始化一个RDD</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>查看这个RDD的分区及分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
-<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
-<p>这时候我们用foldByKey算子，zeroValue设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
-<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>再查看下每个分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
-
-
-<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
-<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
-<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
     <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
@@ -1117,6 +1117,31 @@
 <li><p>需要重启 IDEA ，即可正常运行。</p>
 </li>
 </ol>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法</title>
+    <url>/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>一些排坑记录。。</p>
+<span id="more"></span>
+
+<p>在安装 Homebrew 时发现了如下报错</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Error: Fetching /usr/<span class="built_in">local</span>/Homebrew/Library/Taps/homebrew/homebrew-cask failed!</span><br><span class="line">fatal: Could not resolve HEAD to a revision</span><br><span class="line">Failed during: /usr/<span class="built_in">local</span>/bin/brew update --force --quiet</span><br></pre></td></tr></table></figure>
+
+<p>尝试了一些方法都没解决，最后采用如下方法完美解决。</p>
+<h3 id="1、卸载之前安装的-Homebrew"><a href="#1、卸载之前安装的-Homebrew" class="headerlink" title="1、卸载之前安装的 Homebrew"></a>1、卸载之前安装的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">/usr/bin/ruby -e <span class="string">&quot;<span class="subst">$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2、安装新的-Homebrew"><a href="#2、安装新的-Homebrew" class="headerlink" title="2、安装新的 Homebrew"></a>2、安装新的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">/bin/zsh -c <span class="string">&quot;<span class="subst">$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3、选择中科大下载源"><a href="#3、选择中科大下载源" class="headerlink" title="3、选择中科大下载源"></a>3、选择中科大下载源</h3><p><img src="https://img-blog.csdnimg.cn/20210426215123877.png" alt="在这里插入图片描述"></p>
+<h3 id="4、根据提示运行-source-命令"><a href="#4、根据提示运行-source-命令" class="headerlink" title="4、根据提示运行 source 命令"></a>4、根据提示运行 source 命令</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> /Users/xxx/.zprofile</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="5、查看-brew-版本信息"><a href="#5、查看-brew-版本信息" class="headerlink" title="5、查看 brew 版本信息"></a>5、查看 brew 版本信息</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">xxx@localhost ~ % brew -v</span><br><span class="line">Homebrew 3.1.3-67-gafbe0e8</span><br><span class="line">Homebrew/homebrew-core (git revision e997d9f5a0; last commit 2021-04-23)</span><br></pre></td></tr></table></figure>
+
 ]]></content>
       <categories>
         <category>排坑记录</category>
@@ -1148,35 +1173,10 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;">&#121;&#111;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#x6d;">&#121;&#111;&#x75;&#x40;&#101;&#120;&#97;&#x6d;&#112;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#x6d;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#120;&#97;&#109;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#x6d;">&#121;&#111;&#117;&#64;&#x65;&#120;&#97;&#109;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#x75;&#x40;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#x2e;&#99;&#x6f;&#109;">&#121;&#111;&#x75;&#x40;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#x2e;&#99;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>mac下Homebrew安装Fetching /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask failed报错解决方法</title>
-    <url>/2021/06/08/mac%E4%B8%8BHomebrew%E5%AE%89%E8%A3%85Fetching-usr-local-Homebrew-Library-Taps-homebrew-homebrew-cask-failed%E6%8A%A5%E9%94%99%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<p>一些排坑记录。。</p>
-<span id="more"></span>
-
-<p>在安装 Homebrew 时发现了如下报错</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Error: Fetching /usr/<span class="built_in">local</span>/Homebrew/Library/Taps/homebrew/homebrew-cask failed!</span><br><span class="line">fatal: Could not resolve HEAD to a revision</span><br><span class="line">Failed during: /usr/<span class="built_in">local</span>/bin/brew update --force --quiet</span><br></pre></td></tr></table></figure>
-
-<p>尝试了一些方法都没解决，最后采用如下方法完美解决。</p>
-<h3 id="1、卸载之前安装的-Homebrew"><a href="#1、卸载之前安装的-Homebrew" class="headerlink" title="1、卸载之前安装的 Homebrew"></a>1、卸载之前安装的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">/usr/bin/ruby -e <span class="string">&quot;<span class="subst">$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="2、安装新的-Homebrew"><a href="#2、安装新的-Homebrew" class="headerlink" title="2、安装新的 Homebrew"></a>2、安装新的 Homebrew</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">/bin/zsh -c <span class="string">&quot;<span class="subst">$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)</span>&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="3、选择中科大下载源"><a href="#3、选择中科大下载源" class="headerlink" title="3、选择中科大下载源"></a>3、选择中科大下载源</h3><p><img src="https://img-blog.csdnimg.cn/20210426215123877.png" alt="在这里插入图片描述"></p>
-<h3 id="4、根据提示运行-source-命令"><a href="#4、根据提示运行-source-命令" class="headerlink" title="4、根据提示运行 source 命令"></a>4、根据提示运行 source 命令</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> /Users/xxx/.zprofile</span><br></pre></td></tr></table></figure>
-
-
-<h3 id="5、查看-brew-版本信息"><a href="#5、查看-brew-版本信息" class="headerlink" title="5、查看 brew 版本信息"></a>5、查看 brew 版本信息</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">xxx@localhost ~ % brew -v</span><br><span class="line">Homebrew 3.1.3-67-gafbe0e8</span><br><span class="line">Homebrew/homebrew-core (git revision e997d9f5a0; last commit 2021-04-23)</span><br></pre></td></tr></table></figure>
-
 ]]></content>
       <categories>
         <category>排坑记录</category>
@@ -1361,10 +1361,7 @@
 <h4 id="模型评审"><a href="#模型评审" class="headerlink" title="模型评审"></a>模型评审</h4><p>没有通过规范的模型评审就开始创建新表，不遵守评审规范，可能会造成相似模型的开发。</p>
 <h1 id="相似模型定义"><a href="#相似模型定义" class="headerlink" title="相似模型定义"></a>相似模型定义</h1><h3 id="字段包含"><a href="#字段包含" class="headerlink" title="字段包含"></a>字段包含</h3><p><strong>定义：</strong></p>
 <p>​    有A、B两张表，A表的所有字段都包含在B表中，则认为B表是A表的可替换表。同时限制两张表存储大小差距在一定范围内。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义1.png)</span><br></pre></td></tr></table></figure>
-
-
-
+<p><img src="/Users/jiangzhiqi/Downloads/my-hexo-blog/public/img/%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%891.png"></p>
 <p>如上图，如果A表的字段都在B中，假设A表B表的字段都是向量（见2.4），相似度可以采用余弦计算，B表越大则相似度越小，化简后公式如下:<br>$$<br>相似度 = \frac{\vec{A}*\vec{B}}{\Vert A \Vert\Vert B \Vert} =  \frac{size(A\bigcap B)}{\sqrt{size(A)}\sqrt{size(B)}} =  \frac{\sqrt{size(A)}}{\sqrt{size(B)}}<br>$$<br><strong>注意事项：</strong></p>
 <ul>
 <li>如果A表有多张相似表，取字段最多的表。</li>
@@ -1379,10 +1376,7 @@
 </ul>
 <h3 id="向量相似"><a href="#向量相似" class="headerlink" title="向量相似"></a>向量相似</h3><p><strong>定义：</strong></p>
 <p>​    该方法融合<strong>字段包含</strong>与<strong>同输入相似</strong>的方法，并进行范围的扩大，从来源表、字段词根、表存储大小三个方面筛选其他的相似的表。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义2.png)</span><br></pre></td></tr></table></figure>
-
-
-
+<p><img src="/Users/jiangzhiqi/Downloads/my-hexo-blog/public/img/%E6%A8%A1%E5%9E%8B%E7%9B%B8%E4%BC%BC%E5%AE%9A%E4%B9%892.png"></p>
 <ul>
 <li><strong>字段词根</strong>：对表的字段进行词根分隔，将所有表的词根建设词典，获得每张表所有词根在词典中的向量，如果A表和B表词根向量余弦相似度较高则认为A表B表字段词根相近，如果余弦相似度完全为1，则认为其完全相似，如果余弦相似度为0，则认为两个表词根没有交叉。</li>
 <li><strong>来源表</strong>：与字段词根方法相似，将所有的来源表建设词典，给每个表的来源表建设向量，并计算向量余弦相似度作为其来源表相似度。</li>
