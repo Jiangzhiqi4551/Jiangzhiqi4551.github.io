@@ -21,30 +21,27 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
 <script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;jiangzhiqi4551.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;搜索...&quot;,&quot;empty&quot;:&quot;没有找到任何搜索结果：${query}&quot;,&quot;hits_time&quot;:&quot;找到 ${hits} 个搜索结果（用时 ${time} 毫秒）&quot;,&quot;hits&quot;:&quot;找到 ${hits} 个搜索结果&quot;},&quot;path&quot;:&quot;&#x2F;search.xml&quot;,&quot;localsearch&quot;:{&quot;enable&quot;:true,&quot;trigger&quot;:&quot;auto&quot;,&quot;top_n_per_article&quot;:1,&quot;unescape&quot;:false,&quot;preload&quot;:false}}</script><script src="/js/config.js"></script>
-<meta name="description" content="摘要：什么是catalog，什么是schema">
+<meta name="description" content="数据开发中，经常会用到row_number进行分组排序并取首条记录，如果数据量较大，则SQL的执行时间可能比较长，消耗大量的计算资源。本文将介绍一种使用min、max来替代row_number的优化方案，可以显著减少SQL的执行时间。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="catalog和schema的区别">
-<meta property="og:url" content="https://jiangzhiqi4551.github.io/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:title" content="Hive SQL优化方法——使用min&amp;max代替row_number">
+<meta property="og:url" content="https://jiangzhiqi4551.github.io/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/index.html">
 <meta property="og:site_name" content="Jiang&#39;s blog">
-<meta property="og:description" content="摘要：什么是catalog，什么是schema">
+<meta property="og:description" content="数据开发中，经常会用到row_number进行分组排序并取首条记录，如果数据量较大，则SQL的执行时间可能比较长，消耗大量的计算资源。本文将介绍一种使用min、max来替代row_number的优化方案，可以显著减少SQL的执行时间。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2019121012584136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70">
-<meta property="article:published_time" content="2021-06-08T10:45:56.000Z">
-<meta property="article:modified_time" content="2021-10-11T04:20:54.420Z">
+<meta property="article:published_time" content="2022-03-23T08:30:49.000Z">
+<meta property="article:modified_time" content="2022-03-23T09:21:53.128Z">
 <meta property="article:author" content="Master Jiang">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70">
 
 
-<link rel="canonical" href="https://jiangzhiqi4551.github.io/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/">
+<link rel="canonical" href="https://jiangzhiqi4551.github.io/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;jiangzhiqi4551.github.io&#x2F;2021&#x2F;06&#x2F;08&#x2F;catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB&#x2F;&quot;,&quot;path&quot;:&quot;2021&#x2F;06&#x2F;08&#x2F;catalog和schema的区别&#x2F;&quot;,&quot;title&quot;:&quot;catalog和schema的区别&quot;}</script>
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;jiangzhiqi4551.github.io&#x2F;2022&#x2F;03&#x2F;23&#x2F;Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number&#x2F;&quot;,&quot;path&quot;:&quot;2022&#x2F;03&#x2F;23&#x2F;Hive-SQL优化方法——使用min-max代替row-number&#x2F;&quot;,&quot;title&quot;:&quot;Hive SQL优化方法——使用min&amp;max代替row_number&quot;}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
-<title>catalog和schema的区别 | Jiang's blog</title>
+<title>Hive SQL优化方法——使用min&max代替row_number | Jiang's blog</title>
   
 
 
@@ -152,7 +149,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFcatalog"><span class="nav-number">1.</span> <span class="nav-text">什么是catalog</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFschema"><span class="nav-number">2.</span> <span class="nav-text">什么是schema</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text">示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8BSQL"><span class="nav-number">1.0.1.</span> <span class="nav-text">原始SQL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%90%8ESQL"><span class="nav-number">1.0.2.</span> <span class="nav-text">优化后SQL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E7%82%B9"><span class="nav-number">1.0.3.</span> <span class="nav-text">需要注意的点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">优化原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">适用场景</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -231,7 +228,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/06/08/catalog%E5%92%8Cschema%E7%9A%84%E5%8C%BA%E5%88%AB/">
+    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/logo1.jpeg">
@@ -244,7 +241,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          catalog和schema的区别
+          Hive SQL优化方法——使用min&max代替row_number
         </h1>
 
         <div class="post-meta-container">
@@ -254,23 +251,17 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2021-06-08 18:45:56" itemprop="dateCreated datePublished" datetime="2021-06-08T18:45:56+08:00">2021-06-08</time>
+      <time title="创建时间：2022-03-23 16:30:49 / 修改时间：17:21:53" itemprop="dateCreated datePublished" datetime="2022-03-23T16:30:49+08:00">2022-03-23</time>
     </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-10-11 12:20:54" itemprop="dateModified" datetime="2021-10-11T12:20:54+08:00">2021-10-11</time>
-      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%8A%80%E6%9C%AF-%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">大数据技术&数据仓库</span></a>
+          <a href="/categories/Hive/" itemprop="url" rel="index"><span itemprop="name">Hive</span></a>
         </span>
     </span>
 
@@ -284,17 +275,29 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <p>摘要：什么是catalog，什么是schema</p>
+        <p>数据开发中，经常会用到row_number进行分组排序并取首条记录，如果数据量较大，则SQL的执行时间可能比较长，消耗大量的计算资源。本文将介绍一种使用min、max来替代row_number的优化方案，可以显著减少SQL的执行时间。</p>
 <span id="more"></span>
 
-<p>直接上图，直观一点：</p>
-<p><img src="https://img-blog.csdnimg.cn/20191210125223204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是catalog"><a href="#什么是catalog" class="headerlink" title="什么是catalog"></a>什么是catalog</h3><p>从概念上说，一个catalog包含多个schema，一个schema下可以包含多个数据库对象（表，视图，字段），catalog可以理解为数据库实例的元数据集合。</p>
-<p>常用数据库对catalog和schema的支持如下：</p>
-<p><img src="https://img-blog.csdnimg.cn/2019121012584136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
-<h3 id="什么是schema"><a href="#什么是schema" class="headerlink" title="什么是schema"></a>什么是schema</h3><p>一般来说，schema是指数据库表的组织和定义，定义了表、字段以及表和字段间的关系。可以理解为表的命名空间。</p>
-<p>推荐下stack overflow上的优秀回答：<br> <a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/7022755/whats-the-difference-between-a-catalog-and-a-schema-in-a-relational-database">What’s the difference between a catalog and a schema in a relational database?
-</a></p>
+
+
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h4 id="原始SQL"><a href="#原始SQL" class="headerlink" title="原始SQL"></a>原始SQL</h4><p>获取某个用户当天第一次出现时的位置信息</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">    user_id,</span><br><span class="line">    city_name,</span><br><span class="line">    street_name</span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">(</span><br><span class="line">  <span class="keyword">SELECT</span></span><br><span class="line">    user_id,</span><br><span class="line">    city_name,</span><br><span class="line">    street_name,</span><br><span class="line">    <span class="built_in">row_number</span>() <span class="keyword">OVER</span>(<span class="keyword">PARTITION</span> <span class="keyword">BY</span> user_id <span class="keyword">ORDER</span> <span class="keyword">BY</span> client_timestamp) <span class="keyword">as</span> rn</span><br><span class="line">  <span class="keyword">FROM</span> log</span><br><span class="line">)t</span><br><span class="line"><span class="keyword">where</span> rn <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="优化后SQL"><a href="#优化后SQL" class="headerlink" title="优化后SQL"></a>优化后SQL</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span></span><br><span class="line">    user_id,</span><br><span class="line">    first_info.col2 <span class="keyword">as</span> city_name,</span><br><span class="line">    first_info.col3 <span class="keyword">as</span> street_name</span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">(</span><br><span class="line"> 	<span class="keyword">SELECT</span></span><br><span class="line">  	user_id,</span><br><span class="line">  	<span class="built_in">min</span>(struct(client_timestamp, city_name, street_name)) <span class="keyword">as</span> first_info	</span><br><span class="line">	<span class="keyword">FROM</span> log</span><br><span class="line">	<span class="keyword">group</span> <span class="keyword">by</span> user_id</span><br><span class="line">)t ;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>其中，我们使用了hive中的struct结构来保存需要获取的多个字段，如示例中的城市（city_name）和街道（street_name）。同时hive中对struct的排序其实是对其中多个字段的依次排序。这样我们就可以将需要排序的字段放在struct参数的前面，后面依次放其他要获取的字段。</p>
+<h4 id="需要注意的点"><a href="#需要注意的点" class="headerlink" title="需要注意的点"></a>需要注意的点</h4><p>1、有些情况下order by字段有重复，当值相同时row_number的排序结果其实并不稳定。在改写过程中为保证排序方式与之前尽量保持一致，需要在排序字段后加入rand(1)函数，模拟row_number在字段相同时的随机排序。</p>
+<p><strong>例子：</strong></p>
+<p>如果需要转换 user_id, ip, row_number() over (partition by user_id order by server_timestamp) as rn 这条语句，当一个server_timestamp对应多个ip时，直接使用 user_id, ip, min(struct(server_timestamp , ip))会返回ip最小的那一个，与原来的结果可能不一致，所以可以改写成：</p>
+<p>min(server_timestamp, rand(1), ip) 来模拟随机排序。</p>
+<p>2、在使用Spark执行时，可能需要使用 named_struct(‘col1_name’ , col1 , ‘col2_name’ , col2 , ‘col3_name’ , col3) 来显示指定struct结构</p>
+<h2 id="优化原理"><a href="#优化原理" class="headerlink" title="优化原理"></a>优化原理</h2><p>使用row_number时，会对数据进行分组排序，而排序发生在<strong>reduce</strong>阶段，意味着mr过程中会将所有的数据进行从map端shuffle到reduce端，即使只取一条记录。</p>
+<p>而使用min、max替换后，将发生在reduce端的排序操作转移到<strong>map</strong>端执行，每个分组的map只输出一条记录（最小值或最大值），大大减小了shuffle阶段的数据量，从而达到优化目标。</p>
+<h2 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h2><ul>
+<li>数据量较大</li>
+<li>分组中的数据重复率高</li>
+<li>只取分组中的首条或末条记录（即min或max）</li>
+</ul>
 
     </div>
 
@@ -308,14 +311,11 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2021/06/08/Hive%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%B8%80%EF%BC%89%E4%B9%8B%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/" rel="prev" title="Hive入门之基础知识（一）">
-                  <i class="fa fa-chevron-left"></i> Hive入门之基础知识（一）
+                <a href="/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/" rel="prev" title="数仓中相似模型定义的几种方法">
+                  <i class="fa fa-chevron-left"></i> 数仓中相似模型定义的几种方法
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2021/06/08/%E5%9F%BA%E4%BA%8EGeohash%E5%AE%9E%E7%8E%B0%E6%A0%B9%E6%8D%AE%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%9A%84%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D/" rel="next" title="基于Geohash实现根据经纬度的快速定位">
-                  基于Geohash实现根据经纬度的快速定位 <i class="fa fa-chevron-right"></i>
-                </a>
             </div>
           </div>
     </footer>

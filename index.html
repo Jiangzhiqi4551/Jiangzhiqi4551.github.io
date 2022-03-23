@@ -160,7 +160,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">37</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -213,6 +213,87 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/" class="post-title-link" itemprop="url">Hive SQL优化方法——使用min&max代替row_number</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2022-03-23 16:30:49 / 修改时间：17:21:53" itemprop="dateCreated datePublished" datetime="2022-03-23T16:30:49+08:00">2022-03-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Hive/" itemprop="url" rel="index"><span itemprop="name">Hive</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>数据开发中，经常会用到row_number进行分组排序并取首条记录，如果数据量较大，则SQL的执行时间可能比较长，消耗大量的计算资源。本文将介绍一种使用min、max来替代row_number的优化方案，可以显著减少SQL的执行时间。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -953,87 +1034,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/10/12/%E6%95%B0%E6%8D%AE%E6%B2%BB%E7%90%86%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%A0%E7%A7%8D%E4%BC%98%E5%8C%96%E6%89%8B%E6%AE%B5/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/logo1.jpeg">
-      <meta itemprop="name" content="Master Jiang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiang's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/" class="post-title-link" itemprop="url">Hive宏(Macro)简介</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2021-10-12 15:48:31 / 修改时间：15:54:09" itemprop="dateCreated datePublished" datetime="2021-10-12T15:48:31+08:00">2021-10-12</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hive/" itemprop="url" rel="index"><span itemprop="name">Hive</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近在开发中用到了宏，用起来的确很方便，大大简化了代码，提高了可读性和可维护性，在此记录下宏的用法，以后有机会多更新一些宏的复杂用法。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/10/12/Hive%E5%AE%8F-Macro-%E7%AE%80%E4%BB%8B/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>

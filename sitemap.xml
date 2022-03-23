@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://jiangzhiqi4551.github.io/2022/03/23/Hive-SQL%E4%BC%98%E5%8C%96%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E4%BD%BF%E7%94%A8min-max%E4%BB%A3%E6%9B%BFrow-number/</loc>
+    
+    <lastmod>2022-03-23</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://jiangzhiqi4551.github.io/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/</loc>
     
     <lastmod>2022-03-23</lastmod>
@@ -293,13 +300,6 @@
 
   
   <url>
-    <loc>https://jiangzhiqi4551.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</loc>
-    <lastmod>2022-03-23</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://jiangzhiqi4551.github.io/categories/Hadoop/</loc>
     <lastmod>2022-03-23</lastmod>
     <changefreq>daily</changefreq>
@@ -308,6 +308,13 @@
   
   <url>
     <loc>https://jiangzhiqi4551.github.io/categories/Hive/</loc>
+    <lastmod>2022-03-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://jiangzhiqi4551.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</loc>
     <lastmod>2022-03-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
