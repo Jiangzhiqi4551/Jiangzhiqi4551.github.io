@@ -958,87 +958,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Spark算子之foldByKey</title>
-    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
-    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
-<span id="more"></span>
-
-<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
-<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
-<p>我们先初始化一个RDD</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>查看这个RDD的分区及分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
-<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
-<p>这时候我们用foldByKey算子，zeroValue设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
-<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
-<p>再查看下每个分区中的元素</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
-
-
-<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
-<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
-<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
-]]></content>
-      <categories>
-        <category>Spark</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
-    <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
-    <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
-<span id="more"></span>
-
-<p>bin 目录下启动失败</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  bin pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2/bin</span><br><span class="line">➜  bin spark-shell</span><br><span class="line">zsh: command not found: spark-shell</span><br></pre></td></tr></table></figure>
-
-
-
-<p>在 spark 主目录下执行成功</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-shell</span><br><span class="line">WARNING: An illegal reflective access operation has occurred # 启动成功</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p><a href="https://stackoverflow.com/questions/35620687/unable-to-run-spark-shell-from-bin">Stack Overflow原文链接</a></p>
-<p>简单来说，终端会到 <strong>$PATH</strong> 中寻找可执行文件，如果你要执行的程序不在 <strong>$PATH</strong> 中，就需要指明这个可执行文件在文件系统中的绝对路径。</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如果不希望每次都 cd 到 spark 目录下再执行命令启动 spark，我们就需要把 SPARK_HOME 添加到 $PATH 中。</p>
-<p>首先先在 spark 目录下执行 pwd 记下这个路径</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br></pre></td></tr></table></figure>
-
-
-
-<p>接下来到根目录下修改 <strong>.bash_profile</strong> 文件</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd ~</span><br><span class="line"># 如果还没有 .bash_profile ，则需要先创建文件</span><br><span class="line"># touch .bash_profile</span><br><span class="line">vim .bash_profile </span><br></pre></td></tr></table></figure>
-
-
-
-<p>接下来复制粘贴如下内容，把第一条中的路径换成自己的</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
-
-
-
-<p>最后执行 source 命令使修改生效</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure>
-
-
-
-<p>再次执行 spark-shell 就会发现 spark 已经成功启动了~</p>
-]]></content>
-      <categories>
-        <category>排坑记录</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Spark入门之基础知识（二）RDD编程</title>
     <url>/2021/06/08/Spark%E5%85%A5%E9%97%A8%E4%B9%8B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%EF%BC%88%E4%BA%8C%EF%BC%89RDD%E7%BC%96%E7%A8%8B/</url>
     <content><![CDATA[<p>摘要：RDD基础知识总结</p>
@@ -1102,6 +1021,87 @@
       </categories>
   </entry>
   <entry>
+    <title>Spark在bin目录下执行spark-shell提示command not found: spark-shell解决方案</title>
+    <url>/2021/10/27/Spark%E5%9C%A8bin%E7%9B%AE%E5%BD%95%E4%B8%8B%E6%89%A7%E8%A1%8Cspark-shell%E6%8F%90%E7%A4%BAcommand-not-found-spark-shell%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</url>
+    <content><![CDATA[<p>今天学习 Spark 时发现一个问题，在 bin 目录下执行 spark-shell 无法启动 Spark，但是在 spark 目录下执行 ./bin/spark-shell 却可以，记录下原因和解决方案。</p>
+<span id="more"></span>
+
+<p>bin 目录下启动失败</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  bin pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2/bin</span><br><span class="line">➜  bin spark-shell</span><br><span class="line">zsh: command not found: spark-shell</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在 spark 主目录下执行成功</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">➜  spark-3.2.0-bin-hadoop3.2 ./bin/spark-shell</span><br><span class="line">WARNING: An illegal reflective access operation has occurred # 启动成功</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p><a href="https://stackoverflow.com/questions/35620687/unable-to-run-spark-shell-from-bin">Stack Overflow原文链接</a></p>
+<p>简单来说，终端会到 <strong>$PATH</strong> 中寻找可执行文件，如果你要执行的程序不在 <strong>$PATH</strong> 中，就需要指明这个可执行文件在文件系统中的绝对路径。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如果不希望每次都 cd 到 spark 目录下再执行命令启动 spark，我们就需要把 SPARK_HOME 添加到 $PATH 中。</p>
+<p>首先先在 spark 目录下执行 pwd 记下这个路径</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  spark-3.2.0-bin-hadoop3.2 pwd</span><br><span class="line">/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来到根目录下修改 <strong>.bash_profile</strong> 文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd ~</span><br><span class="line"># 如果还没有 .bash_profile ，则需要先创建文件</span><br><span class="line"># touch .bash_profile</span><br><span class="line">vim .bash_profile </span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来复制粘贴如下内容，把第一条中的路径换成自己的</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/Users/xxx/Project/spark-3.2.0-bin-hadoop3.2</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后执行 source 命令使修改生效</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source ~/.bash_profile</span><br></pre></td></tr></table></figure>
+
+
+
+<p>再次执行 spark-shell 就会发现 spark 已经成功启动了~</p>
+]]></content>
+      <categories>
+        <category>排坑记录</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Spark算子之foldByKey</title>
+    <url>/2021/06/08/Spark%E7%AE%97%E5%AD%90%E4%B9%8BfoldByKey/</url>
+    <content><![CDATA[<p>摘要：Spark foldByKey算子介绍</p>
+<span id="more"></span>
+
+<p>在学习foldByKey这个算子的时候，发现网上好多文章的内容相互冲突，于是决定自己实践一边，以理解这个算子是怎么运行的。</p>
+<h2 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V, numPartitions: Int)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, <span class="keyword">new</span> HashPartitioner(numPartitions))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function">def <span class="title">foldByKey</span><span class="params">(zeroValue: V)</span><span class="params">(func: (V, V)</span> </span>=&gt; V): RDD[(K, V)] = self.withScope &#123;</span><br><span class="line">    foldByKey(zeroValue, defaultPartitioner(self))(func)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>这是源码中对foldByKey的定义，主要是zeroValue这个点容易造成误解：</p>
+<p>我们先初始化一个RDD</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;A&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">1</span>),(<span class="string">&quot;B&quot;</span>,<span class="number">2</span>),(<span class="string">&quot;C&quot;</span>,<span class="number">1</span>)))</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">6</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>查看这个RDD的分区及分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res11: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">2</span>), (A,<span class="number">1</span>))), (1_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>), (B,<span class="number">1</span>))))</span><br></pre></td></tr></table></figure>
+<p>可以看到，目前是有两个分区：<br>第一个分区中包含(A,2), (A,1)；<br>第二个分区中包含(C,1), (B,2), (B,1)</p>
+<p>这时候我们用foldByKey算子，zeroValue设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt;  rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res12: Array[(String, Int)] = Array((B,<span class="number">5</span>), (A,<span class="number">5</span>), (C,<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="再来看看另一种情况"><a href="#再来看看另一种情况" class="headerlink" title="再来看看另一种情况"></a>再来看看另一种情况</h4><p>在初始化RDD的过程中，将分区数设为3</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; <span class="keyword">var</span> rdd = sc.makeRDD(Array((<span class="string">&quot;A&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;A&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">1</span>), (<span class="string">&quot;B&quot;</span>, <span class="number">2</span>), (<span class="string">&quot;C&quot;</span>, <span class="number">1</span>)),<span class="number">3</span>)</span><br><span class="line">rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[<span class="number">11</span>] at makeRDD at &lt;console&gt;:<span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p>再查看下每个分区中的元素</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.mapPartitionsWithIndex((index, iter) =&gt; &#123;</span><br><span class="line">     |       <span class="keyword">var</span> rddmap = scala.collection.mutable.Map[String, List[(String, Int)]]()</span><br><span class="line">     |       <span class="keyword">while</span> (iter.hasNext) &#123;</span><br><span class="line">     |         <span class="keyword">var</span> elem = iter.next()</span><br><span class="line">     |         <span class="keyword">var</span> partNum = index + <span class="string">&quot;_&quot;</span></span><br><span class="line">     |         <span class="keyword">if</span> (rddmap.contains(partNum)) &#123;</span><br><span class="line">     |           <span class="keyword">var</span> elems = rddmap(partNum)</span><br><span class="line">     |           elems ::= elem</span><br><span class="line">     |           rddmap(partNum) = elems</span><br><span class="line">     |         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     |           <span class="keyword">var</span> newlist = List[(String,Int)]()</span><br><span class="line">     |           newlist ::= elem</span><br><span class="line">     |           rddmap(partNum) = newlist</span><br><span class="line">     |         &#125;</span><br><span class="line">     |       &#125;</span><br><span class="line">     |       rddmap.toIterator</span><br><span class="line">     |     &#125;).collect()</span><br><span class="line">res13: Array[(String, List[(String, Int)])] = Array((0_,List((A,<span class="number">1</span>))), (1_,List((B,<span class="number">1</span>), (A,<span class="number">2</span>))), (2_,List((C,<span class="number">1</span>), (B,<span class="number">2</span>))))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>第一个分区中只有 （A，1）<br>第二个分区中有 （B，1）（A，2）<br>第三个分区中有 （C，1）（B，2）<br>这时我们再使用foldByKey算子，zeroValue还是设为2</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">scala&gt; rdd.foldByKey(<span class="number">2</span>) &#123; (x1, x2) =&gt; x1 + x2 &#125;.collect()</span><br><span class="line">res14: Array[(String, Int)] = Array((B,<span class="number">7</span>), (C,<span class="number">3</span>), (A,<span class="number">7</span>))</span><br></pre></td></tr></table></figure>
+
+
+<h6 id="出现了和第一次不一样的结果"><a href="#出现了和第一次不一样的结果" class="headerlink" title="出现了和第一次不一样的结果"></a>出现了和第一次不一样的结果</h6><p>由此我们已经可以推断出foldByKey的机制了，我的理解是：<br>取RDD的每一个分片，在每一个分片中，先根据你定义的映射，用zeroValue对不同key对应的value做<font color='red'>一次</font>初始化，再对剩下的value值做映射。</p>
+<p>在第一次操作中，第一个分区中包含(A,2), (A,1)，先做初始化 2+2 = 4 ，再对剩下的值做累加， 最后得到 （A，4+1 = 5）</p>
+<p>在第二次操作中，第一个分区中只有 （A，1），初始化为（A，2+1 = 3），第二个分区中有 （B，1）（A，2），因为是不同分区，所以也对A进行初始化（A，2+2 = 4），最后两个分区的结果统计到一起就是（A，4+3 = 7），BC同理。</p>
+]]></content>
+      <categories>
+        <category>Spark</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Windows下搭建大数据开发环境ERROR Shell: Failed to locate the winutils binary in the hadoop binary path解决方法</title>
     <url>/2021/06/08/Windows%E4%B8%8B%E6%90%AD%E5%BB%BA%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83ERROR-Shell-Failed-to-locate-the-winutils-binary-in-the-hadoop-binary-path%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
     <content><![CDATA[<p>一些排坑记录。。</p>
@@ -1148,9 +1148,9 @@
 <span id="more"></span>
 
 <p>先是按照git的提示</p>
-<p>git config –global user.email “<a href="mailto:&#x79;&#111;&#117;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#99;&#111;&#109;">&#x79;&#111;&#117;&#64;&#x65;&#x78;&#97;&#109;&#x70;&#x6c;&#101;&#46;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
+<p>git config –global user.email “<a href="mailto:&#121;&#111;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;">&#121;&#111;&#x75;&#x40;&#101;&#x78;&#x61;&#109;&#112;&#108;&#x65;&#46;&#99;&#111;&#109;</a>“<br>git config –global user.name “Your Name”</p>
 <p>进行设置，结果发现还是报错，最后找到解决方案如下：</p>
-<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#x6f;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#x63;&#x6f;&#109;">&#121;&#x6f;&#x75;&#64;&#x65;&#120;&#x61;&#x6d;&#112;&#x6c;&#x65;&#46;&#x63;&#x6f;&#109;</a>“<br>git add *<br>git commit -m “commit message”</p>
+<p>git init<br>git config user.name “Your Name”<br>git config user.email “<a href="mailto:&#121;&#111;&#117;&#64;&#x65;&#120;&#97;&#109;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#x6d;">&#121;&#111;&#117;&#64;&#x65;&#120;&#97;&#109;&#x70;&#108;&#101;&#46;&#99;&#x6f;&#x6d;</a>“<br>git add *<br>git commit -m “commit message”</p>
 <p>按如上步骤操作，最后成功commit</p>
 ]]></content>
       <categories>
@@ -1348,6 +1348,83 @@
       </categories>
   </entry>
   <entry>
+    <title>数仓中相似模型定义的几种方法</title>
+    <url>/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<p>随着业务的不断发展，在数仓中会慢慢产生一些相似模型，在数据治理中，我们需要找到并推动相似和可替换模型的下线，节约成本资源，优化数仓模型质量，提高模型开发效率。</p>
+<p>本文将介绍判断相似模型的几种方法。</p>
+<span id="more"></span>
+
+
+
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><h4 id="烟囱建设"><a href="#烟囱建设" class="headerlink" title="烟囱建设"></a>烟囱建设</h4><p>不同的项目组进行数据建设的同时，可能存在烟囱式建设，相同功能或者粒度的表可能会被重复建设。这样会造成相似模型的开发。</p>
+<h4 id="不遵循维度建模规范"><a href="#不遵循维度建模规范" class="headerlink" title="不遵循维度建模规范"></a>不遵循维度建模规范</h4><p>在模型建设的时候，不遵循维度建模的规范，在同一个项目或者业务线，为了某些快速满足需求，往往会不考虑模型的可扩展，相同的维度的表会多次建设，造成相似模型的开发。</p>
+<h4 id="模型评审"><a href="#模型评审" class="headerlink" title="模型评审"></a>模型评审</h4><p>没有通过规范的模型评审就开始创建新表，不遵守评审规范，可能会造成相似模型的开发。</p>
+<h1 id="相似模型定义"><a href="#相似模型定义" class="headerlink" title="相似模型定义"></a>相似模型定义</h1><h3 id="字段包含"><a href="#字段包含" class="headerlink" title="字段包含"></a>字段包含</h3><p><strong>定义：</strong></p>
+<p>​    有A、B两张表，A表的所有字段都包含在B表中，则认为B表是A表的可替换表。同时限制两张表存储大小差距在一定范围内。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义1.png)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如上图，如果A表的字段都在B中，假设A表B表的字段都是向量（见2.4），相似度可以采用余弦计算，B表越大则相似度越小，化简后公式如下:<br>$$<br>相似度 = \frac{\vec{A}*\vec{B}}{\Vert A \Vert\Vert B \Vert} =  \frac{size(A\bigcap B)}{\sqrt{size(A)}\sqrt{size(B)}} =  \frac{\sqrt{size(A)}}{\sqrt{size(B)}}<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>如果A表有多张相似表，取字段最多的表。</li>
+<li>匹配通过字段名，如果字段含义相同但命名不同则不统计在内。</li>
+<li>B表包含A表所有字段，但可能存在B表和A表的粒度不同，具体是否可以替换需业务数仓评估。</li>
+</ul>
+<h3 id="同输入相似"><a href="#同输入相似" class="headerlink" title="同输入相似"></a>同输入相似</h3><p><strong>定义：</strong></p>
+<p>​    有A、B两张表，A表B表的所有输入表都是相同，并且两个表的文件数和大小相近，则认为B表是A表的可替换表。相似度可以用两张表的存储大小的比值表示：<br>$$<br>相似度 = 1 - \frac{\Vert totalsizeB - totalsizeA\Vert}{max(totalsizeA,totalsizeN)}<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>如果A表有多张相似表，取字段最多的表作为其他表的相似表。</li>
+<li>可能存在A、B输入表相同，大小文件相似，但字段区分很大，有判断错误风险，需具体评估。</li>
+</ul>
+<h3 id="向量相似"><a href="#向量相似" class="headerlink" title="向量相似"></a>向量相似</h3><p><strong>定义：</strong></p>
+<p>​    该方法融合<strong>字段包含</strong>与<strong>同输入相似</strong>的方法，并进行范围的扩大，从来源表、字段词根、表存储大小三个方面筛选其他的相似的表。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义2.png)</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><strong>字段词根</strong>：对表的字段进行词根分隔，将所有表的词根建设词典，获得每张表所有词根在词典中的向量，如果A表和B表词根向量余弦相似度较高则认为A表B表字段词根相近，如果余弦相似度完全为1，则认为其完全相似，如果余弦相似度为0，则认为两个表词根没有交叉。</li>
+<li><strong>来源表</strong>：与字段词根方法相似，将所有的来源表建设词典，给每个表的来源表建设向量，并计算向量余弦相似度作为其来源表相似度。</li>
+<li><strong>存储大小</strong>：可以用两张表的存储大小的比值表示相似度。</li>
+<li><strong>相似度</strong>：最后相似度通过上面三种相似度的加权平均进行计算。</li>
+</ul>
+<p>$$<br>相似度（字段与表） = \frac{\vec{A}*\vec{B}}{\Vert A \Vert\Vert B \Vert} =  \frac{size(A\bigcap B)}{\sqrt{size(A)}\sqrt{size(B)}}<br>$$</p>
+<p>$$<br>来源表相似度 = 1 - \frac{\Vert totalsizeB - totalsizeA\Vert}{max(totalsizeA,totalsizeN)}<br>$$</p>
+<p>$$<br>相似度 =  0.4 * 字段相似度 + 0.3 * 来源表相似度 + 0.3 * 存储大小相似度<br>$$</p>
+<p><strong>举例：</strong></p>
+<p>​    A表字段：user_id，photo_id，show_cnt，上游血缘表：A，B，C，大小为0.8PB</p>
+<p>​    B表字段：user_id，photo_id，click_cnt， 上游血缘表：A，B，       大小为0.4PB</p>
+<p>词根词典顺序为为：user，id，photo，show，click，cnt，按照该词典(不统计词频)，AB的字段向量分别如下：</p>
+<p>​        A（1，1，1，1，0，1）</p>
+<p>​        B（1，1，1，0，1，1）</p>
+<p>AB的来源表向量为：</p>
+<p>​        A（1，1，1）</p>
+<p>​        B（1，1，0）</p>
+<p>计算得到：AB字段余弦相似度 = 0.8，AB来源表余弦相似度 = 0.81，AB大小相似度=0.5，向量相似度为=0.71。</p>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>字段词根相近的条件相比上面其他定义更加宽泛，筛选出来的相似的表可能存在完全无法替换的情况。</li>
+<li>匹配通过字段名，如果字段含义相同但词根不同则不统计在内。</li>
+<li>如果A表有多张相似表，取字段最多的表作为其他表的相似表。</li>
+</ul>
+<h3 id="综合相似"><a href="#综合相似" class="headerlink" title="综合相似"></a>综合相似</h3><p><strong>定义：</strong></p>
+<p>上述四种方法范围有一定的包含关系：</p>
+<p><strong>向量相似定义范围 &gt; 同输入相似粒度定义范围 &gt; 字段包含定义范围</strong></p>
+<p>综合相似度通过上述三种定义进行加权平均，权重按照三种相似度的包含关系进行确定，定义范围越大权重越小。<br>$$<br>相似度 =  0.25 * 向量相近相似度 + 0.35 * 同输入相似粒度相似度 + 0.4 * 字段包含相似度<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>同一张表出现在不同定义中，则其相似度进行累加，其相似的定义取范围最小的定义，比如AB两个表既是同输入相似，又符合字段匹配，则认为是字段匹配。</li>
+<li>加权平均的方法更加突出多种方法中重复出现的表，其权重可根据不同情况进行修改。</li>
+<li>综合相似度大于xxx，则认为是相似度较高，可推进替换下线。</li>
+<li>部分表的开发过程中有中间表，与生产表相似度极高，可以过滤掉</li>
+<li>考虑ods表与dwd等层表的关系，在相似模型计算过程中排除ods表。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>大数据技术&amp;数据仓库</category>
+      </categories>
+  </entry>
+  <entry>
     <title>数据仓库之如何分层</title>
     <url>/2021/06/08/%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E4%B9%8B%E5%A6%82%E4%BD%95%E5%88%86%E5%B1%82/</url>
     <content><![CDATA[<p>经典的数仓分层思想</p>
@@ -1536,66 +1613,6 @@
       </categories>
   </entry>
   <entry>
-    <title>详解TCP/IP协议栈</title>
-    <url>/2021/06/08/%E8%AF%A6%E8%A7%A3TCP-IP%E5%8D%8F%E8%AE%AE%E6%A0%88/</url>
-    <content><![CDATA[<p>之前对网络各层作用的了解一直都比较模糊，对各个协议的作用也不甚清楚，最近看到了一篇对TCP/IP协议栈讲解比较清晰的博文，特地转载过来。</p>
-<span id="more"></span>
-
-<p><a href="https://www.cnblogs.com/onepixel/p/7092302.html">原文链接</a></p>
-<h2 id="什么是TCP-IP协议栈"><a href="#什么是TCP-IP协议栈" class="headerlink" title="什么是TCP/IP协议栈"></a>什么是TCP/IP协议栈</h2><p>TCP/IP 协议栈是一系列网络协议的总和，是构成网络通信的核心骨架，它定义了电子设备如何连入因特网，以及数据如何在它们之间进行传输。TCP/IP 协议采用4层结构，分别是<font color='yellow'>应用层、传输层、网络层和链路层</font>，每一层都呼叫它的下一层所提供的协议来完成自己的需求。由于我们大部分时间都工作在应用层，下层的事情不用我们操心；其次网络协议体系本身就很复杂庞大，入门门槛高，因此很难搞清楚TCP/IP的工作原理，通俗一点讲就是，<font color='yellow'>一个主机的数据要经过哪些过程才能发送到对方的主机上</font>。 </p>
-<h2 id="物理介质"><a href="#物理介质" class="headerlink" title="物理介质"></a>物理介质</h2><p>物理介质就是把电脑连接起来的物理手段，常见的有光纤、双绞线，以及无线电波，它决定了电信号(0和1)的传输方式，物理介质的不同决定了电信号的传输带宽、速率、传输距离以及抗干扰性等等。</p>
-<p>TCP/IP协议栈分为四层，每一层都由特定的协议与对方进行通信，而<font color='yellow'>协议之间的通信最终都要转化为 0 和 1 的电信号，通过物理介质进行传输才能到达对方的电脑</font>，因此物理介质是网络通信的基石。</p>
-<p>下面我们通过一张图先来大概了解一下TCP/IP协议的基本框架：<br><img src="https://img-blog.csdnimg.cn/20200404205007610.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>当通过http发起一个请求时，应用层、传输层、网络层和链路层的相关协议依次对该请求进行包装并携带对应的首部，最终在链路层生成以太网数据包，以太网数据包通过物理介质传输给对方主机，对方接收到数据包以后，然后再一层一层采用对应的协议进行拆包，最后把应用层数据交给应用程序处理。</p>
-<p>网络通信就好比送快递，商品外面的一层层包裹就是各种协议，协议包含了商品信息、收货地址、收件人、联系方式等，然后还需要配送车、配送站、快递员，商品才能最终到达用户手中。</p>
-<p>一般情况下，快递是不能直达的，需要先转发到对应的配送站，然后由配送站再进行派件。</p>
-<p>配送车就是物理介质，配送站就是网关， 快递员就是路由器，收货地址就是IP地址，联系方式就是MAC地址。 </p>
-<p>快递员负责把包裹转发到各个配送站，配送站根据收获地址里的省市区，确认是否需要继续转发到其他配送站，当包裹到达了目标配送站以后，配送站再根据联系方式找到收件人进行派件。  </p>
-<p>有了整体概念以后，下面我们详细了解一下各层的分工。</p>
-<h2 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h2><p>网络通信就是把有特定意义的数据通过物理介质传送给对方，单纯的发送 0 和 1 是没有意义的，要传输有意义的数据，就需要以字节为单位对 0 和 1 进行分组，并且要标识好每一组电信号的信息特征，然后按照分组的顺序依次发送。以太网规定一组电信号就是一个数据包，一个数据包被称为<font color='yellow'>一帧</font>， 制定这个规则的协议就是<font color='yellow'>以太网协议</font>。一个完整的以太网数据包如下图所示：<br><img src="https://img-blog.csdnimg.cn/202004042051205.png" alt="在这里插入图片描述"><br>整个数据帧由<font color='yellow'>首部、数据和尾部</font>三部分组成，首部固定为14个字节，包含了目标MAC地址、源MAC地址和类型；数据最短为46个字节，最长为1500个字节，如果需要传输的数据很长，就必须分割成多个帧进行发送；尾部固定为4个字节，表示数据帧校验序列，用于确定数据包在传输过程中是否损坏。因此，以太网协议通过对电信号进行分组并形成数据帧，然后通过物理介质把数据帧发送给接收方。那么以太网如何来识接收方的身份呢？</p>
-<p>以太网规协议定，接入网络的设备都必须安装网络适配器，即<font color='yellow'>网卡</font>， 数据包必须是从一块网卡传送到另一块网卡。而<font color='yellow'>网卡地址</font>就是数据包的发送地址和接收地址，也就是帧首部所包含的<font color='yellow'>MAC地址</font>，MAC地址是每块网卡的身份标识，就如同我们身份证上的身份证号码，具有全球唯一性。MAC地址采用十六进制标识，共6个字节， 前三个字节是厂商编号，后三个字节是网卡流水号，例如 4C-0F-6E-12-D2-19</p>
-<p>有了MAC地址以后，以太网采用<font color='yellow'>广播</font>形式，把数据包发给该<font color='yellow'>子网内</font>所有主机，子网内每台主机在接收到这个包以后，都会读取首部里的目标MAC地址，然后和自己的MAC地址进行对比，如果相同就做下一步处理，如果不同，就丢弃这个包。</p>
-<p>所以链路层的主要工作就是<font color='yellow'>对电信号进行分组并形成具有特定意义的数据帧，然后以广播的形式通过物理介质发送给接收方。</font></p>
-<h2 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h2><p>对于上面的过程，有几个细节问题值得我们思考：</p>
-<p>1、发送者如何知道接收者的MAC地址？</p>
-<p>2、发送者如何知道接收者和自己同属一个子网？</p>
-<p>3、如果接收者和自己不在同一个子网，数据包如何发给对方？<br>为了解决这些问题，网络层引入了三个协议，分别是<font color='yellow'>IP协议、ARP协议、路由协议。</font></p>
-<h4 id="IP协议"><a href="#IP协议" class="headerlink" title="IP协议"></a>IP协议</h4><p>通过前面的介绍我们知道，MAC地址只与厂商有关，与所处的网络无关，所以无法通过MAC地址来判断两台主机是否属于同一个子网。</p>
-<p>因此，网络层引入了IP协议，制定了一套新地址，使得我们能够区分两台主机是否同属一个网络，这套地址就是网络地址，也就是所谓的IP地址。</p>
-<p>IP地址目前有两个版本，分别是IPv4和IPv6，IPv4是一个32位的地址，常采用4个十进制数字表示。IP协议将这个32位的地址分为两部分，前面部分代表网络地址，后面部分表示该主机在局域网中的地址。由于各类地址的分法不尽相同，以C类地址192.168.24.1为例，其中前24位就是网络地址，后8位就是主机地址。因此， <font color='yellow'>如果两个IP地址在同一个子网内，则网络地址一定相同</font>。为了判断IP地址中的网络地址，IP协议还引入了子网掩码， IP地址和子网掩码通过按位与运算后就可以得到网络地址。</p>
-<p>由于发送者和接收者的IP地址是已知的(应用层的协议会传入)， 因此我们只要通过子网掩码对两个IP地址进行AND运算后就能够判断双方是否在同一个子网了。</p>
-<h4 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h4><p>即地址解析协议，是<font color='yellow'>根据IP地址获取MAC地址</font>的一个网络层协议。其工作原理如下：</p>
-<p>ARP首先会发起一个请求数据包，数据包的首部包含了目标主机的IP地址，然后这个数据包会在链路层进行再次包装，生成以太网数据包，最终由以太网广播给子网内的所有主机，每一台主机都会接收到这个数据包，并取出标头里的IP地址，然后和自己的IP地址进行比较，如果相同就返回自己的MAC地址，如果不同就丢弃该数据包。ARP接收返回消息，以此确定目标机的MAC地址；与此同时，ARP还会将返回的MAC地址与对应的IP地址存入本机ARP缓存中并保留一定时间，下次请求时直接查询ARP缓存以节约资源。cmd输入 arp -a 就可以查询本机缓存的ARP数据。</p>
-<h4 id="路由协议"><a href="#路由协议" class="headerlink" title="路由协议"></a>路由协议</h4><p>通过ARP协议的工作原理可以发现，<font color='yellow'>ARP的MAC寻址还是局限在同一个子网中</font>，因此网络层引入了路由协议，首先通过IP协议来判断两台主机是否在同一个子网中，如果在同一个子网，就通过ARP协议查询对应的MAC地址，然后以广播的形式向该子网内的主机发送数据包；如果不在同一个子网，以太网会将该数据包转发给本子网的网关进行路由。网关是互联网上子网与子网之间的桥梁，所以网关会进行多次转发，最终将该数据包转发到目标IP所在的子网中，然后再通过ARP获取目标机MAC，最终也是通过广播形式将数据包发送给接收方。</p>
-<p>而完成这个路由协议的物理设备就是<font color='yellow'>路由器</font>，在错综复杂的网络世界里，路由器扮演者交通枢纽的角色，它会根据信道情况，选择并设定路由，以最佳路径来转发数据包。</p>
-<h4 id="IP数据包"><a href="#IP数据包" class="headerlink" title="IP数据包"></a>IP数据包</h4><p>在网络层被包装的数据包就叫<font color='yellow'>IP数据包</font>，IPv4数据包的结构如下图所示：<br><img src="https://img-blog.csdnimg.cn/20200404205714539.png" alt="在这里插入图片描述"><br>IP数据包由首部和数据两部分组成，首部长度为20个字节，主要包含了目标IP地址和源IP地址，目标IP地址是网关路由的线索和依据；数据部分的最大长度为65515字节，理论上一个IP数据包的总长度可以达到65535个字节，而以太网数据包的最大长度是1500个字符，如果超过这个大小，就需要对IP数据包进行分割，分成多帧发送。</p>
-<p>所以，网络层的主要工作是<font color='yellow'>定义网络地址，区分网段，子网内MAC寻址，对于不同子网的数据包进行路由</font>。</p>
-<h4 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h4><p>链路层定义了主机的身份，即MAC地址， 而网络层定义了IP地址，明确了主机所在的网段，有了这两个地址，数据包就从可以从一个主机发送到另一台主机。但实际上数据包是从一个主机的某个应用程序发出，然后由对方主机的应用程序接收。而每台电脑都有可能同时运行着很多个应用程序，所以当数据包被发送到主机上以后，是无法确定哪个应用程序要接收这个包。</p>
-<p>因此传输层引入了UDP协议来解决这个问题，为了给每个应用程序标识身份，UDP协议定义了<font color='yellow'>端口</font>，同一个主机上的每个应用程序都需要指定唯一的端口号，并且规定网络中传输的数据包必须加上端口信息。 这样，当数据包到达主机以后，就可以根据端口号找到对应的应用程序了。UDP定义的数据包就叫做UDP数据包，结构如下所示：<br><img src="https://img-blog.csdnimg.cn/20200404205754668.png" alt="在这里插入图片描述"><br>UDP数据包由首部和数据两部分组成，首部长度为8个字节，主要包括源端口和目标端口；数据最大为65527个字节，整个数据包的长度最大可达到65535个字节。</p>
-<p>UDP协议比较简单，实现容易，但它没有确认机制， 数据包一旦发出，无法知道对方是否收到，因此可靠性较差，为了解决这个问题，提高网络可靠性，TCP协议就诞生了，TCP即传输控制协议，是一种面向连接的、可靠的、基于字节流的通信协议。简单来说TCP就是有确认机制的UDP协议，每发出一个数据包都要求确认，如果有一个数据包丢失，就收不到确认，发送方就必须重发这个数据包。<br>为了保证传输的可靠性，TCP 协议在 UDP 基础之上建立了三次对话的确认机制，也就是说，在正式收发数据前，必须和对方建立可靠的连接。由于建立过程较为复杂，我们在这里做一个形象的描述：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">主机A：我想发数据给你，可以么？</span><br><span class="line"></span><br><span class="line">主机B：可以，你什么时候发？</span><br><span class="line"></span><br><span class="line">主机A：我马上发，你接着！</span><br></pre></td></tr></table></figure>
-<p>经过三次对话之后，主机A才会向主机B发送正式数据，而UDP是面向非连接的协议，它不与对方建立连接，而是直接就把数据包发过去了。所以 TCP 能够保证数据包在传输过程中不被丢失，但美好的事物必然是要付出代价的，相比 UDP，TCP 实现过程复杂，消耗连接资源多，传输速度慢。</p>
-<p>TCP 数据包和 UDP 一样，都是由首部和数据两部分组成，唯一不同的是，TCP 数据包没有长度限制，理论上可以无限长，但是为了保证网络的效率，通常 TCP 数据包的长度不会超过IP数据包的长度，以确保单个 TCP 数据包不必再分割。</p>
-<p>总结一下，传输层的主要工作是<font color='yellow'>定义端口，标识应用程序身份，实现端口到端口的通信，TCP协议可以保证数据传输的可靠性</font>。</p>
-<h4 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4><p>理论上讲，有了以上三层协议的支持，数据已经可以从一个主机上的应用程序传输到另一台主机的应用程序了，但此时传过来的数据是字节流，不能很好的被程序识别，操作性差。因此，应用层定义了各种各样的协议来规范数据格式，常见的有 HTTP、FTP、SMTP 等，HTTP 是一种比较常用的应用层协议，主要用于B/S架构之间的数据通信，其报文格式如下：<br><img src="https://img-blog.csdnimg.cn/20200404205928861.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>在 Resquest Headers 中，Accept 表示客户端期望接收的数据格式，而 ContentType 则表示客户端发送的数据格式；在 Response Headers 中，ContentType 表示服务端响应的数据格式，这里定义的格式，一般是和  Resquest Headers 中 Accept 定义的格式是一致的。</p>
-<p>有了这个规范以后，服务端收到请求以后，就能正确的解析客户端发来的数据，当请求处理完以后，再按照客户端要求的格式返回，客户端收到结果后，按照服务端返回的格式进行解析。</p>
-<p>所以应用层的主要工作就是<font color='yellow'>定义数据格式并按照对应的格式解读数据</font>。</p>
-<h4 id="全流程"><a href="#全流程" class="headerlink" title="全流程"></a>全流程</h4><p>首先我们梳理一下每层模型的职责：</p>
-<ul>
-<li><font color='yellow'>链路层</font>：对0和1进行分组，定义数据帧，确认主机的物理地址，传输数据；</li>
-<li><font color='yellow'>网络层</font>：定义IP地址，确认主机所在的网络位置，并通过IP进行MAC寻址，对外网数据包进行路由转发；</li>
-<li><font color='yellow'>传输层</font>：定义端口，确认主机上应用程序的身份，并将数据包交给对应的应用程序；</li>
-<li><font color='yellow'>应用层</font>：定义数据格式，并按照对应的格式解读数据。</li>
-</ul>
-<p>然后再把每层模型的职责串联起来，用一句通俗易懂的话讲就是：</p>
-<blockquote>
-<p>当你输入一个网址并按下回车键的时候，首先，应用层协议对该请求包做了格式定义；紧接着传输层协议加上了双方的端口号，确认了双方通信的应用程序；然后网络协议加上了双方的IP地址，确认了双方的网络位置；最后链路层协议加上了双方的MAC地址，确认了双方的物理位置，同时将数据进行分组，形成数据帧，采用广播方式，通过传输介质发送给对方主机。而对于不同网段，该数据包首先会转发给网关路由器，经过多次转发后，最终被发送到目标主机。目标机接收到数据包后，采用对应的协议，对帧数据进行组装，然后再通过一层一层的协议进行解析，最终被应用层的协议解析并交给服务器处理。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>计算机基础知识</category>
-      </categories>
-  </entry>
-  <entry>
     <title>数据开发中需要注意的一些规则</title>
     <url>/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/</url>
     <content><![CDATA[<p>在数据开发中有一些常见的点需要注意，这些<strong>点</strong>可以理解成是数据开发中的通用规范，如果我们能在开发中遵守这些规范，将大大提高我们模型、代码的质量，这里总结一些常见的规则以及为什么要遵守这些规则的原因。</p>
@@ -1664,6 +1681,66 @@
       <tags>
         <tag>数据治理</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>详解TCP/IP协议栈</title>
+    <url>/2021/06/08/%E8%AF%A6%E8%A7%A3TCP-IP%E5%8D%8F%E8%AE%AE%E6%A0%88/</url>
+    <content><![CDATA[<p>之前对网络各层作用的了解一直都比较模糊，对各个协议的作用也不甚清楚，最近看到了一篇对TCP/IP协议栈讲解比较清晰的博文，特地转载过来。</p>
+<span id="more"></span>
+
+<p><a href="https://www.cnblogs.com/onepixel/p/7092302.html">原文链接</a></p>
+<h2 id="什么是TCP-IP协议栈"><a href="#什么是TCP-IP协议栈" class="headerlink" title="什么是TCP/IP协议栈"></a>什么是TCP/IP协议栈</h2><p>TCP/IP 协议栈是一系列网络协议的总和，是构成网络通信的核心骨架，它定义了电子设备如何连入因特网，以及数据如何在它们之间进行传输。TCP/IP 协议采用4层结构，分别是<font color='yellow'>应用层、传输层、网络层和链路层</font>，每一层都呼叫它的下一层所提供的协议来完成自己的需求。由于我们大部分时间都工作在应用层，下层的事情不用我们操心；其次网络协议体系本身就很复杂庞大，入门门槛高，因此很难搞清楚TCP/IP的工作原理，通俗一点讲就是，<font color='yellow'>一个主机的数据要经过哪些过程才能发送到对方的主机上</font>。 </p>
+<h2 id="物理介质"><a href="#物理介质" class="headerlink" title="物理介质"></a>物理介质</h2><p>物理介质就是把电脑连接起来的物理手段，常见的有光纤、双绞线，以及无线电波，它决定了电信号(0和1)的传输方式，物理介质的不同决定了电信号的传输带宽、速率、传输距离以及抗干扰性等等。</p>
+<p>TCP/IP协议栈分为四层，每一层都由特定的协议与对方进行通信，而<font color='yellow'>协议之间的通信最终都要转化为 0 和 1 的电信号，通过物理介质进行传输才能到达对方的电脑</font>，因此物理介质是网络通信的基石。</p>
+<p>下面我们通过一张图先来大概了解一下TCP/IP协议的基本框架：<br><img src="https://img-blog.csdnimg.cn/20200404205007610.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>当通过http发起一个请求时，应用层、传输层、网络层和链路层的相关协议依次对该请求进行包装并携带对应的首部，最终在链路层生成以太网数据包，以太网数据包通过物理介质传输给对方主机，对方接收到数据包以后，然后再一层一层采用对应的协议进行拆包，最后把应用层数据交给应用程序处理。</p>
+<p>网络通信就好比送快递，商品外面的一层层包裹就是各种协议，协议包含了商品信息、收货地址、收件人、联系方式等，然后还需要配送车、配送站、快递员，商品才能最终到达用户手中。</p>
+<p>一般情况下，快递是不能直达的，需要先转发到对应的配送站，然后由配送站再进行派件。</p>
+<p>配送车就是物理介质，配送站就是网关， 快递员就是路由器，收货地址就是IP地址，联系方式就是MAC地址。 </p>
+<p>快递员负责把包裹转发到各个配送站，配送站根据收获地址里的省市区，确认是否需要继续转发到其他配送站，当包裹到达了目标配送站以后，配送站再根据联系方式找到收件人进行派件。  </p>
+<p>有了整体概念以后，下面我们详细了解一下各层的分工。</p>
+<h2 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h2><p>网络通信就是把有特定意义的数据通过物理介质传送给对方，单纯的发送 0 和 1 是没有意义的，要传输有意义的数据，就需要以字节为单位对 0 和 1 进行分组，并且要标识好每一组电信号的信息特征，然后按照分组的顺序依次发送。以太网规定一组电信号就是一个数据包，一个数据包被称为<font color='yellow'>一帧</font>， 制定这个规则的协议就是<font color='yellow'>以太网协议</font>。一个完整的以太网数据包如下图所示：<br><img src="https://img-blog.csdnimg.cn/202004042051205.png" alt="在这里插入图片描述"><br>整个数据帧由<font color='yellow'>首部、数据和尾部</font>三部分组成，首部固定为14个字节，包含了目标MAC地址、源MAC地址和类型；数据最短为46个字节，最长为1500个字节，如果需要传输的数据很长，就必须分割成多个帧进行发送；尾部固定为4个字节，表示数据帧校验序列，用于确定数据包在传输过程中是否损坏。因此，以太网协议通过对电信号进行分组并形成数据帧，然后通过物理介质把数据帧发送给接收方。那么以太网如何来识接收方的身份呢？</p>
+<p>以太网规协议定，接入网络的设备都必须安装网络适配器，即<font color='yellow'>网卡</font>， 数据包必须是从一块网卡传送到另一块网卡。而<font color='yellow'>网卡地址</font>就是数据包的发送地址和接收地址，也就是帧首部所包含的<font color='yellow'>MAC地址</font>，MAC地址是每块网卡的身份标识，就如同我们身份证上的身份证号码，具有全球唯一性。MAC地址采用十六进制标识，共6个字节， 前三个字节是厂商编号，后三个字节是网卡流水号，例如 4C-0F-6E-12-D2-19</p>
+<p>有了MAC地址以后，以太网采用<font color='yellow'>广播</font>形式，把数据包发给该<font color='yellow'>子网内</font>所有主机，子网内每台主机在接收到这个包以后，都会读取首部里的目标MAC地址，然后和自己的MAC地址进行对比，如果相同就做下一步处理，如果不同，就丢弃这个包。</p>
+<p>所以链路层的主要工作就是<font color='yellow'>对电信号进行分组并形成具有特定意义的数据帧，然后以广播的形式通过物理介质发送给接收方。</font></p>
+<h2 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h2><p>对于上面的过程，有几个细节问题值得我们思考：</p>
+<p>1、发送者如何知道接收者的MAC地址？</p>
+<p>2、发送者如何知道接收者和自己同属一个子网？</p>
+<p>3、如果接收者和自己不在同一个子网，数据包如何发给对方？<br>为了解决这些问题，网络层引入了三个协议，分别是<font color='yellow'>IP协议、ARP协议、路由协议。</font></p>
+<h4 id="IP协议"><a href="#IP协议" class="headerlink" title="IP协议"></a>IP协议</h4><p>通过前面的介绍我们知道，MAC地址只与厂商有关，与所处的网络无关，所以无法通过MAC地址来判断两台主机是否属于同一个子网。</p>
+<p>因此，网络层引入了IP协议，制定了一套新地址，使得我们能够区分两台主机是否同属一个网络，这套地址就是网络地址，也就是所谓的IP地址。</p>
+<p>IP地址目前有两个版本，分别是IPv4和IPv6，IPv4是一个32位的地址，常采用4个十进制数字表示。IP协议将这个32位的地址分为两部分，前面部分代表网络地址，后面部分表示该主机在局域网中的地址。由于各类地址的分法不尽相同，以C类地址192.168.24.1为例，其中前24位就是网络地址，后8位就是主机地址。因此， <font color='yellow'>如果两个IP地址在同一个子网内，则网络地址一定相同</font>。为了判断IP地址中的网络地址，IP协议还引入了子网掩码， IP地址和子网掩码通过按位与运算后就可以得到网络地址。</p>
+<p>由于发送者和接收者的IP地址是已知的(应用层的协议会传入)， 因此我们只要通过子网掩码对两个IP地址进行AND运算后就能够判断双方是否在同一个子网了。</p>
+<h4 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h4><p>即地址解析协议，是<font color='yellow'>根据IP地址获取MAC地址</font>的一个网络层协议。其工作原理如下：</p>
+<p>ARP首先会发起一个请求数据包，数据包的首部包含了目标主机的IP地址，然后这个数据包会在链路层进行再次包装，生成以太网数据包，最终由以太网广播给子网内的所有主机，每一台主机都会接收到这个数据包，并取出标头里的IP地址，然后和自己的IP地址进行比较，如果相同就返回自己的MAC地址，如果不同就丢弃该数据包。ARP接收返回消息，以此确定目标机的MAC地址；与此同时，ARP还会将返回的MAC地址与对应的IP地址存入本机ARP缓存中并保留一定时间，下次请求时直接查询ARP缓存以节约资源。cmd输入 arp -a 就可以查询本机缓存的ARP数据。</p>
+<h4 id="路由协议"><a href="#路由协议" class="headerlink" title="路由协议"></a>路由协议</h4><p>通过ARP协议的工作原理可以发现，<font color='yellow'>ARP的MAC寻址还是局限在同一个子网中</font>，因此网络层引入了路由协议，首先通过IP协议来判断两台主机是否在同一个子网中，如果在同一个子网，就通过ARP协议查询对应的MAC地址，然后以广播的形式向该子网内的主机发送数据包；如果不在同一个子网，以太网会将该数据包转发给本子网的网关进行路由。网关是互联网上子网与子网之间的桥梁，所以网关会进行多次转发，最终将该数据包转发到目标IP所在的子网中，然后再通过ARP获取目标机MAC，最终也是通过广播形式将数据包发送给接收方。</p>
+<p>而完成这个路由协议的物理设备就是<font color='yellow'>路由器</font>，在错综复杂的网络世界里，路由器扮演者交通枢纽的角色，它会根据信道情况，选择并设定路由，以最佳路径来转发数据包。</p>
+<h4 id="IP数据包"><a href="#IP数据包" class="headerlink" title="IP数据包"></a>IP数据包</h4><p>在网络层被包装的数据包就叫<font color='yellow'>IP数据包</font>，IPv4数据包的结构如下图所示：<br><img src="https://img-blog.csdnimg.cn/20200404205714539.png" alt="在这里插入图片描述"><br>IP数据包由首部和数据两部分组成，首部长度为20个字节，主要包含了目标IP地址和源IP地址，目标IP地址是网关路由的线索和依据；数据部分的最大长度为65515字节，理论上一个IP数据包的总长度可以达到65535个字节，而以太网数据包的最大长度是1500个字符，如果超过这个大小，就需要对IP数据包进行分割，分成多帧发送。</p>
+<p>所以，网络层的主要工作是<font color='yellow'>定义网络地址，区分网段，子网内MAC寻址，对于不同子网的数据包进行路由</font>。</p>
+<h4 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h4><p>链路层定义了主机的身份，即MAC地址， 而网络层定义了IP地址，明确了主机所在的网段，有了这两个地址，数据包就从可以从一个主机发送到另一台主机。但实际上数据包是从一个主机的某个应用程序发出，然后由对方主机的应用程序接收。而每台电脑都有可能同时运行着很多个应用程序，所以当数据包被发送到主机上以后，是无法确定哪个应用程序要接收这个包。</p>
+<p>因此传输层引入了UDP协议来解决这个问题，为了给每个应用程序标识身份，UDP协议定义了<font color='yellow'>端口</font>，同一个主机上的每个应用程序都需要指定唯一的端口号，并且规定网络中传输的数据包必须加上端口信息。 这样，当数据包到达主机以后，就可以根据端口号找到对应的应用程序了。UDP定义的数据包就叫做UDP数据包，结构如下所示：<br><img src="https://img-blog.csdnimg.cn/20200404205754668.png" alt="在这里插入图片描述"><br>UDP数据包由首部和数据两部分组成，首部长度为8个字节，主要包括源端口和目标端口；数据最大为65527个字节，整个数据包的长度最大可达到65535个字节。</p>
+<p>UDP协议比较简单，实现容易，但它没有确认机制， 数据包一旦发出，无法知道对方是否收到，因此可靠性较差，为了解决这个问题，提高网络可靠性，TCP协议就诞生了，TCP即传输控制协议，是一种面向连接的、可靠的、基于字节流的通信协议。简单来说TCP就是有确认机制的UDP协议，每发出一个数据包都要求确认，如果有一个数据包丢失，就收不到确认，发送方就必须重发这个数据包。<br>为了保证传输的可靠性，TCP 协议在 UDP 基础之上建立了三次对话的确认机制，也就是说，在正式收发数据前，必须和对方建立可靠的连接。由于建立过程较为复杂，我们在这里做一个形象的描述：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">主机A：我想发数据给你，可以么？</span><br><span class="line"></span><br><span class="line">主机B：可以，你什么时候发？</span><br><span class="line"></span><br><span class="line">主机A：我马上发，你接着！</span><br></pre></td></tr></table></figure>
+<p>经过三次对话之后，主机A才会向主机B发送正式数据，而UDP是面向非连接的协议，它不与对方建立连接，而是直接就把数据包发过去了。所以 TCP 能够保证数据包在传输过程中不被丢失，但美好的事物必然是要付出代价的，相比 UDP，TCP 实现过程复杂，消耗连接资源多，传输速度慢。</p>
+<p>TCP 数据包和 UDP 一样，都是由首部和数据两部分组成，唯一不同的是，TCP 数据包没有长度限制，理论上可以无限长，但是为了保证网络的效率，通常 TCP 数据包的长度不会超过IP数据包的长度，以确保单个 TCP 数据包不必再分割。</p>
+<p>总结一下，传输层的主要工作是<font color='yellow'>定义端口，标识应用程序身份，实现端口到端口的通信，TCP协议可以保证数据传输的可靠性</font>。</p>
+<h4 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4><p>理论上讲，有了以上三层协议的支持，数据已经可以从一个主机上的应用程序传输到另一台主机的应用程序了，但此时传过来的数据是字节流，不能很好的被程序识别，操作性差。因此，应用层定义了各种各样的协议来规范数据格式，常见的有 HTTP、FTP、SMTP 等，HTTP 是一种比较常用的应用层协议，主要用于B/S架构之间的数据通信，其报文格式如下：<br><img src="https://img-blog.csdnimg.cn/20200404205928861.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0ppYW5nemhpcWk0NTUx,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"><br>在 Resquest Headers 中，Accept 表示客户端期望接收的数据格式，而 ContentType 则表示客户端发送的数据格式；在 Response Headers 中，ContentType 表示服务端响应的数据格式，这里定义的格式，一般是和  Resquest Headers 中 Accept 定义的格式是一致的。</p>
+<p>有了这个规范以后，服务端收到请求以后，就能正确的解析客户端发来的数据，当请求处理完以后，再按照客户端要求的格式返回，客户端收到结果后，按照服务端返回的格式进行解析。</p>
+<p>所以应用层的主要工作就是<font color='yellow'>定义数据格式并按照对应的格式解读数据</font>。</p>
+<h4 id="全流程"><a href="#全流程" class="headerlink" title="全流程"></a>全流程</h4><p>首先我们梳理一下每层模型的职责：</p>
+<ul>
+<li><font color='yellow'>链路层</font>：对0和1进行分组，定义数据帧，确认主机的物理地址，传输数据；</li>
+<li><font color='yellow'>网络层</font>：定义IP地址，确认主机所在的网络位置，并通过IP进行MAC寻址，对外网数据包进行路由转发；</li>
+<li><font color='yellow'>传输层</font>：定义端口，确认主机上应用程序的身份，并将数据包交给对应的应用程序；</li>
+<li><font color='yellow'>应用层</font>：定义数据格式，并按照对应的格式解读数据。</li>
+</ul>
+<p>然后再把每层模型的职责串联起来，用一句通俗易懂的话讲就是：</p>
+<blockquote>
+<p>当你输入一个网址并按下回车键的时候，首先，应用层协议对该请求包做了格式定义；紧接着传输层协议加上了双方的端口号，确认了双方通信的应用程序；然后网络协议加上了双方的IP地址，确认了双方的网络位置；最后链路层协议加上了双方的MAC地址，确认了双方的物理位置，同时将数据进行分组，形成数据帧，采用广播方式，通过传输介质发送给对方主机。而对于不同网段，该数据包首先会转发给网关路由器，经过多次转发后，最终被发送到目标主机。目标机接收到数据包后，采用对应的协议，对帧数据进行组装，然后再通过一层一层的协议进行解析，最终被应用层的协议解析并交给服务器处理。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>计算机基础知识</category>
+      </categories>
   </entry>
   <entry>
     <title>大数据框架中的小文件问题</title>

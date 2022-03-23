@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_HFPB3ejLT_nj8HqhtjexZg7Y92C_R99qs8SDBU38lA">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;jiangzhiqi4551.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;搜索...&quot;,&quot;empty&quot;:&quot;没有找到任何搜索结果：${query}&quot;,&quot;hits_time&quot;:&quot;找到 ${hits} 个搜索结果（用时 ${time} 毫秒）&quot;,&quot;hits&quot;:&quot;找到 ${hits} 个搜索结果&quot;},&quot;path&quot;:&quot;&#x2F;search.xml&quot;,&quot;localsearch&quot;:{&quot;enable&quot;:true,&quot;trigger&quot;:&quot;auto&quot;,&quot;top_n_per_article&quot;:1,&quot;unescape&quot;:false,&quot;preload&quot;:false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="随着业务的不断发展，在数仓中会慢慢产生一些相似模型，在数据治理中，我们需要找到并推动相似和可替换模型的下线，节约成本资源，优化数仓模型质量，提高模型开发效率。 本文将介绍判断相似模型的几种方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数仓中相似模型定义的几种方法">
+<meta property="og:url" content="https://jiangzhiqi4551.github.io/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="Jiang&#39;s blog">
+<meta property="og:description" content="随着业务的不断发展，在数仓中会慢慢产生一些相似模型，在数据治理中，我们需要找到并推动相似和可替换模型的下线，节约成本资源，优化数仓模型质量，提高模型开发效率。 本文将介绍判断相似模型的几种方法。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-23T02:43:28.000Z">
+<meta property="article:modified_time" content="2022-03-23T03:58:46.459Z">
+<meta property="article:author" content="Master Jiang">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://jiangzhiqi4551.github.io/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-CN&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;jiangzhiqi4551.github.io&#x2F;2022&#x2F;03&#x2F;23&#x2F;%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95&#x2F;&quot;,&quot;path&quot;:&quot;2022&#x2F;03&#x2F;23&#x2F;数仓中相似模型定义的几种方法&#x2F;&quot;,&quot;title&quot;:&quot;数仓中相似模型定义的几种方法&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>数仓中相似模型定义的几种方法 | Jiang's blog</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+  <!-- 页面点击小红心 -->
+  <script type="text/javascript" src="/js/clicklove.js"></script>
+<link rel="alternate" href="/atom.xml" title="Jiang's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiang's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%83%9F%E5%9B%B1%E5%BB%BA%E8%AE%BE"><span class="nav-number">1.0.0.1.</span> <span class="nav-text">烟囱建设</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E9%81%B5%E5%BE%AA%E7%BB%B4%E5%BA%A6%E5%BB%BA%E6%A8%A1%E8%A7%84%E8%8C%83"><span class="nav-number">1.0.0.2.</span> <span class="nav-text">不遵循维度建模规范</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E8%AF%84%E5%AE%A1"><span class="nav-number">1.0.0.3.</span> <span class="nav-text">模型评审</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89"><span class="nav-number">2.</span> <span class="nav-text">相似模型定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E5%8C%85%E5%90%AB"><span class="nav-number">2.0.1.</span> <span class="nav-text">字段包含</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E8%BE%93%E5%85%A5%E7%9B%B8%E4%BC%BC"><span class="nav-number">2.0.2.</span> <span class="nav-text">同输入相似</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E7%9B%B8%E4%BC%BC"><span class="nav-number">2.0.3.</span> <span class="nav-text">向量相似</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%BC%E5%90%88%E7%9B%B8%E4%BC%BC"><span class="nav-number">2.0.4.</span> <span class="nav-text">综合相似</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Master Jiang"
+      src="/images/logo1.jpeg">
+  <p class="site-author-name" itemprop="name">Master Jiang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Jiangzhiqi4551" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Jiangzhiqi4551" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:Jiangzhiqi4551@outlook.com" title="E-Mail → mailto:Jiangzhiqi4551@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/Jiangzhiqi4551?spm=1000.2115.3001.5343" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;Jiangzhiqi4551?spm&#x3D;1000.2115.3001.5343" rel="noopener" target="_blank"><i class="fas fa-blog fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://jiangzhiqi4551.github.io/2022/03/23/%E6%95%B0%E4%BB%93%E4%B8%AD%E7%9B%B8%E4%BC%BC%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/logo1.jpeg">
+      <meta itemprop="name" content="Master Jiang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiang's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          数仓中相似模型定义的几种方法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2022-03-23 10:43:28 / 修改时间：11:58:46" itemprop="dateCreated datePublished" datetime="2022-03-23T10:43:28+08:00">2022-03-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%8A%80%E6%9C%AF-%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">大数据技术&数据仓库</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>随着业务的不断发展，在数仓中会慢慢产生一些相似模型，在数据治理中，我们需要找到并推动相似和可替换模型的下线，节约成本资源，优化数仓模型质量，提高模型开发效率。</p>
+<p>本文将介绍判断相似模型的几种方法。</p>
+<span id="more"></span>
+
+
+
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><h4 id="烟囱建设"><a href="#烟囱建设" class="headerlink" title="烟囱建设"></a>烟囱建设</h4><p>不同的项目组进行数据建设的同时，可能存在烟囱式建设，相同功能或者粒度的表可能会被重复建设。这样会造成相似模型的开发。</p>
+<h4 id="不遵循维度建模规范"><a href="#不遵循维度建模规范" class="headerlink" title="不遵循维度建模规范"></a>不遵循维度建模规范</h4><p>在模型建设的时候，不遵循维度建模的规范，在同一个项目或者业务线，为了某些快速满足需求，往往会不考虑模型的可扩展，相同的维度的表会多次建设，造成相似模型的开发。</p>
+<h4 id="模型评审"><a href="#模型评审" class="headerlink" title="模型评审"></a>模型评审</h4><p>没有通过规范的模型评审就开始创建新表，不遵守评审规范，可能会造成相似模型的开发。</p>
+<h1 id="相似模型定义"><a href="#相似模型定义" class="headerlink" title="相似模型定义"></a>相似模型定义</h1><h3 id="字段包含"><a href="#字段包含" class="headerlink" title="字段包含"></a>字段包含</h3><p><strong>定义：</strong></p>
+<p>​    有A、B两张表，A表的所有字段都包含在B表中，则认为B表是A表的可替换表。同时限制两张表存储大小差距在一定范围内。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义1.png)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如上图，如果A表的字段都在B中，假设A表B表的字段都是向量（见2.4），相似度可以采用余弦计算，B表越大则相似度越小，化简后公式如下:<br>$$<br>相似度 = \frac{\vec{A}*\vec{B}}{\Vert A \Vert\Vert B \Vert} =  \frac{size(A\bigcap B)}{\sqrt{size(A)}\sqrt{size(B)}} =  \frac{\sqrt{size(A)}}{\sqrt{size(B)}}<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>如果A表有多张相似表，取字段最多的表。</li>
+<li>匹配通过字段名，如果字段含义相同但命名不同则不统计在内。</li>
+<li>B表包含A表所有字段，但可能存在B表和A表的粒度不同，具体是否可以替换需业务数仓评估。</li>
+</ul>
+<h3 id="同输入相似"><a href="#同输入相似" class="headerlink" title="同输入相似"></a>同输入相似</h3><p><strong>定义：</strong></p>
+<p>​    有A、B两张表，A表B表的所有输入表都是相同，并且两个表的文件数和大小相近，则认为B表是A表的可替换表。相似度可以用两张表的存储大小的比值表示：<br>$$<br>相似度 = 1 - \frac{\Vert totalsizeB - totalsizeA\Vert}{max(totalsizeA,totalsizeN)}<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>如果A表有多张相似表，取字段最多的表作为其他表的相似表。</li>
+<li>可能存在A、B输入表相同，大小文件相似，但字段区分很大，有判断错误风险，需具体评估。</li>
+</ul>
+<h3 id="向量相似"><a href="#向量相似" class="headerlink" title="向量相似"></a>向量相似</h3><p><strong>定义：</strong></p>
+<p>​    该方法融合<strong>字段包含</strong>与<strong>同输入相似</strong>的方法，并进行范围的扩大，从来源表、字段词根、表存储大小三个方面筛选其他的相似的表。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">![截屏2021-10-28 下午4.40.11](/img/相似模型定义2.png)</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><strong>字段词根</strong>：对表的字段进行词根分隔，将所有表的词根建设词典，获得每张表所有词根在词典中的向量，如果A表和B表词根向量余弦相似度较高则认为A表B表字段词根相近，如果余弦相似度完全为1，则认为其完全相似，如果余弦相似度为0，则认为两个表词根没有交叉。</li>
+<li><strong>来源表</strong>：与字段词根方法相似，将所有的来源表建设词典，给每个表的来源表建设向量，并计算向量余弦相似度作为其来源表相似度。</li>
+<li><strong>存储大小</strong>：可以用两张表的存储大小的比值表示相似度。</li>
+<li><strong>相似度</strong>：最后相似度通过上面三种相似度的加权平均进行计算。</li>
+</ul>
+<p>$$<br>相似度（字段与表） = \frac{\vec{A}*\vec{B}}{\Vert A \Vert\Vert B \Vert} =  \frac{size(A\bigcap B)}{\sqrt{size(A)}\sqrt{size(B)}}<br>$$</p>
+<p>$$<br>来源表相似度 = 1 - \frac{\Vert totalsizeB - totalsizeA\Vert}{max(totalsizeA,totalsizeN)}<br>$$</p>
+<p>$$<br>相似度 =  0.4 * 字段相似度 + 0.3 * 来源表相似度 + 0.3 * 存储大小相似度<br>$$</p>
+<p><strong>举例：</strong></p>
+<p>​    A表字段：user_id，photo_id，show_cnt，上游血缘表：A，B，C，大小为0.8PB</p>
+<p>​    B表字段：user_id，photo_id，click_cnt， 上游血缘表：A，B，       大小为0.4PB</p>
+<p>词根词典顺序为为：user，id，photo，show，click，cnt，按照该词典(不统计词频)，AB的字段向量分别如下：</p>
+<p>​        A（1，1，1，1，0，1）</p>
+<p>​        B（1，1，1，0，1，1）</p>
+<p>AB的来源表向量为：</p>
+<p>​        A（1，1，1）</p>
+<p>​        B（1，1，0）</p>
+<p>计算得到：AB字段余弦相似度 = 0.8，AB来源表余弦相似度 = 0.81，AB大小相似度=0.5，向量相似度为=0.71。</p>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li>字段词根相近的条件相比上面其他定义更加宽泛，筛选出来的相似的表可能存在完全无法替换的情况。</li>
+<li>匹配通过字段名，如果字段含义相同但词根不同则不统计在内。</li>
+<li>如果A表有多张相似表，取字段最多的表作为其他表的相似表。</li>
+</ul>
+<h3 id="综合相似"><a href="#综合相似" class="headerlink" title="综合相似"></a>综合相似</h3><p><strong>定义：</strong></p>
+<p>上述四种方法范围有一定的包含关系：</p>
+<p><strong>向量相似定义范围 &gt; 同输入相似粒度定义范围 &gt; 字段包含定义范围</strong></p>
+<p>综合相似度通过上述三种定义进行加权平均，权重按照三种相似度的包含关系进行确定，定义范围越大权重越小。<br>$$<br>相似度 =  0.25 * 向量相近相似度 + 0.35 * 同输入相似粒度相似度 + 0.4 * 字段包含相似度<br>$$<br><strong>注意事项：</strong></p>
+<ul>
+<li>同一张表出现在不同定义中，则其相似度进行累加，其相似的定义取范围最小的定义，比如AB两个表既是同输入相似，又符合字段匹配，则认为是字段匹配。</li>
+<li>加权平均的方法更加突出多种方法中重复出现的表，其权重可根据不同情况进行修改。</li>
+<li>综合相似度大于xxx，则认为是相似度较高，可推进替换下线。</li>
+<li>部分表的开发过程中有中间表，与生产表相似度极高，可以过滤掉</li>
+<li>考虑ods表与dwd等层表的关系，在相似模型计算过程中排除ods表。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/11/01/%E6%95%B0%E6%8D%AE%E5%BC%80%E5%8F%91%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E4%B8%80%E4%BA%9B%E8%A7%84%E5%88%99/" rel="prev" title="数据开发中需要注意的一些规则">
+                  <i class="fa fa-chevron-left"></i> 数据开发中需要注意的一些规则
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Master Jiang</span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
